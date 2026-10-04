@@ -638,3 +638,278 @@ window.saveSettings = async function () {
 
   render();
 };
+// =========================================================
+// SAVE PLANNER TASK TO SUPABASE
+// =========================================================
+
+// =========================================================
+// LEARNMATE TASK CREATOR
+// Custom popup for VS Code Integrated Browser
+// =========================================================
+
+window.createTask = function () {
+
+  // Don't create the popup twice.
+  if (document.getElementById("learnmateTaskModal")) {
+    document.getElementById("learnmateTaskModal").style.display = "flex";
+    document.getElementById("lmTaskTitle").focus();
+    return;
+  }
+
+  const modal = document.createElement("div");
+
+  modal.id = "learnmateTaskModal";
+
+  modal.innerHTML = `
+    <div style="
+      position:fixed;
+      inset:0;
+      z-index:99999;
+      background:rgba(5,12,18,.72);
+      backdrop-filter:blur(12px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    ">
+
+      <div style="
+        width:min(460px,100%);
+        background:#ffffff;
+        border-radius:24px;
+        padding:30px;
+        box-shadow:0 30px 80px rgba(0,0,0,.35);
+      ">
+
+        <div style="
+          width:48px;
+          height:48px;
+          border-radius:15px;
+          background:#083335;
+          color:#ffffff;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-size:22px;
+          margin-bottom:18px;
+        ">✦</div>
+
+        <h2 style="
+          margin:0;
+          font-family:Manrope,sans-serif;
+          color:#102326;
+          font-size:24px;
+        ">
+          Add a goal
+        </h2>
+
+        <p style="
+          margin:8px 0 20px;
+          color:#647477;
+          font-size:14px;
+        ">
+          What would you like LearnMate to add to your plan?
+        </p>
+
+        <label style="
+          display:block;
+          margin-bottom:7px;
+          font-size:13px;
+          font-weight:700;
+          color:#304447;
+        ">
+          Goal or task
+        </label>
+
+        <input
+          id="lmTaskTitle"
+          type="text"
+          placeholder="e.g. Learn Python for 30 minutes"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            padding:14px;
+            border:1px solid #dce4e4;
+            border-radius:12px;
+            font-size:14px;
+            outline:none;
+          "
+        >
+
+        <div style="
+          display:flex;
+          gap:10px;
+          margin-top:18px;
+        ">
+
+          <button
+            onclick="closeTaskModal()"
+            style="
+              flex:1;
+              border:1px solid #dce4e4;
+              background:#ffffff;
+              color:#536568;
+              border-radius:12px;
+              padding:13px;
+              cursor:pointer;
+              font-weight:700;
+            "
+          >
+            Cancel
+          </button>
+
+          <button
+            onclick="saveLearnMateTask()"
+            style="
+              flex:1;
+              border:0;
+              background:#083335;
+              color:#ffffff;
+              border-radius:12px;
+              padding:13px;
+              cursor:pointer;
+              font-weight:700;
+            "
+          >
+            Add goal
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  setTimeout(() => {
+    document.getElementById("lmTaskTitle").focus();
+  }, 50);
+};
+
+
+// =========================================================
+// CLOSE TASK POPUP
+// =========================================================
+
+window.closeTaskModal = function () {
+
+  const modal = document.getElementById("learnmateTaskModal");
+
+  if (modal) {
+    modal.style.display = "none";
+  }
+
+};
+
+
+// =========================================================
+// SAVE TASK TO SUPABASE
+// =========================================================
+
+window.saveLearnMateTask = async function () {
+
+  const input = document.getElementById("lmTaskTitle");
+
+  if (!input) return;
+
+  const title = input.value.trim();
+
+  if (!title) {
+
+    input.style.borderColor = "#d92d20";
+
+    input.focus();
+
+    return;
+  }
+
+  const button =
+    document.querySelector("#learnmateTaskModal button:last-child");
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Saving...";
+  }
+
+  try {
+
+    const {
+      data: { session }
+    } = await learnmateSupabase.auth.getSession();
+
+
+    // =====================================================
+    // GUEST MODE
+    // =====================================================
+
+    if (!session?.user) {
+
+      state.tasks.push(title);
+
+      store.set("lm_tasks", state.tasks);
+
+      closeTaskModal();
+
+      toast("Goal added to your plan");
+
+      return;
+    }
+
+
+    // =====================================================
+    // LOGGED-IN USER
+    // =====================================================
+
+    const { data, error } =
+      await learnmateSupabase
+        .from("tasks")
+        .insert({
+          user_id: session.user.id,
+          title: title,
+          description: "",
+          priority: "medium",
+          status: "pending",
+          completed: false
+        })
+        .select()
+        .single();
+
+
+    if (error) {
+
+      console.error("Task creation error:", error);
+
+      toast("Could not save task");
+
+      return;
+    }
+
+
+    // Keep local UI synchronized.
+    state.tasks.push(data.title);
+
+    store.set("lm_tasks", state.tasks);
+
+    closeTaskModal();
+
+    toast("Task saved to LearnMate");
+
+  } catch (error) {
+
+    console.error("Task error:", error);
+
+    toast("Something went wrong while saving");
+
+  } finally {
+
+    if (button) {
+
+      button.disabled = false;
+      button.textContent = "Add goal";
+
+    }
+
+  }
+
+};
