@@ -1189,3 +1189,610 @@ window.go = function(page) {
   }
 
 };
+// =========================================================
+// AI ASSISTANT - SUPABASE CONVERSATION STORAGE
+// =========================================================
+
+let learnMateConversationId = null;
+
+
+// ---------------------------------------------------------
+// GET OR CREATE A CONVERSATION
+// ---------------------------------------------------------
+
+async function getLearnMateConversation() {
+
+  const {
+    data: { session }
+  } = await learnmateSupabase.auth.getSession();
+
+  if (!session?.user) {
+    return null;
+  }
+
+  // Reuse the conversation already opened in this session.
+  if (learnMateConversationId) {
+    return learnMateConversationId;
+  }
+
+  // Try to load the user's latest conversation.
+  const { data: existing, error: existingError } =
+    await learnmateSupabase
+      .from("conversations")
+      .select("id")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+  if (existingError) {
+    console.error("Conversation lookup error:", existingError);
+  }
+
+  if (existing?.id) {
+    learnMateConversationId = existing.id;
+    return existing.id;
+  }
+
+  // No conversation exists — create one.
+  const { data, error } =
+    await learnmateSupabase
+      .from("conversations")
+      .insert({
+        user_id: session.user.id,
+        title: "My LearnMate conversation"
+      })
+      .select("id")
+      .single();
+
+  if (error) {
+    console.error("Conversation creation error:", error);
+    return null;
+  }
+
+  learnMateConversationId = data.id;
+
+  return data.id;
+}
+
+
+// ---------------------------------------------------------
+// SAVE ONE MESSAGE
+// ---------------------------------------------------------
+
+async function saveLearnMateMessage(role, content) {
+
+  const {
+    data: { session }
+  } = await learnmateSupabase.auth.getSession();
+
+  if (!session?.user) {
+    return;
+  }
+
+  const conversationId =
+    await getLearnMateConversation();
+
+  if (!conversationId) {
+    return;
+  }
+
+  const { error } =
+    await learnmateSupabase
+      .from("messages")
+      .insert({
+        user_id: session.user.id,
+        conversation_id: conversationId,
+        role: role,
+        content: content
+      });
+
+  if (error) {
+    console.error("Message save error:", error);
+  }
+}
+
+
+// ---------------------------------------------------------
+// LOAD LATEST CONVERSATION
+// ---------------------------------------------------------
+
+async function loadLearnMateConversation() {
+
+  const {
+    data: { session }
+  } = await learnmateSupabase.auth.getSession();
+
+  if (!session?.user) {
+    return;
+  }
+
+  const { data: conversation, error: conversationError } =
+    await learnmateSupabase
+      .from("conversations")
+      .select("id")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+  if (conversationError || !conversation) {
+    return;
+  }
+
+  learnMateConversationId = conversation.id;
+
+  const { data: messages, error } =
+    await learnmateSupabase
+      .from("messages")
+      .select("role, content, created_at")
+      .eq("user_id", session.user.id)
+      .eq("conversation_id", conversation.id)
+      .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Conversation loading error:", error);
+    return;
+  }
+
+  if (!messages || messages.length === 0) {
+    return;
+  }
+
+  state.chats = messages.map(message => ({
+    who: message.role === "assistant"
+      ? "ai"
+      : message.role === "user"
+        ? "user"
+        : "ai",
+    text: message.content
+  }));
+
+  store.set("lm_chats", state.chats);
+
+  render();
+
+  setTimeout(() => {
+
+    const el =
+      document.getElementById("chatMessages");
+
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+
+  }, 50);
+}
+
+
+// ---------------------------------------------------------
+// REPLACE SEND CHAT WITH PERSISTENT VERSION
+// ---------------------------------------------------------
+
+window.sendChat = async function(e) {
+
+  e.preventDefault();
+
+  const input =
+    document.getElementById("chatInput");
+
+  if (!input) return;
+
+  const text = input.value.trim();
+
+  if (!text) return;
+
+  input.value = "";
+
+  // Show the user's message immediately.
+  state.chats.push({
+    who: "user",
+    text: text
+  });
+
+  store.set("lm_chats", state.chats);
+
+  render();
+
+  // Save user message to Supabase.
+  await saveLearnMateMessage("user", text);
+
+  // Simulated intelligent response for the current MVP.
+  let response =
+    "I can help with that. I’ll break your goal into clear next steps and a practical plan you can follow.";
+
+  if (/interview/i.test(text)) {
+
+    response =
+      "Let’s prepare strategically: identify the target role, practice technical and behavioral questions, analyze your answers, and turn weak areas into a focused preparation plan.";
+
+  } else if (/resume|cv/i.test(text)) {
+
+    response =
+      "For a strong resume, align your summary, skills and projects with the target role, strengthen your impact-focused bullets, and review the result for ATS-friendly structure.";
+
+  } else if (/plan|learn|study/i.test(text)) {
+
+    response =
+      "I recommend a goal → roadmap → daily tasks → practice → assessment loop. Tell me your deadline and available study time and I can structure the next steps.";
+
+  } else if (/project|build/i.test(text)) {
+
+    response =
+      "I can help you choose a project based on your current skills, target career, available time and difficulty. Then we can break it into architecture, development, testing and deployment.";
+
+  }
+
+  state.chats.push({
+    who: "ai",
+    text: response
+  });
+
+  store.set("lm_chats", state.chats);
+
+  render();
+
+  // Save AI response to Supabase.
+  await saveLearnMateMessage(
+    "assistant",
+    response
+  );
+
+  setTimeout(() => {
+
+    const el =
+      document.getElementById("chatMessages");
+
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+
+  }, 50);
+};
+
+
+// ---------------------------------------------------------
+// LOAD CLOUD CHAT WHEN AI ASSISTANT OPENS
+// ---------------------------------------------------------
+
+const learnMatePreviousGoForChat =
+  window.go;
+
+window.go = function(page) {
+
+  learnMatePreviousGoForChat(page);
+
+  if (page === "ai") {
+
+    setTimeout(() => {
+      loadLearnMateConversation();
+    }, 100);
+
+  }
+
+};
+
+
+// Make the loader available for testing.
+window.loadLearnMateConversation =
+  loadLearnMateConversation;
+// =========================================================
+// PROJECT GENERATOR - SUPABASE
+// =========================================================
+
+function learnMateEscapeProjectText(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+
+// ---------------------------------------------------------
+// GENERATE + SAVE PROJECT
+// ---------------------------------------------------------
+
+window.generateProject = async function () {
+
+  const input =
+    document.getElementById("projectInput");
+
+  if (!input) return;
+
+  const idea = input.value.trim();
+
+  if (!idea) {
+    toast("Tell me what you want to build first");
+    input.focus();
+    return;
+  }
+
+  const {
+    data: { session }
+  } = await learnmateSupabase.auth.getSession();
+
+  if (!session?.user) {
+    toast("Log in to save your project");
+    return;
+  }
+
+  toast("Creating your project...");
+
+  const project = {
+    user_id: session.user.id,
+    title: idea,
+    description:
+      `Build ${idea} as a portfolio-ready project with clear requirements, an AI/ML workflow, testing and deployment.`,
+    category: "AI / ML",
+    difficulty: "Intermediate",
+    status: "planned",
+    tech_stack: [
+      "Python",
+      "Machine Learning",
+      "AI",
+      "GitHub"
+    ]
+  };
+
+  const { data, error } =
+    await learnmateSupabase
+      .from("projects")
+      .insert(project)
+      .select()
+      .single();
+
+  if (error) {
+
+    console.error("Project save error:", error);
+
+    toast("Could not save project");
+
+    return;
+  }
+
+  toast("Project saved to LearnMate 🚀");
+
+  showLearnMateSavedProjects();
+
+};
+
+
+// ---------------------------------------------------------
+// SHOW SAVED PROJECTS
+// ---------------------------------------------------------
+
+async function showLearnMateSavedProjects() {
+
+  const {
+    data: { session }
+  } = await learnmateSupabase.auth.getSession();
+
+  if (!session?.user) return;
+
+  const { data, error } =
+    await learnmateSupabase
+      .from("projects")
+      .select(
+        "id, title, description, category, difficulty, status, tech_stack, created_at"
+      )
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false });
+
+  if (error) {
+
+    console.error("Project loading error:", error);
+
+    return;
+  }
+
+  const content =
+    document.querySelector(".content");
+
+  if (!content) return;
+
+  const old =
+    document.getElementById("learnmateSavedProjects");
+
+  if (old) old.remove();
+
+  if (!data || data.length === 0) return;
+
+  const section =
+    document.createElement("div");
+
+  section.id =
+    "learnmateSavedProjects";
+
+  section.innerHTML = `
+    <div class="section-head" style="margin-top:30px">
+      <h2>My projects</h2>
+      <span class="muted">
+        ${data.length} saved
+      </span>
+    </div>
+
+    <div class="grid g3">
+
+      ${data.map(project => {
+
+        const title =
+          learnMateEscapeProjectText(project.title);
+
+        const description =
+          learnMateEscapeProjectText(project.description);
+
+        const category =
+          learnMateEscapeProjectText(project.category);
+
+        const difficulty =
+          learnMateEscapeProjectText(project.difficulty);
+
+        return `
+          <div class="card feature-card">
+
+            <div>
+
+              <span class="tag">
+                ${category} · ${difficulty}
+              </span>
+
+              <h3 style="margin-top:12px">
+                ${title}
+              </h3>
+
+              <p>
+                ${description}
+              </p>
+
+            </div>
+
+            <div style="margin-top:14px">
+
+              <span class="tag">
+                ${project.status || "planned"}
+              </span>
+
+            </div>
+
+          </div>
+        `;
+
+      }).join("")}
+
+    </div>
+  `;
+
+  content.appendChild(section);
+
+}
+
+
+// ---------------------------------------------------------
+// LOAD SAVED PROJECTS WHEN PROJECT PAGE OPENS
+// ---------------------------------------------------------
+
+const learnMatePreviousGoForProjects =
+  window.go;
+
+window.go = function(page) {
+
+  learnMatePreviousGoForProjects(page);
+
+  if (page === "projects") {
+
+    setTimeout(() => {
+      showLearnMateSavedProjects();
+    }, 100);
+
+  }
+
+};
+
+window.showLearnMateSavedProjects =
+  showLearnMateSavedProjects;
+// =========================================================
+// RESUME STUDIO - SUPABASE PERSISTENCE
+// =========================================================
+
+window.saveResume = async function () {
+
+  const name =
+    document.getElementById("rname")?.value.trim() || "Learner";
+
+  const role =
+    document.getElementById("rrole")?.value.trim() || "Learner";
+
+  const summary =
+    document.getElementById("rsummary")?.value.trim() || "";
+
+  const {
+    data: { session }
+  } = await learnmateSupabase.auth.getSession();
+
+  if (!session?.user) {
+    toast("Please log in to save your resume");
+    return;
+  }
+
+  const resumeData = {
+    full_name: name,
+    target_role: role,
+    professional_summary: summary,
+    skills: [
+      "Python",
+      "Machine Learning",
+      "NLP",
+      "LLMs",
+      "RAG",
+      "SQL",
+      "Git"
+    ],
+    projects: [
+      "LearnMate AI"
+    ],
+    education:
+      "B.Tech — Computer Science & Engineering",
+    location:
+      "Hyderabad, India"
+  };
+
+  // Simple demo ATS score.
+  // Later we can replace this with a real AI ATS analyzer.
+  let atsScore = 78;
+
+  if (summary.length >= 100) {
+    atsScore += 5;
+  }
+
+  if (role.toLowerCase().includes("ai") ||
+      role.toLowerCase().includes("machine") ||
+      role.toLowerCase().includes("ml")) {
+    atsScore += 5;
+  }
+
+  atsScore = Math.min(atsScore, 95);
+
+  const { error } =
+    await learnmateSupabase
+      .from("resumes")
+      .insert({
+        user_id: session.user.id,
+        title: `${name} - ${role}`,
+        resume_data: resumeData,
+        ats_score: atsScore
+      });
+
+  if (error) {
+
+    console.error("Resume save error:", error);
+
+    toast("Could not save resume");
+
+    return;
+  }
+
+  // Update the existing preview.
+  const previewName =
+    document.getElementById("previewName");
+
+  const previewSummary =
+    document.getElementById("previewSummary");
+
+  if (previewName) {
+    previewName.textContent = name;
+  }
+
+  if (previewSummary) {
+    previewSummary.textContent = summary;
+  }
+
+  // Keep the local profile synchronized too.
+  state.user.name = name;
+  state.user.goal = role;
+
+  store.set("lm_user", state.user);
+
+  toast(`Resume saved • ATS score ${atsScore}%`);
+};
