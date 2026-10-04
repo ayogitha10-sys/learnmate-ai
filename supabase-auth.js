@@ -913,3 +913,134 @@ window.saveLearnMateTask = async function () {
   }
 
 };
+// =========================================================
+// LOAD SAVED TASKS INTO PLANNER
+// =========================================================
+
+async function loadLearnMatePlannerTasks() {
+
+  const {
+    data: { session }
+  } = await learnmateSupabase.auth.getSession();
+
+  if (!session?.user) {
+    return;
+  }
+
+  const { data, error } =
+    await learnmateSupabase
+      .from("tasks")
+      .select("id, title, description, due_date, priority, status, completed, created_at")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Planner task loading error:", error);
+    return;
+  }
+
+  const content = document.querySelector(".content");
+
+  if (!content) {
+    return;
+  }
+
+  // Remove an older saved-task section before adding the latest one.
+  const oldSection =
+    document.getElementById("learnmateSavedTasks");
+
+  if (oldSection) {
+    oldSection.remove();
+  }
+
+  if (!data || data.length === 0) {
+    return;
+  }
+
+  const section = document.createElement("div");
+
+  section.id = "learnmateSavedTasks";
+
+  section.innerHTML = `
+    <div class="section-head" style="margin-top:28px">
+      <h2>Your saved goals</h2>
+      <span class="muted">${data.length} task${data.length === 1 ? "" : "s"}</span>
+    </div>
+
+    <div class="card">
+
+      ${data.map(task => `
+        <div
+          style="
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:16px;
+            padding:16px 0;
+            border-bottom:1px solid rgba(255,255,255,.08);
+          "
+        >
+
+          <div style="display:flex;align-items:center;gap:14px">
+
+            <div
+              style="
+                width:10px;
+                height:10px;
+                border-radius:50%;
+                background:${task.completed ? "#7ee8c8" : "#66d9ef"};
+              "
+            ></div>
+
+            <div>
+              <strong>${esc(task.title)}</strong>
+
+              <div
+                class="muted"
+                style="margin-top:5px"
+              >
+                ${task.status || "pending"}
+                · ${task.priority || "medium"} priority
+              </div>
+            </div>
+
+          </div>
+
+          <span class="tag">
+            ${task.completed ? "Completed" : "Pending"}
+          </span>
+
+        </div>
+      `).join("")}
+
+    </div>
+  `;
+
+  content.appendChild(section);
+}
+
+
+// =========================================================
+// LOAD TASKS WHEN PLANNER OPENS
+// =========================================================
+
+const originalLearnMateGo = window.go;
+
+window.go = async function(page) {
+
+  originalLearnMateGo(page);
+
+  if (page === "planner") {
+
+    // Give the page a moment to render.
+    setTimeout(() => {
+      loadLearnMatePlannerTasks();
+    }, 50);
+
+  }
+
+};
+
+
+// Make task loader available if needed later.
+window.loadLearnMatePlannerTasks = loadLearnMatePlannerTasks;
