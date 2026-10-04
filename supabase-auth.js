@@ -1044,3 +1044,148 @@ window.go = async function(page) {
 
 // Make task loader available if needed later.
 window.loadLearnMatePlannerTasks = loadLearnMatePlannerTasks;
+// =========================================================
+// COMPLETE / UNCOMPLETE PLANNER TASKS
+// =========================================================
+
+window.completeLearnMateTask = async function (taskId, completed) {
+
+  const {
+    data: { session }
+  } = await learnmateSupabase.auth.getSession();
+
+  if (!session?.user) {
+    toast("Log in to save task progress");
+    return;
+  }
+
+  const { error } =
+    await learnmateSupabase
+      .from("tasks")
+      .update({
+        completed: completed,
+        status: completed ? "completed" : "pending"
+      })
+      .eq("id", taskId)
+      .eq("user_id", session.user.id);
+
+  if (error) {
+    console.error("Task completion error:", error);
+    toast("Could not update task");
+    return;
+  }
+
+  toast(
+    completed
+      ? "Goal completed! 🎉"
+      : "Goal moved back to pending"
+  );
+
+  // Reload the Planner so the UI reflects the database.
+  if (state.page === "planner") {
+    setTimeout(() => {
+      loadLearnMatePlannerTasks();
+      setTimeout(() => addTaskCompletionControls(), 150);
+    }, 50);
+  }
+};
+
+
+// =========================================================
+// ADD CHECKBOXES TO SAVED GOALS
+// =========================================================
+
+async function addTaskCompletionControls() {
+
+  const section =
+    document.getElementById("learnmateSavedTasks");
+
+  if (!section) return;
+
+  const {
+    data: { session }
+  } = await learnmateSupabase.auth.getSession();
+
+  if (!session?.user) return;
+
+  const { data, error } =
+    await learnmateSupabase
+      .from("tasks")
+      .select("id, completed")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false });
+
+  if (error || !data) return;
+
+  const rows =
+    section.querySelectorAll(".card > div");
+
+  data.forEach((task, index) => {
+
+    const row = rows[index];
+
+    if (!row) return;
+
+    // Don't add the control twice.
+    if (row.querySelector(".lm-task-check")) return;
+
+    const button = document.createElement("button");
+
+    button.className = "lm-task-check";
+
+    button.type = "button";
+
+    button.textContent =
+      task.completed ? "✓ Done" : "Mark done";
+
+    button.style.cssText = `
+      border:0;
+      border-radius:10px;
+      padding:9px 12px;
+      cursor:pointer;
+      font-size:12px;
+      font-weight:700;
+      background:${task.completed ? "#dff8ef" : "#083335"};
+      color:${task.completed ? "#17664f" : "#ffffff"};
+      white-space:nowrap;
+    `;
+
+    button.onclick = () => {
+
+      button.disabled = true;
+
+      completeLearnMateTask(
+        task.id,
+        !task.completed
+      );
+
+    };
+
+    row.appendChild(button);
+
+  });
+}
+
+
+// =========================================================
+// LOAD COMPLETION CONTROLS WHEN PLANNER OPENS
+// =========================================================
+
+const learnMateOriginalGoForCompletion =
+  window.go;
+
+window.go = function(page) {
+
+  learnMateOriginalGoForCompletion(page);
+
+  if (page === "planner") {
+
+    setTimeout(() => {
+
+      addTaskCompletionControls();
+
+    }, 250);
+
+  }
+
+};
