@@ -5,6 +5,63 @@ function sendJson(res, status, body) {
   return res.status(status).json(body);
 }
 
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function callGemini(payload) {
+  const maxAttempts = 3;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const response = await fetch(GEMINI_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": process.env.GEMINI_API_KEY
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    // Success
+    if (response.ok) {
+      return {
+        success: true,
+        data
+      };
+    }
+
+    // Temporary Google service problem.
+    // Retry with increasing delays: 1s → 2s → 4s.
+    if (response.status >= 500 && attempt < maxAttempts) {
+      console.log(
+        `Gemini temporary error ${response.status}. Retry ${attempt + 1}/${maxAttempts}`
+      );
+
+      await wait(1000 * Math.pow(2, attempt - 1));
+      continue;
+    }
+
+    // Non-retryable error or final failed attempt.
+    return {
+      success: false,
+      status: response.status,
+      data
+    };
+  }
+
+  return {
+    success: false,
+    status: 503,
+    data: {
+      error: {
+        message: "Gemini service is temporarily unavailable."
+      }
+    }
+  };
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return sendJson(res, 405, {
@@ -99,41 +156,36 @@ ${message.trim().slice(0, 8000)}
 Respond directly to the learner.
 `;
 
-    const geminiResponse = await fetch(GEMINI_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": process.env.GEMINI_API_KEY
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: prompt
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1200
+    const result = await callGemini({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: prompt
+            }
+          ]
         }
-      })
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 1200
+      }
     });
 
-    const data = await geminiResponse.json().catch(() => ({}));
+    if (!result.success) {
+      console.error("Gemini API error:", result.data);
 
-    if (!geminiResponse.ok) {
-      console.error("Gemini API error:", data);
+      const googleMessage =
+        result.data?.error?.message ||
+        "The Gemini AI service is temporarily unavailable.";
 
       return sendJson(res, 502, {
-        error:
-          data?.error?.message ||
-          "The Gemini AI service returned an error."
+        error: googleMessage
       });
     }
+
+    const data = result.data;
 
     const output =
       data?.candidates?.[0]?.content?.parts
