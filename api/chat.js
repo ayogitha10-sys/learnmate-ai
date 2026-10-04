@@ -1,5 +1,5 @@
-const OPENAI_API_URL = "https://api.openai.com/v1/responses";
-const MODEL = process.env.OPENAI_MODEL || "gpt-6-luna";
+const GEMINI_API_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
 function sendJson(res, status, body) {
   return res.status(status).json(body);
@@ -7,12 +7,14 @@ function sendJson(res, status, body) {
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
-    return sendJson(res, 405, { error: "Method not allowed." });
+    return sendJson(res, 405, {
+      error: "Method not allowed."
+    });
   }
 
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.GEMINI_API_KEY) {
     return sendJson(res, 500, {
-      error: "OPENAI_API_KEY is not configured on the server."
+      error: "GEMINI_API_KEY is not configured on the server."
     });
   }
 
@@ -50,15 +52,16 @@ module.exports = async function handler(req, res) {
         ? profile.career_goal.slice(0, 200)
         : "Not specified";
 
-    const instructions = `
+    const systemInstruction = `
 You are LearnMate AI, an intelligent learning and career companion.
 
 Learner name: ${learnerName}
 Current career goal: ${careerGoal}
 
-Your job is to help the learner understand what they want to achieve and guide them toward it.
+Your job is to understand what the learner wants to accomplish and guide them toward it.
 
 Behavior rules:
+
 1. Understand what the learner is actually trying to accomplish.
 2. Personalize the response using the learner information provided.
 3. Ask only useful missing questions instead of inventing information.
@@ -77,65 +80,79 @@ Behavior rules:
 The learner wants a useful answer, not a generic chatbot response.
 `;
 
-    const input = [
-      ...safeHistory,
-      {
-        role: "user",
-        content: message.trim().slice(0, 8000)
-      }
-    ];
+    const conversationText = safeHistory
+      .map((item) => {
+        const speaker = item.role === "assistant" ? "LearnMate" : "Learner";
+        return `${speaker}: ${item.content}`;
+      })
+      .join("\n\n");
 
-    const openaiResponse = await fetch(OPENAI_API_URL, {
+    const prompt = `
+${systemInstruction}
+
+Previous conversation:
+${conversationText || "No previous conversation."}
+
+Learner's latest message:
+${message.trim().slice(0, 8000)}
+
+Respond directly to the learner.
+`;
+
+    const geminiResponse = await fetch(GEMINI_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+        "x-goog-api-key": process.env.GEMINI_API_KEY
       },
       body: JSON.stringify({
-        model: MODEL,
-        instructions,
-        input,
-        max_output_tokens: 1200
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: prompt
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1200
+        }
       })
     });
 
-    const data = await openaiResponse.json().catch(() => ({}));
+    const data = await geminiResponse.json().catch(() => ({}));
 
-    if (!openaiResponse.ok) {
-      console.error("OpenAI API error:", data);
+    if (!geminiResponse.ok) {
+      console.error("Gemini API error:", data);
 
       return sendJson(res, 502, {
         error:
           data?.error?.message ||
-          "The AI service returned an error. Please try again."
+          "The Gemini AI service returned an error."
       });
     }
 
-    let output = "";
-
-    if (typeof data.output_text === "string") {
-      output = data.output_text;
-    } else if (Array.isArray(data.output)) {
-      output = data.output
-        .flatMap((item) =>
-          Array.isArray(item.content) ? item.content : []
-        )
-        .map((part) => part.text || "")
+    const output =
+      data?.candidates?.[0]?.content?.parts
+        ?.map((part) => part.text || "")
         .filter(Boolean)
-        .join("\n");
-    }
+        .join("\n")
+        .trim() || "";
 
-    if (!output.trim()) {
+    if (!output) {
       return sendJson(res, 502, {
-        error: "The AI service returned an empty response."
+        error: "Gemini returned an empty response."
       });
     }
 
     return sendJson(res, 200, {
-      output: output.trim()
+      output
     });
   } catch (error) {
-    console.error("LearnMate /api/chat error:", error);
+    console.error("LearnMate Gemini error:", error);
 
     return sendJson(res, 500, {
       error: "LearnMate could not reach the AI service right now."
