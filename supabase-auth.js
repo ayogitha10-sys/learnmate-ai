@@ -581,3 +581,60 @@ window.showSignupMode = showSignupMode;
 window.handleLearnMateAuth = handleLearnMateAuth;
 window.continueAsGuest = continueAsGuest;
 window.closeLearnMateAuth = closeLearnMateAuth;
+// =========================================================
+// SAVE PROFILE TO SUPABASE
+// =========================================================
+
+window.saveSettings = async function () {
+
+  const name =
+    document.getElementById("sname").value.trim() || "Learner";
+
+  const goal =
+    document.getElementById("sgoal").value.trim() || "Learner";
+
+  const {
+    data: { session }
+  } = await learnmateSupabase.auth.getSession();
+
+  // Guest users don't have a cloud profile.
+  if (!session?.user) {
+    state.user.name = name;
+    state.user.goal = goal;
+
+    store.set("lm_user", state.user);
+
+    toast("Profile updated locally");
+    render();
+
+    return;
+  }
+
+  const { error } =
+    await learnmateSupabase
+      .from("profiles")
+      .update({
+        full_name: name,
+        career_goal: goal
+      })
+      .eq("user_id", session.user.id);
+
+  if (error) {
+
+    console.error("Profile update error:", error);
+
+    toast("Could not save profile");
+
+    return;
+  }
+
+  // Keep the UI state synchronized with the database.
+  state.user.name = name;
+  state.user.goal = goal;
+
+  store.set("lm_user", state.user);
+
+  toast("Profile saved to LearnMate");
+
+  render();
+};
