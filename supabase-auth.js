@@ -725,7 +725,35 @@ learnmateSupabase.auth.onAuthStateChange(async (event, session) => {
 
 
 
+async function learnMateLogout() {
+  const { error } = await learnmateSupabase.auth.signOut();
 
+  if (error) {
+    console.error("LearnMate logout error:", error);
+    if (typeof toast === "function") {
+      toast("Could not log out. Please try again.");
+    }
+    return;
+  }
+
+  state.user = {
+    name: "Learner",
+    goal: "Learner",
+    education: "",
+    level: "Beginner",
+    dailyHours: 1,
+    learningStyle: "Step-by-step",
+    deadline: "",
+    interests: ""
+  };
+
+  store.set("lm_user", state.user);
+  store.set("lm_onboarding", {});
+  state.page = "landing";
+
+  render();
+  showLearnMateAuth();
+}
 
 // Make useful functions available to the existing HTML.
 
@@ -740,6 +768,8 @@ window.handleLearnMateAuth = handleLearnMateAuth;
 window.continueAsGuest = continueAsGuest;
 
 window.closeLearnMateAuth = closeLearnMateAuth;
+
+window.learnMateLogout = learnMateLogout;
 
 // =========================================================
 
