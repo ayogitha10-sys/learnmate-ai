@@ -1099,6 +1099,386 @@ function interview(){return shell(`<div class="content"><div class="page-title">
 
 function startInterview(type){toast(`${type} interview session started`);setTimeout(()=>go('ai'),500)}
 
+function docs(){
+  return shell(`
+    <div class="content">
+      <div class="page-title">Learn from your documents.</div>
+      <p class="sub">Upload your study material and let LearnMate turn it into explanations, summaries and practice.</p>
+
+      <div class="card" style="margin-bottom:18px">
+        <div class="eyebrow">Document Learning</div>
+        <h3>Upload a document</h3>
+        <p class="muted">Start with a PDF or TXT file.</p>
+
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <input
+            id="learnMateDocumentInput"
+            type="file"
+            accept=".pdf,.txt,application/pdf,text/plain"
+            class="input"
+            style="padding:10px"
+            onchange="learnMateLoadDocument(this)"
+          >
+          <button class="ghost-btn" type="button" onclick="learnMateClearDocument()">Clear</button>
+        </div>
+
+        <div id="learnMateDocumentStatus" style="margin-top:14px">
+          <div class="muted">No document selected yet.</div>
+        </div>
+      </div>
+
+      <div id="learnMateDocumentWorkspace"></div>
+    </div>
+  `,'Documents');
+}
+
+let learnMateCurrentDocument = {
+  name:'',
+  type:'',
+  text:''
+};
+
+async function learnMateLoadDocument(input){
+  const file=input?.files?.[0];
+  const status=document.getElementById('learnMateDocumentStatus');
+  const workspace=document.getElementById('learnMateDocumentWorkspace');
+
+  if(!file){
+    if(status) status.innerHTML='<div class="muted">No document selected yet.</div>';
+    if(workspace) workspace.innerHTML='';
+    return;
+  }
+
+  if(status){
+    status.innerHTML='<div class="card" style="padding:14px"><b>Reading document...</b><p class="muted" style="margin-top:6px">LearnMate is preparing your file.</p></div>';
+  }
+
+  try{
+    const name=file.name||'Document';
+    const type=file.type||'';
+
+    if(type==='text/plain' || /\.txt$/i.test(name)){
+      const text=await file.text();
+
+      learnMateCurrentDocument={
+        name,
+        type:'text',
+        text:text.trim()
+      };
+
+      if(!learnMateCurrentDocument.text){
+        throw new Error('The selected text file is empty.');
+      }
+
+      learnMateRenderDocumentWorkspace();
+      return;
+    }
+
+    if(type==='application/pdf' || /\.pdf$/i.test(name)){
+      learnMateCurrentDocument={
+        name,
+        type:'pdf',
+        text:''
+      };
+
+      if(status){
+        status.innerHTML=`
+          <div class="card" style="padding:14px">
+            <b>PDF selected: ${esc(name)}</b>
+            <p class="muted" style="margin-top:6px">
+              The PDF is ready. PDF text extraction will be connected to the AI document workflow next.
+            </p>
+          </div>
+        `;
+      }
+
+      learnMateRenderDocumentWorkspace();
+      return;
+    }
+
+    throw new Error('Please select a PDF or TXT file.');
+
+  }catch(error){
+    console.error('LearnMate document error:',error);
+
+    if(status){
+      status.innerHTML=`
+        <div class="card" style="padding:14px">
+          <b>Could not read this document.</b>
+          <p class="muted" style="margin-top:6px">${esc(error.message)}</p>
+        </div>
+      `;
+    }
+  }
+}
+
+function learnMateRenderDocumentWorkspace(){
+  const status=document.getElementById('learnMateDocumentStatus');
+  const workspace=document.getElementById('learnMateDocumentWorkspace');
+
+  if(!workspace) return;
+
+  const doc=learnMateCurrentDocument;
+
+  if(status){
+    status.innerHTML=`
+      <div class="card" style="padding:14px">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+          <div>
+            <b>${esc(doc.name)}</b>
+            <div class="muted" style="margin-top:4px">
+              ${doc.type==='text' ? 'Text document loaded' : 'PDF selected'}
+            </div>
+          </div>
+          <span class="tag">${doc.type.toUpperCase()}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  if(doc.type==='text'){
+    workspace.innerHTML=`
+      <div class="card" style="margin-bottom:18px">
+        <div class="eyebrow">Document Preview</div>
+        <h3>${esc(doc.name)}</h3>
+        <div style="margin-top:14px;max-height:360px;overflow:auto;white-space:pre-wrap;line-height:1.7;padding:14px;border-radius:12px;background:var(--surface-2,#f7f7f7)">
+          ${esc(doc.text)}
+        </div>
+      </div>
+
+      <div class="grid g2">
+        <div class="card">
+          <div class="eyebrow">AI Learning</div>
+          <h3>Understand this document</h3>
+          <p class="muted">Turn the document into a simple explanation.</p>
+          <button class="primary" type="button" onclick="learnMateDocumentExplain()">Explain simply →</button>
+        </div>
+
+        <div class="card">
+          <div class="eyebrow">Summary</div>
+          <h3>Get the key points</h3>
+          <p class="muted">Create a concise study summary.</p>
+          <button class="primary" type="button" onclick="learnMateDocumentSummary()">Summarize →</button>
+        </div>
+
+        <div class="card">
+          <div class="eyebrow">Practice</div>
+          <h3>Test yourself</h3>
+          <p class="muted">Generate questions from your document.</p>
+          <button class="primary" type="button" onclick="learnMateDocumentQuiz()">Generate quiz →</button>
+        </div>
+
+        <div class="card">
+          <div class="eyebrow">Ask</div>
+          <h3>Ask about this document</h3>
+          <input id="learnMateDocumentQuestion" class="input" placeholder="e.g. What are the main concepts?">
+          <button class="primary" style="margin-top:10px" type="button" onclick="learnMateDocumentAsk()">Ask LearnMate →</button>
+        </div>
+      </div>
+
+      <div id="learnMateDocumentResult" style="margin-top:18px"></div>
+    `;
+  }else{
+    workspace.innerHTML=`
+      <div class="card">
+        <div class="eyebrow">PDF Learning</div>
+        <h3>${esc(doc.name)}</h3>
+        <p class="muted">
+          Your PDF is selected successfully. The document-learning interface is ready.
+        </p>
+        <div style="margin-top:14px;padding:14px;border-radius:12px;background:var(--surface-2,#f7f7f7)">
+          <b>Next:</b> PDF text extraction will be connected so LearnMate can read and analyze the PDF.
+        </div>
+      </div>
+    `;
+  }
+}
+
+function learnMateDocumentSetResult(title,text){
+  const result=document.getElementById('learnMateDocumentResult');
+  if(!result) return;
+
+  result.innerHTML=`
+    <div class="card">
+      <div class="eyebrow">${esc(title)}</div>
+      <div style="margin-top:12px;white-space:pre-wrap;line-height:1.7">
+        ${esc(text)}
+      </div>
+    </div>
+  `;
+
+  result.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function learnMateDocumentAI(prompt){
+  try{
+    const response=await fetch('/api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        message:prompt,
+        history:[],
+        profile:getLearnMatePersonalContext()
+      })
+    });
+
+    const data=await response.json().catch(()=>({}));
+
+    if(!response.ok){
+      throw new Error(data.error||'LearnMate AI could not respond.');
+    }
+
+    if(!data.output){
+      throw new Error('LearnMate returned an empty response.');
+    }
+
+    return data.output;
+
+  }catch(error){
+    console.error('Document AI error:',error);
+    throw error;
+  }
+}
+
+async function learnMateDocumentExplain(){
+  const doc=learnMateCurrentDocument;
+
+  if(!doc.text){
+    toast('PDF text extraction is not connected yet.');
+    return;
+  }
+
+  learnMateDocumentSetResult('Preparing explanation...','LearnMate is reading your document.');
+
+  try{
+    const output=await learnMateDocumentAI(
+      `Explain the following study document in very simple language for a beginner. 
+Preserve the important concepts and terminology. Give a structured explanation with examples where useful.
+
+DOCUMENT:
+${doc.text.slice(0,30000)}`
+    );
+
+    learnMateDocumentSetResult('Simple explanation',output);
+
+  }catch(error){
+    learnMateDocumentSetResult('Explanation unavailable',error.message);
+  }
+}
+
+async function learnMateDocumentSummary(){
+  const doc=learnMateCurrentDocument;
+
+  if(!doc.text){
+    toast('PDF text extraction is not connected yet.');
+    return;
+  }
+
+  learnMateDocumentSetResult('Creating summary...','LearnMate is analyzing the document.');
+
+  try{
+    const output=await learnMateDocumentAI(
+      `Summarize the following study document for a learner. 
+Give the most important concepts, definitions, key points and exam-relevant ideas in a clear structured format.
+
+DOCUMENT:
+${doc.text.slice(0,30000)}`
+    );
+
+    learnMateDocumentSetResult('Document summary',output);
+
+  }catch(error){
+    learnMateDocumentSetResult('Summary unavailable',error.message);
+  }
+}
+
+async function learnMateDocumentQuiz(){
+  const doc=learnMateCurrentDocument;
+
+  if(!doc.text){
+    toast('PDF text extraction is not connected yet.');
+    return;
+  }
+
+  learnMateDocumentSetResult('Generating quiz...','LearnMate is creating questions from your document.');
+
+  try{
+    const output=await learnMateDocumentAI(
+      `Create a 5-question quiz from the following study document.
+Use four options (A-D) for each question.
+Clearly show the correct answer and give a short explanation.
+Only ask questions supported by the document.
+
+DOCUMENT:
+${doc.text.slice(0,30000)}`
+    );
+
+    learnMateDocumentSetResult('Document quiz',output);
+
+  }catch(error){
+    learnMateDocumentSetResult('Quiz unavailable',error.message);
+  }
+}
+
+async function learnMateDocumentAsk(){
+  const doc=learnMateCurrentDocument;
+  const question=document.getElementById('learnMateDocumentQuestion')?.value.trim();
+
+  if(!doc.text){
+    toast('PDF text extraction is not connected yet.');
+    return;
+  }
+
+  if(!question){
+    toast('Type a question first.');
+    document.getElementById('learnMateDocumentQuestion')?.focus();
+    return;
+  }
+
+  learnMateDocumentSetResult('Thinking...','LearnMate is answering from your document.');
+
+  try{
+    const output=await learnMateDocumentAI(
+      `Answer the learner's question using only the following document.
+If the answer is not supported by the document, clearly say that the document does not provide enough information.
+
+QUESTION:
+${question}
+
+DOCUMENT:
+${doc.text.slice(0,30000)}`
+    );
+
+    learnMateDocumentSetResult('Answer',output);
+
+  }catch(error){
+    learnMateDocumentSetResult('Answer unavailable',error.message);
+  }
+}
+
+function learnMateClearDocument(){
+  learnMateCurrentDocument={
+    name:'',
+    type:'',
+    text:''
+  };
+
+  const input=document.getElementById('learnMateDocumentInput');
+  const status=document.getElementById('learnMateDocumentStatus');
+  const workspace=document.getElementById('learnMateDocumentWorkspace');
+
+  if(input) input.value='';
+
+  if(status){
+    status.innerHTML='<div class="muted">No document selected yet.</div>';
+  }
+
+  if(workspace){
+    workspace.innerHTML='';
+  }
+
+  toast('Document cleared');
+}
 
 
 function planner(){return shell(`<div class="content"><div class="page-title">Your AI planner.</div><p class="sub">Turn goals, deadlines and available time into a plan you can actually follow.</p><div class="grid g3"><div class="card"><div class="eyebrow">This week</div><h3>18h 30m planned</h3><p class="muted">Across learning, projects and interview prep.</p><button class="primary" onclick="createTask()">＋ Add goal</button></div><div class="card"><div class="eyebrow">Completion</div><h3>76%</h3><div class="progress"><i style="width:76%"></i></div><p class="muted">You're ahead of your weekly target.</p></div><div class="card"><div class="eyebrow">AI adjustment</div><h3>2 tasks moved</h3><p class="muted">Your plan adapts when you miss or reschedule a task.</p></div></div><div class="section-head"><h2>Today's schedule</h2><button class="link" onclick="toast('Plan optimized for your current goals')">✦ Optimize with AI</button></div><div class="card"><div class="timeline"><div class="timeline-item"><span class="time">6:00 PM</span><i class="dot"></i><div><b>Deep Learning</b><div class="muted">Learn neural network fundamentals · 45 min</div></div></div><div class="timeline-item"><span class="time">7:00 PM</span><i class="dot"></i><div><b>Technical Interview</b><div class="muted">5 questions · 20 min</div></div></div><div class="timeline-item"><span class="time">7:30 PM</span><i class="dot"></i><div><b>Project sprint</b><div class="muted">Implement document upload · 60 min</div></div></div></div></div><div class="section-head"><h2>Weekly view</h2></div><div class="card"><div class="calendar">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i)=>`<div class="day"><b>${d}</b><span>${i<5?'2 tasks':'1 task'}</span></div>`).join('')}</div></div></div>`,'Planner')}
@@ -1150,3 +1530,611 @@ window.go=go;window.render=render;window.enterApp=enterApp;window.state=state;wi
 
 
 render();
+/* =========================================================
+   LEARNMATE DOCUMENT AI — PDF + TXT UPGRADE
+   ========================================================= */
+
+let learnMatePdfLibraryPromise = null;
+
+function learnMateLoadPdfLibrary(){
+  if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+
+  if(learnMatePdfLibraryPromise) return learnMatePdfLibraryPromise;
+
+  learnMatePdfLibraryPromise = new Promise((resolve,reject)=>{
+    const existing=document.getElementById('learnMatePdfJs');
+
+    if(existing){
+      existing.addEventListener('load',()=>resolve(window.pdfjsLib));
+      existing.addEventListener('error',()=>reject(new Error('Could not load PDF reader.')));
+      return;
+    }
+
+    const script=document.createElement('script');
+    script.id='learnMatePdfJs';
+    script.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+
+    script.onload=()=>{
+      try{
+        if(window.pdfjsLib){
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc=
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+          resolve(window.pdfjsLib);
+        }else{
+          reject(new Error('PDF reader loaded but is unavailable.'));
+        }
+      }catch(error){
+        reject(error);
+      }
+    };
+
+    script.onerror=()=>{
+      reject(new Error('Could not load the PDF reader. Check your internet connection.'));
+    };
+
+    document.head.appendChild(script);
+  });
+
+  return learnMatePdfLibraryPromise;
+}
+
+async function learnMateExtractPdfText(file){
+  const pdfjsLib=await learnMateLoadPdfLibrary();
+
+  const buffer=await file.arrayBuffer();
+
+  const pdf=await pdfjsLib.getDocument({
+    data:new Uint8Array(buffer)
+  }).promise;
+
+  let fullText='';
+
+  for(let pageNumber=1;pageNumber<=pdf.numPages;pageNumber++){
+    const page=await pdf.getPage(pageNumber);
+    const content=await page.getTextContent();
+
+    const pageText=content.items
+      .map(item=>item.str||'')
+      .join(' ')
+      .replace(/\s+/g,' ')
+      .trim();
+
+    if(pageText){
+      fullText+=`\n\n--- Page ${pageNumber} ---\n${pageText}`;
+    }
+  }
+
+  return fullText.trim();
+}
+
+async function learnMateLoadDocumentV2(input){
+  const file=input?.files?.[0];
+  const status=document.getElementById('learnMateDocumentStatus');
+  const workspace=document.getElementById('learnMateDocumentWorkspace');
+
+  if(!file){
+    learnMateClearDocument();
+    return;
+  }
+
+  if(status){
+    status.innerHTML=`
+      <div class="card" style="padding:14px">
+        <b>Reading ${esc(file.name)}...</b>
+        <p class="muted" style="margin-top:6px">
+          LearnMate is extracting the document text.
+        </p>
+      </div>
+    `;
+  }
+
+  try{
+    let text='';
+    let type='';
+
+    if(file.type==='text/plain' || /\.txt$/i.test(file.name)){
+      type='text';
+      text=await file.text();
+    }
+
+    else if(
+      file.type==='application/pdf' ||
+      /\.pdf$/i.test(file.name)
+    ){
+      type='pdf';
+      text=await learnMateExtractPdfText(file);
+    }
+
+    else{
+      throw new Error('Please upload a PDF or TXT file.');
+    }
+
+    text=text.trim();
+
+    if(!text){
+      throw new Error(
+        'No readable text was found. This may be a scanned/image-only PDF.'
+      );
+    }
+
+    learnMateCurrentDocument={
+      name:file.name,
+      type,
+      text
+    };
+
+    learnMateRenderDocumentWorkspaceV2();
+
+  }catch(error){
+    console.error('LearnMate document loading error:',error);
+
+    if(status){
+      status.innerHTML=`
+        <div class="card" style="padding:14px">
+          <b>Could not read this document.</b>
+          <p class="muted" style="margin-top:6px">
+            ${esc(error.message)}
+          </p>
+        </div>
+      `;
+    }
+
+    if(workspace){
+      workspace.innerHTML='';
+    }
+
+    toast('Document could not be read');
+  }
+}
+
+function learnMateRenderDocumentWorkspaceV2(){
+  const status=document.getElementById('learnMateDocumentStatus');
+  const workspace=document.getElementById('learnMateDocumentWorkspace');
+
+  if(!workspace) return;
+
+  const doc=learnMateCurrentDocument;
+
+  if(status){
+    status.innerHTML=`
+      <div class="card" style="padding:14px">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+          <div>
+            <b>${esc(doc.name)}</b>
+            <div class="muted" style="margin-top:4px">
+              ${doc.type==='pdf'?'PDF text extracted successfully':'TXT document loaded successfully'}
+              · ${doc.text.length.toLocaleString()} characters
+            </div>
+          </div>
+          <span class="tag">${doc.type.toUpperCase()}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  workspace.innerHTML=`
+    <div class="card" style="margin-bottom:18px">
+      <div class="eyebrow">Document Preview</div>
+      <h3>${esc(doc.name)}</h3>
+
+      <div style="
+        margin-top:14px;
+        max-height:360px;
+        overflow:auto;
+        white-space:pre-wrap;
+        line-height:1.7;
+        padding:14px;
+        border-radius:12px;
+        background:var(--surface-2,#f7f7f7)
+      ">${esc(doc.text)}</div>
+    </div>
+
+    <div class="grid g2">
+
+      <div class="card">
+        <div class="eyebrow">AI Learning</div>
+        <h3>Understand this document</h3>
+        <p class="muted">
+          Get a beginner-friendly explanation of the material.
+        </p>
+        <button
+          class="primary"
+          type="button"
+          onclick="learnMateDocumentExplainV2()"
+        >
+          Explain simply →
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="eyebrow">Summary</div>
+        <h3>Get the key points</h3>
+        <p class="muted">
+          Extract the important concepts and exam-relevant points.
+        </p>
+        <button
+          class="primary"
+          type="button"
+          onclick="learnMateDocumentSummaryV2()"
+        >
+          Summarize →
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="eyebrow">Practice</div>
+        <h3>Test yourself</h3>
+        <p class="muted">
+          Generate questions directly from your document.
+        </p>
+        <button
+          class="primary"
+          type="button"
+          onclick="learnMateDocumentQuizV2()"
+        >
+          Generate quiz →
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="eyebrow">Ask</div>
+        <h3>Ask about this document</h3>
+
+        <input
+          id="learnMateDocumentQuestion"
+          class="input"
+          placeholder="e.g. What are the main concepts?"
+        >
+
+        <button
+          class="primary"
+          style="margin-top:10px"
+          type="button"
+          onclick="learnMateDocumentAskV2()"
+        >
+          Ask LearnMate →
+        </button>
+      </div>
+
+    </div>
+
+    <div id="learnMateDocumentResult" style="margin-top:18px"></div>
+  `;
+}
+
+function learnMateDocumentShowResultV2(title,text){
+  const result=document.getElementById('learnMateDocumentResult');
+
+  if(!result) return;
+
+  result.innerHTML=`
+    <div class="card">
+      <div class="eyebrow">${esc(title)}</div>
+
+      <div style="
+        margin-top:12px;
+        white-space:pre-wrap;
+        line-height:1.7
+      ">
+        ${esc(text)}
+      </div>
+    </div>
+  `;
+
+  result.scrollIntoView({
+    behavior:'smooth',
+    block:'start'
+  });
+}
+
+async function learnMateDocumentAIV2(prompt){
+  const response=await fetch('/api/chat',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify({
+      message:prompt,
+      history:[],
+      profile:getLearnMatePersonalContext()
+    })
+  });
+
+  const data=await response.json().catch(()=>({}));
+
+  if(!response.ok){
+    throw new Error(
+      data.error ||
+      'LearnMate AI could not respond right now.'
+    );
+  }
+
+  if(!data.output){
+    throw new Error(
+      'LearnMate returned an empty response.'
+    );
+  }
+
+  return data.output;
+}
+
+function learnMateDocumentContent(){
+  return learnMateCurrentDocument?.text?.trim() || '';
+}
+
+async function learnMateDocumentExplainV2(){
+  const text=learnMateDocumentContent();
+
+  if(!text){
+    toast('Upload a document first.');
+    return;
+  }
+
+  learnMateDocumentShowResultV2(
+    'Preparing explanation...',
+    'LearnMate is reading your document.'
+  );
+
+  try{
+    const output=await learnMateDocumentAIV2(`
+You are LearnMate, an AI learning assistant.
+
+Explain the following uploaded study document to the learner in very simple language.
+
+Requirements:
+1. Start with a short overview.
+2. Explain the important concepts one by one.
+3. Give simple examples where useful.
+4. Explain difficult terminology.
+5. Mention important exam or interview points.
+6. End with 3 things the learner should remember.
+
+Use ONLY the document as the source.
+
+DOCUMENT:
+${text.slice(0,50000)}
+`);
+
+    learnMateDocumentShowResultV2(
+      'Simple explanation',
+      output
+    );
+
+  }catch(error){
+    console.error(error);
+
+    learnMateDocumentShowResultV2(
+      'Explanation unavailable',
+      error.message
+    );
+  }
+}
+
+async function learnMateDocumentSummaryV2(){
+  const text=learnMateDocumentContent();
+
+  if(!text){
+    toast('Upload a document first.');
+    return;
+  }
+
+  learnMateDocumentShowResultV2(
+    'Creating summary...',
+    'LearnMate is analyzing your document.'
+  );
+
+  try{
+    const output=await learnMateDocumentAIV2(`
+You are LearnMate, an AI learning assistant.
+
+Create a structured study summary from the following uploaded document.
+
+Include:
+1. Main topic
+2. Important concepts
+3. Definitions
+4. Key points
+5. Important formulas or processes if present
+6. Exam-relevant points
+7. Short final revision checklist
+
+Do not invent information that is not supported by the document.
+
+DOCUMENT:
+${text.slice(0,50000)}
+`);
+
+    learnMateDocumentShowResultV2(
+      'Document summary',
+      output
+    );
+
+  }catch(error){
+    console.error(error);
+
+    learnMateDocumentShowResultV2(
+      'Summary unavailable',
+      error.message
+    );
+  }
+}
+
+async function learnMateDocumentQuizV2(){
+  const text=learnMateDocumentContent();
+
+  if(!text){
+    toast('Upload a document first.');
+    return;
+  }
+
+  learnMateDocumentShowResultV2(
+    'Generating quiz...',
+    'LearnMate is creating questions from your document.'
+  );
+
+  try{
+    const output=await learnMateDocumentAIV2(`
+You are LearnMate, an AI learning assistant.
+
+Create a 5-question quiz using ONLY the uploaded document.
+
+For every question:
+- Give four options: A, B, C and D.
+- Clearly identify the correct answer.
+- Give a short explanation.
+- Mix conceptual and practical questions.
+- Increase difficulty gradually.
+
+Do not create questions about information that is not present in the document.
+
+DOCUMENT:
+${text.slice(0,50000)}
+`);
+
+    learnMateDocumentShowResultV2(
+      'Document quiz',
+      output
+    );
+
+  }catch(error){
+    console.error(error);
+
+    learnMateDocumentShowResultV2(
+      'Quiz unavailable',
+      error.message
+    );
+  }
+}
+
+async function learnMateDocumentAskV2(){
+  const text=learnMateDocumentContent();
+  const question=document
+    .getElementById('learnMateDocumentQuestion')
+    ?.value
+    .trim();
+
+  if(!text){
+    toast('Upload a document first.');
+    return;
+  }
+
+  if(!question){
+    toast('Type your question first.');
+    document
+      .getElementById('learnMateDocumentQuestion')
+      ?.focus();
+    return;
+  }
+
+  learnMateDocumentShowResultV2(
+    'Thinking...',
+    'LearnMate is finding the answer in your document.'
+  );
+
+  try{
+    const output=await learnMateDocumentAIV2(`
+You are LearnMate, an AI document-learning assistant.
+
+Answer the learner's question using ONLY the uploaded document.
+
+Question:
+${question}
+
+Rules:
+- Use information supported by the document.
+- Explain the answer clearly.
+- If the document does not contain enough information, say:
+  "The uploaded document does not provide enough information to answer this."
+- Do not invent facts.
+
+DOCUMENT:
+${text.slice(0,50000)}
+`);
+
+    learnMateDocumentShowResultV2(
+      'Answer from your document',
+      output
+    );
+
+  }catch(error){
+    console.error(error);
+
+    learnMateDocumentShowResultV2(
+      'Answer unavailable',
+      error.message
+    );
+  }
+}
+
+/* Use the upgraded document functions. */
+function docs(){
+  return shell(`
+    <div class="content">
+
+      <div class="page-title">
+        Learn from your documents.
+      </div>
+
+      <p class="sub">
+        Upload your study material and let LearnMate explain,
+        summarize and quiz you.
+      </p>
+
+      <div class="card" style="margin-bottom:18px">
+
+        <div class="eyebrow">
+          Document Learning
+        </div>
+
+        <h3>
+          Upload a PDF or TXT file
+        </h3>
+
+        <p class="muted">
+          LearnMate will extract the text and use AI to help you learn it.
+        </p>
+
+        <div style="
+          margin-top:16px;
+          display:flex;
+          gap:10px;
+          flex-wrap:wrap;
+          align-items:center
+        ">
+
+          <input
+            id="learnMateDocumentInput"
+            type="file"
+            accept=".pdf,.txt,application/pdf,text/plain"
+            class="input"
+            style="padding:10px"
+            onchange="learnMateLoadDocumentV2(this)"
+          >
+
+          <button
+            class="ghost-btn"
+            type="button"
+            onclick="learnMateClearDocument()"
+          >
+            Clear
+          </button>
+
+        </div>
+
+        <div
+          id="learnMateDocumentStatus"
+          style="margin-top:14px"
+        >
+          <div class="muted">
+            No document selected yet.
+          </div>
+        </div>
+
+      </div>
+
+      <div id="learnMateDocumentWorkspace"></div>
+
+    </div>
+  `,'Documents');
+}
