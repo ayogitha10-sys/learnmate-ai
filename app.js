@@ -46,9 +46,100 @@ function shell(body,title='LearnMate'){return `<div class="app-shell">${nav()}<m
 
 
 
-function landing(){return `<div class="landing"><header class="landing-nav"><div class="brand"><div class="logo">✦</div><div><strong>LearnMate</strong><span>AI learning companion</span></div></div><div class="actions"><button class="ghost-btn" onclick="enterApp()">Try LearnMate</button><button class="primary" onclick="enterApp()">Get started →</button></div></header><main class="landing-main"><div class="mini-orbit"><div>✦</div></div><div class="eyebrow">One intelligent companion for your next step</div><h1>Learn anything.<br><span class="gradient-text">Build everything.</span></h1><p>LearnMate brings learning, projects, interview preparation, resumes and career growth into one intelligent, personalized workspace.</p><div class="landing-cta"><button class="primary" style="font-size:15px;padding:14px 22px" onclick="enterApp()">Start learning for free →</button></div><div class="landing-grid"><div class="landing-feature"><span>01</span><b>Learn smarter</b><span>Understand concepts, study from your documents, practice and discover what to learn next.</span></div><div class="landing-feature"><span>02</span><b>Build with confidence</b><span>Turn ideas into guided projects, portfolios and career-ready work.</span></div><div class="landing-feature"><span>03</span><b>Become interview-ready</b><span>Practice, get feedback, improve your resume and follow a focused career roadmap.</span></div></div></main></div>`}
+function landing(){return `
+<div class="landing lm-home">
+<style>
+.lm-home{min-height:100vh;background:radial-gradient(circle at 72% 18%,rgba(91,239,206,.10),transparent 28%),radial-gradient(circle at 18% 40%,rgba(112,124,255,.10),transparent 25%),#071014;color:#edf8f6;overflow:hidden}
+.lm-home .landing-nav{position:relative;z-index:5;max-width:1180px;margin:0 auto;padding:22px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07)}
+.lm-home .brand{display:flex;align-items:center;gap:12px}.lm-home .brand .logo{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#7df3d2,#62d9ff);color:#071014;font-weight:900;box-shadow:0 0 30px rgba(98,217,255,.18)}
+.lm-home .brand strong{display:block;font-family:Manrope,sans-serif;font-size:18px}.lm-home .brand span{display:block;color:#86a19f;font-size:11px;margin-top:2px}
+.lm-home .actions{display:flex;gap:10px;align-items:center}.lm-home .actions .ghost-btn{color:#d9e9e7;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.03)}
+.lm-home .lm-hero{max-width:1180px;margin:0 auto;padding:78px 28px 70px;display:grid;grid-template-columns:1.03fr .97fr;gap:64px;align-items:center;position:relative}
+.lm-home .lm-glow{position:absolute;width:420px;height:420px;border-radius:50%;background:rgba(89,239,206,.08);filter:blur(70px);right:3%;top:8%;pointer-events:none}
+.lm-home .lm-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(125,243,210,.20);background:rgba(125,243,210,.06);color:#8af1d4;border-radius:999px;padding:8px 13px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.lm-home .lm-badge i{width:7px;height:7px;border-radius:50%;background:#7df3d2;box-shadow:0 0 12px #7df3d2}
+.lm-home .lm-hero h1{font-family:Manrope,sans-serif;font-size:clamp(48px,6vw,78px);line-height:.98;letter-spacing:-.055em;margin:22px 0 22px;max-width:720px}.lm-home .lm-hero h1 span{background:linear-gradient(90deg,#82f5d7,#74d9ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lm-home .lm-hero-copy{font-size:17px;line-height:1.75;color:#9ab1af;max-width:650px;margin:0}.lm-home .lm-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}.lm-home .lm-cta .primary{padding:14px 20px;font-size:14px}.lm-home .lm-cta .ghost-btn{padding:13px 18px;color:#dce9e7;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.03)}
+.lm-home .lm-trust{display:flex;gap:22px;flex-wrap:wrap;margin-top:30px;color:#78918f;font-size:12px}.lm-home .lm-trust b{color:#d6e7e5;margin-right:5px}
+.lm-home .lm-ai-window{position:relative;border:1px solid rgba(255,255,255,.10);background:linear-gradient(145deg,rgba(21,38,43,.94),rgba(8,18,22,.96));border-radius:26px;padding:18px;box-shadow:0 35px 90px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.04);transform:rotate(1deg)}
+.lm-home .lm-window-top{display:flex;justify-content:space-between;align-items:center;padding:3px 4px 15px;border-bottom:1px solid rgba(255,255,255,.07);font-size:11px;color:#77908e}.lm-home .lm-dots{display:flex;gap:5px}.lm-home .lm-dots i{width:7px;height:7px;border-radius:50%;background:#31484a}.lm-home .lm-ai-title{display:flex;gap:12px;align-items:center;padding:20px 8px 15px}.lm-home .lm-ai-orb{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#79efd1,#5fcfff);color:#071014;font-weight:900;box-shadow:0 0 25px rgba(95,207,255,.14)}.lm-home .lm-ai-title b{display:block;font-size:15px}.lm-home .lm-ai-title span{display:block;font-size:11px;color:#78918f;margin-top:3px}
+.lm-home .lm-goal{border:1px solid rgba(125,243,210,.12);background:rgba(125,243,210,.035);border-radius:18px;padding:16px}.lm-home .lm-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#72b5aa;font-weight:800}.lm-home .lm-goal h3{margin:8px 0 13px;font-size:20px}.lm-home .lm-mini-row{display:flex;justify-content:space-between;align-items:center;color:#91aaa7;font-size:11px;margin-top:9px}.lm-home .lm-mini-row b{color:#dcebe8}.lm-home .lm-progress{height:7px;border-radius:99px;background:#1b3033;overflow:hidden;margin-top:8px}.lm-home .lm-progress i{display:block;height:100%;width:72%;background:linear-gradient(90deg,#75e9cc,#69d7ff);border-radius:99px}.lm-home .lm-next{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:9px}.lm-home .lm-next div{padding:13px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)}.lm-home .lm-next small{display:block;color:#6f8987;font-size:9px;text-transform:uppercase;letter-spacing:.06em}.lm-home .lm-next b{display:block;margin-top:5px;font-size:12px}
+.lm-home .lm-section{max-width:1180px;margin:0 auto;padding:75px 28px}.lm-home .lm-section-head{text-align:center;max-width:720px;margin:0 auto 38px}.lm-home .lm-section-head .lm-kicker{color:#79e9ce;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.lm-home .lm-section-head h2{font-family:Manrope,sans-serif;font-size:36px;letter-spacing:-.035em;margin:10px 0}.lm-home .lm-section-head p{color:#829a98;line-height:1.7;margin:0}
+.lm-home .lm-cap-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.lm-home .lm-cap{min-height:205px;padding:22px;border-radius:20px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);transition:transform .2s,border-color .2s,background .2s}.lm-home .lm-cap:hover{transform:translateY(-4px);border-color:rgba(125,243,210,.20);background:rgba(125,243,210,.035)}.lm-home .lm-cap-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(125,243,210,.08);font-size:18px}.lm-home .lm-cap h3{font-size:15px;margin:17px 0 8px}.lm-home .lm-cap p{font-size:12px;line-height:1.65;color:#79918f;margin:0}
+.lm-home .lm-flow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1px solid rgba(255,255,255,.07);border-radius:22px;overflow:hidden;background:rgba(255,255,255,.018)}.lm-home .lm-step{padding:25px 20px;border-right:1px solid rgba(255,255,255,.07)}.lm-home .lm-step:last-child{border-right:0}.lm-home .lm-step-num{color:#6ee5ca;font-size:11px;font-weight:900;letter-spacing:.08em}.lm-home .lm-step h3{font-size:14px;margin:12px 0 7px}.lm-home .lm-step p{font-size:11px;line-height:1.6;color:#748d8a;margin:0}
+.lm-home .lm-career{display:grid;grid-template-columns:.9fr 1.1fr;gap:24px;align-items:stretch}.lm-home .lm-career-copy,.lm-home .lm-career-panel{border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.025);border-radius:24px;padding:30px}.lm-home .lm-career-copy h2{font-family:Manrope,sans-serif;font-size:32px;letter-spacing:-.03em;margin:10px 0 13px}.lm-home .lm-career-copy p{color:#829a98;line-height:1.7}.lm-home .lm-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}.lm-home .lm-pill{padding:7px 10px;border-radius:999px;background:#102225;border:1px solid rgba(255,255,255,.06);font-size:10px;color:#9db4b1}.lm-home .lm-career-panel{background:linear-gradient(145deg,#0e1b20,#0a1418)}.lm-home .lm-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.lm-home .lm-score{font-size:12px;color:#7df3d2;font-weight:800}.lm-home .lm-skill{margin:15px 0}.lm-home .lm-skill-top{display:flex;justify-content:space-between;font-size:11px;color:#8ea6a3}.lm-home .lm-skill-top b{color:#d8e8e5}.lm-home .lm-skill .lm-progress i{width:var(--w)}
+.lm-home .lm-footer{border-top:1px solid rgba(255,255,255,.07);background:#050c10;margin-top:25px}.lm-home .lm-footer-inner{max-width:1180px;margin:0 auto;padding:55px 28px 25px}.lm-home .lm-footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:40px}.lm-home .lm-footer-brand p{color:#6f8987;font-size:12px;line-height:1.7;max-width:310px}.lm-home .lm-footer h4{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#dceae7;margin:0 0 15px}.lm-home .lm-footer a{display:block;color:#718a88;font-size:12px;margin:10px 0;cursor:pointer}.lm-home .lm-footer a:hover{color:#8df0d4}.lm-home .lm-footer-bottom{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-top:42px;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);color:#5e7775;font-size:10px}.lm-home .lm-footer-brand strong{font-family:Manrope,sans-serif;font-size:18px}.lm-home .lm-footer-badge{display:inline-flex;margin-top:16px;padding:7px 10px;border-radius:8px;background:rgba(125,243,210,.06);border:1px solid rgba(125,243,210,.10);color:#78cbb8;font-size:10px}
+@media(max-width:900px){.lm-home .lm-hero,.lm-home .lm-career{grid-template-columns:1fr}.lm-home .lm-cap-grid{grid-template-columns:repeat(2,1fr)}.lm-home .lm-flow{grid-template-columns:1fr}.lm-home .lm-step{border-right:0;border-bottom:1px solid rgba(255,255,255,.07)}.lm-home .lm-step:last-child{border-bottom:0}.lm-home .lm-footer-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.lm-home .landing-nav{padding:17px 18px}.lm-home .actions .ghost-btn{display:none}.lm-home .lm-hero{padding:55px 18px}.lm-home .lm-hero h1{font-size:45px}.lm-home .lm-section{padding:55px 18px}.lm-home .lm-cap-grid{grid-template-columns:1fr}.lm-home .lm-footer-grid{grid-template-columns:1fr 1fr;gap:25px}.lm-home .lm-footer-bottom{align-items:flex-start;flex-direction:column}.lm-home .lm-ai-window{transform:none}}
+</style>
+<header class="landing-nav">
+  <div class="brand"><div class="logo">✦</div><div><strong>LearnMate</strong><span>AI learning & career companion</span></div></div>
+  <div class="actions"><button class="ghost-btn" onclick="go('ai')">✦ Ask LearnMate</button><button class="primary" onclick="enterApp()">Get started →</button></div>
+</header>
+<main>
+  <section class="lm-hero">
+    <div class="lm-glow"></div>
+    <div>
+      <div class="lm-badge"><i></i> Intelligent learning, built around you</div>
+      <h1>Learn smarter.<br><span>Build faster.</span><br>Grow with purpose.</h1>
+      <p class="lm-hero-copy">LearnMate is your AI-powered learning and career companion — helping you understand anything, build real projects, prepare for interviews and turn your goals into a practical next step.</p>
+      <div class="lm-cta"><button class="primary" onclick="enterApp()">Start learning for free →</button><button class="ghost-btn" onclick="go('ai')">Talk to LearnMate ✦</button></div>
+      <div class="lm-trust"><span><b>✦</b> Personalized</span><span><b>⌁</b> AI-guided</span><span><b>↗</b> Career-focused</span><span><b>∞</b> Learn anything</span></div>
+    </div>
+    <div class="lm-ai-window">
+      <div class="lm-window-top"><div class="lm-dots"><i></i><i></i><i></i></div><span>LEARNMATE / AI WORKSPACE</span><span>LIVE</span></div>
+      <div class="lm-ai-title"><div class="lm-ai-orb">✦</div><div><b>Your AI learning companion</b><span>Understanding your goal and planning the next move</span></div></div>
+      <div class="lm-goal"><div class="lm-label">Goal detected</div><h3>Become an AI Engineer</h3><div class="lm-mini-row"><span>Career readiness</span><b>72%</b></div><div class="lm-progress"><i></i></div><div class="lm-mini-row"><span>Current focus</span><b>Deep Learning</b></div></div>
+      <div class="lm-next"><div><small>Next lesson</small><b>Neural Networks</b></div><div><small>Next action</small><b>Build a mini project</b></div></div>
+    </div>
+  </section>
 
+  <section class="lm-section">
+    <div class="lm-section-head"><div class="lm-kicker">One companion. Every stage.</div><h2>Everything you need to move forward.</h2><p>LearnMate connects learning, practice, projects and career preparation into one intelligent workspace.</p></div>
+    <div class="lm-cap-grid">
+      <div class="lm-cap"><div class="lm-cap-icon">🧠</div><h3>Learn</h3><p>Understand concepts at your level with simple explanations, examples and practice.</p></div>
+      <div class="lm-cap"><div class="lm-cap-icon">📚</div><h3>Study</h3><p>Turn your notes and documents into structured learning, quizzes and revision.</p></div>
+      <div class="lm-cap"><div class="lm-cap-icon">🛠</div><h3>Build</h3><p>Go from idea to architecture, tasks and a real portfolio-ready project.</p></div>
+      <div class="lm-cap"><div class="lm-cap-icon">💼</div><h3>Career</h3><p>See your skill gaps and follow a roadmap toward your target role.</p></div>
+      <div class="lm-cap"><div class="lm-cap-icon">🎤</div><h3>Interview</h3><p>Practice technical and behavioral interviews and improve from feedback.</p></div>
+    </div>
+  </section>
 
+  <section class="lm-section">
+    <div class="lm-section-head"><div class="lm-kicker">Simple 5-step flow</div><h2>From “I want to learn” to “I can do it.”</h2><p>LearnMate turns a vague goal into a sequence of actions you can actually follow.</p></div>
+    <div class="lm-flow">
+      <div class="lm-step"><div class="lm-step-num">01</div><h3>Tell LearnMate</h3><p>Share your goal, topic, deadline or problem.</p></div>
+      <div class="lm-step"><div class="lm-step-num">02</div><h3>Understand you</h3><p>LearnMate considers your level and target.</p></div>
+      <div class="lm-step"><div class="lm-step-num">03</div><h3>Build your path</h3><p>Get a personalized roadmap and next actions.</p></div>
+      <div class="lm-step"><div class="lm-step-num">04</div><h3>Learn & build</h3><p>Study, practice, create projects and improve.</p></div>
+      <div class="lm-step"><div class="lm-step-num">05</div><h3>Grow</h3><p>Track progress and move toward your career goal.</p></div>
+    </div>
+  </section>
+
+  <section class="lm-section">
+    <div class="lm-career">
+      <div class="lm-career-copy"><div class="lm-kicker">Career intelligence</div><h2>Your goal becomes a roadmap.</h2><p>Instead of giving you random resources, LearnMate can connect the dots between what you know, what your target role needs, what you should build and what you should practice next.</p><div class="lm-pills"><span class="lm-pill">Skill gaps</span><span class="lm-pill">Projects</span><span class="lm-pill">Resume</span><span class="lm-pill">Interviews</span><span class="lm-pill">Roadmap</span></div></div>
+      <div class="lm-career-panel"><div class="lm-panel-head"><div><div class="lm-label">AI Engineer pathway</div><h3 style="margin:6px 0 0">Your skill map</h3></div><span class="lm-score">72% ready</span></div>
+        <div class="lm-skill"><div class="lm-skill-top"><span>Python</span><b>Strong · 92%</b></div><div class="lm-progress"><i style="--w:92%"></i></div></div>
+        <div class="lm-skill"><div class="lm-skill-top"><span>Machine Learning</span><b>Strong · 84%</b></div><div class="lm-progress"><i style="--w:84%"></i></div></div>
+        <div class="lm-skill"><div class="lm-skill-top"><span>Deep Learning</span><b>Developing · 64%</b></div><div class="lm-progress"><i style="--w:64%"></i></div></div>
+        <div class="lm-skill"><div class="lm-skill-top"><span>LLMs & RAG</span><b>Developing · 45%</b></div><div class="lm-progress"><i style="--w:45%"></i></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="lm-footer">
+  <div class="lm-footer-inner">
+    <div class="lm-footer-grid">
+      <div class="lm-footer-brand"><strong>LearnMate AI</strong><p>Your intelligent learning and career companion for understanding more, building better and moving closer to your goals.</p><span class="lm-footer-badge">✦ AI-powered learning workspace</span></div>
+      <div><h4>Product</h4><a onclick="go('ai')">AI Assistant</a><a onclick="go('learn')">Learn</a><a onclick="go('docs')">Documents</a><a onclick="go('projects')">Projects</a></div>
+      <div><h4>Career</h4><a onclick="go('career')">Career roadmap</a><a onclick="go('resume')">Resume</a><a onclick="go('interview')">Interview prep</a><a onclick="go('progress')">Progress</a></div>
+      <div><h4>Explore</h4><a onclick="enterApp()">Dashboard</a><a onclick="go('planner')">Planner</a><a onclick="go('settings')">Settings</a><a onclick="go('ai')">Ask LearnMate ✦</a></div>
+    </div>
+    <div class="lm-footer-bottom"><span>© 2026 LearnMate AI. Learn. Build. Grow.</span><span>Built as an intelligent learning & career platform.</span></div>
+  </div>
+</footer>
+</div>`}
 
 function enterApp(){go('dashboard')}
 
@@ -75,213 +166,109 @@ function sendChat(e){e.preventDefault();const input=document.getElementById('cha
 
 
 function learn(){return shell(`
-
-  <div class="content">
-
-    <div class="page-title">Learn anything, your way.</div>
-
-    <p class="sub">Tell LearnMate what you want to learn and it will turn the topic into a practical path with lessons, practice and revision.</p>
-
-
-
-    <div class="card" style="margin-bottom:16px">
-
-      <div class="eyebrow">AI Learning Path</div>
-
-      <h3>What do you want to learn?</h3>
-
-      <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
-
-        <input id="learnTopicInput" class="input" placeholder="e.g. Python, photography, calculus, machine learning..." onkeydown="if(event.key==='Enter'){event.preventDefault();generateLearningPath()}" />
-
-        <button class="primary" type="button" onclick="generateLearningPath()">Create path →</button>
-
-      </div>
-
-      <div class="suggestions" style="margin-top:12px">
-
-        <button class="suggestion" type="button" onclick="setLearnTopic('Python')">Python</button>
-
-        <button class="suggestion" type="button" onclick="setLearnTopic('Machine Learning')">Machine Learning</button>
-
-        <button class="suggestion" type="button" onclick="setLearnTopic('English communication')">English</button>
-
-        <button class="suggestion" type="button" onclick="setLearnTopic('Data Science')">Data Science</button>
-
-        <button class="suggestion" type="button" onclick="setLearnTopic('Digital Marketing')">Digital Marketing</button>
-
-      </div>
-
-      <div id="learnPathResult" style="margin-top:18px"></div>
-
-    </div>
-
-
-
-    <div class="section-head">
-
-      <h2>Your learning paths</h2>
-
-      <span class="muted">Personalized</span>
-
-    </div>
-
-
-
-    <div class="grid g3">
-
-      <div class="card feature-card">
-
-        <div>
-
-          <div class="feature-icon">🐍</div>
-
-          <h3>Python Foundations</h3>
-
-          <p>Syntax → functions → OOP → projects.</p>
-
-        </div>
-
-        <div>
-
-          <div class="progress"><i style="width:82%"></i></div>
-
-          <small class="muted">82% · 4h 20m left</small>
-
-        </div>
-
-      </div>
-
-      <div class="card feature-card">
-
-        <div>
-
-          <div class="feature-icon">🧠</div>
-
-          <h3>Machine Learning</h3>
-
-          <p>Models, evaluation, practical intuition and projects.</p>
-
-        </div>
-
-        <div>
-
-          <div class="progress"><i style="width:58%"></i></div>
-
-          <small class="muted">58% · 8h 10m left</small>
-
-        </div>
-
-      </div>
-
-      <div class="card feature-card">
-
-        <div>
-
-          <div class="feature-icon">🎯</div>
-
-          <h3>Interview Communication</h3>
-
-          <p>Answer structure, confidence and concise explanations.</p>
-
-        </div>
-
-        <div>
-
-          <div class="progress"><i style="width:35%"></i></div>
-
-          <small class="muted">35% · 3h 40m left</small>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-
-    <div class="section-head">
-
-      <h2>Learning toolkit</h2>
-
-      <span class="muted">Powered by LearnMate AI</span>
-
-    </div>
-
-
-
-    <div class="grid g4">
-
-      <div class="card feature-card">
-
-        <div>
-
-          <div class="feature-icon">📖</div>
-
-          <h3>Learn</h3>
-
-          <p>Get a clear explanation at your current level, with examples and practice.</p>
-
-        </div>
-
-        <button class="ghost-btn" type="button" onclick="openLearningLesson()">Open →</button>
-
-      </div>
-
-      <div class="card feature-card">
-
-        <div>
-
-          <div class="feature-icon">🧪</div>
-
-          <h3>Quiz</h3>
-
-          <p>Generate questions that check whether you actually understood the topic.</p>
-
-        </div>
-
-        <button class="ghost-btn" type="button" onclick="generateLearningQuiz()">Generate →</button>
-
-      </div>
-
-      <div class="card feature-card">
-
-        <div>
-
-          <div class="feature-icon">🗂️</div>
-
-          <h3>Flashcards</h3>
-
-          <p>Turn the important ideas into quick revision cards.</p>
-
-        </div>
-
-        <button class="ghost-btn" type="button" onclick="generateLearningFlashcards()">Create →</button>
-
-      </div>
-
-      <div class="card feature-card">
-
-        <div>
-
-          <div class="feature-icon">📊</div>
-
-          <h3>Progress</h3>
-
-          <p>See your current learning progress and decide what to work on next.</p>
-
-        </div>
-
-        <button class="ghost-btn" type="button" onclick="go('progress')">View →</button>
-
-      </div>
-
-    </div>
-
-  </div>
-
+  <div class="content">
+    <div class="page-title">Learn anything, your way.</div>
+    <p class="sub">Tell LearnMate what you want to learn and it will turn the topic into a practical path with lessons, practice and revision.</p>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="eyebrow">AI Learning Path</div>
+      <h3>What do you want to learn?</h3>
+      <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
+        <input id="learnTopicInput" class="input" placeholder="e.g. Python, photography, calculus, machine learning..." onkeydown="if(event.key==='Enter'){event.preventDefault();generateLearningPath()}" />
+        <button class="primary" type="button" onclick="generateLearningPath()">Create path →</button>
+      </div>
+      <div class="suggestions" style="margin-top:12px">
+        <button class="suggestion" type="button" onclick="setLearnTopic('Python')">Python</button>
+        <button class="suggestion" type="button" onclick="setLearnTopic('Machine Learning')">Machine Learning</button>
+        <button class="suggestion" type="button" onclick="setLearnTopic('English communication')">English</button>
+        <button class="suggestion" type="button" onclick="setLearnTopic('Data Science')">Data Science</button>
+        <button class="suggestion" type="button" onclick="setLearnTopic('Digital Marketing')">Digital Marketing</button>
+      </div>
+      <div id="learnPathResult" style="margin-top:18px"></div>
+    </div>
+
+    <div class="section-head">
+      <h2>Your learning paths</h2>
+      <span class="muted">Personalized</span>
+    </div>
+
+    <div class="grid g3">
+      <div class="card feature-card">
+        <div>
+          <div class="feature-icon">🐍</div>
+          <h3>Python Foundations</h3>
+          <p>Syntax → functions → OOP → projects.</p>
+        </div>
+        <div>
+          <div class="progress"><i style="width:82%"></i></div>
+          <small class="muted">82% · 4h 20m left</small>
+        </div>
+      </div>
+      <div class="card feature-card">
+        <div>
+          <div class="feature-icon">🧠</div>
+          <h3>Machine Learning</h3>
+          <p>Models, evaluation, practical intuition and projects.</p>
+        </div>
+        <div>
+          <div class="progress"><i style="width:58%"></i></div>
+          <small class="muted">58% · 8h 10m left</small>
+        </div>
+      </div>
+      <div class="card feature-card">
+        <div>
+          <div class="feature-icon">🎯</div>
+          <h3>Interview Communication</h3>
+          <p>Answer structure, confidence and concise explanations.</p>
+        </div>
+        <div>
+          <div class="progress"><i style="width:35%"></i></div>
+          <small class="muted">35% · 3h 40m left</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h2>Learning toolkit</h2>
+      <span class="muted">Powered by LearnMate AI</span>
+    </div>
+
+    <div class="grid g4">
+      <div class="card feature-card">
+        <div>
+          <div class="feature-icon">📖</div>
+          <h3>Learn</h3>
+          <p>Get a clear explanation at your current level, with examples and practice.</p>
+        </div>
+        <button class="ghost-btn" type="button" onclick="openLearningLesson()">Open →</button>
+      </div>
+      <div class="card feature-card">
+        <div>
+          <div class="feature-icon">🧪</div>
+          <h3>Quiz</h3>
+          <p>Generate questions that check whether you actually understood the topic.</p>
+        </div>
+        <button class="ghost-btn" type="button" onclick="generateLearningQuiz()">Generate →</button>
+      </div>
+      <div class="card feature-card">
+        <div>
+          <div class="feature-icon">🗂️</div>
+          <h3>Flashcards</h3>
+          <p>Turn the important ideas into quick revision cards.</p>
+        </div>
+        <button class="ghost-btn" type="button" onclick="generateLearningFlashcards()">Create →</button>
+      </div>
+      <div class="card feature-card">
+        <div>
+          <div class="feature-icon">📊</div>
+          <h3>Progress</h3>
+          <p>See your current learning progress and decide what to work on next.</p>
+        </div>
+        <button class="ghost-btn" type="button" onclick="go('progress')">View →</button>
+      </div>
+    </div>
+  </div>
 `,'Learn')}
-
 
 
 async function learnMateLearningAI(prompt){
@@ -684,6 +671,63 @@ async function generateLearningFlashcards(){
 }
 
 
+
+
+
+async function learnMateAssistantChat(e){
+  if(e) e.preventDefault();
+  const input=document.getElementById('chatInput');
+  if(!input) return;
+  const message=input.value.trim();
+  if(!message) return;
+  input.value='';
+
+  state.chats.push({who:'user',text:message});
+  store.set('lm_chats',state.chats);
+  render();
+
+  try{
+    const response=await fetch('/api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        message,
+        history:state.chats.slice(-12).map(m=>({role:m.who==='ai'?'assistant':'user',content:m.text})),
+        profile:{name:state.user?.name||'Learner',career_goal:state.user?.goal||'Not specified'}
+      })
+    });
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(data.error||'AI service unavailable');
+    if(!data.output) throw new Error('AI returned an empty response');
+    state.chats.push({who:'ai',text:data.output});
+  }catch(error){
+    console.warn('LearnMate Assistant AI unavailable; using fallback:',error);
+    state.chats.push({who:'ai',text:getLearnMateChatFallback(message)});
+  }
+
+  store.set('lm_chats',state.chats);
+  render();
+  setTimeout(()=>{
+    const el=document.getElementById('chatMessages');
+    if(el) el.scrollTop=el.scrollHeight;
+  },30);
+}
+
+function getLearnMateChatFallback(message){
+  const t=String(message||'');
+  if(/interview/i.test(t)) return `**Interview preparation**\n\nI can help you prepare step by step.\n\n1. Choose the target role.\n2. Review the required technical skills.\n3. Practice technical and HR questions.\n4. Improve weak answers with feedback.\n\n**Next step:** Tell me the role you are preparing for and your interview date.`;
+  if(/resume|cv/i.test(t)) return `**Resume improvement**\n\nFocus on the target role first, then align your summary, skills and projects to that role. Use measurable outcomes where possible.\n\n**Next step:** Tell me the job role and I can give you a section-by-section improvement checklist.`;
+  if(/project|build/i.test(t)) return `**Project planning**\n\nA strong project should match your current skills, career goal and available time. Start with the problem, users, features, architecture and first milestone.\n\n**Next step:** Tell me what skills you already know and I’ll suggest a project structure.`;
+  if(/plan|learn|study/i.test(t)) return `**Learning plan**\n\nUse this loop: goal → fundamentals → practice → quiz → project → revision. Keep each study session focused on one measurable outcome.\n\n**Next step:** Tell me the topic, deadline and hours you can study each day.`;
+  return `**LearnMate Demo Mode**\n\nThe live AI service is temporarily unavailable because its current API quota/credits are unavailable. Your LearnMate workspace is still working, and I can continue guiding you with the built-in assistant.\n\n**Next step:** Tell me what you want to learn, build or achieve, and I’ll help you break it into practical steps.`;
+}
+
+// supabase-auth.js currently installs an older simulated sendChat handler after app.js loads.
+// Re-attach the real/fallback assistant after all scripts have initialized.
+setTimeout(()=>{
+  window.sendChat=learnMateAssistantChat;
+},0);
+window.learnMateAssistantChat=learnMateAssistantChat;
 
 window.generateLearningPath=generateLearningPath;
 
