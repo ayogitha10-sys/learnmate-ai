@@ -844,7 +844,8 @@ async function handleLearnMateAuth() {
 
 
 
-    go("dashboard");
+    // Route through the onboarding/profile check.
+    await checkLearnMateOnboarding();
 
 
 
@@ -938,15 +939,28 @@ async function loadLearnMateProfile(userId) {
 
   if (data) {
 
+    const packedInterests = String(data.interests || '');
+    const savedOnboarding = store.get('lm_onboarding', {});
 
+    const extractMemoryField = (label) => {
+      const match = packedInterests
+        .split(' | ')
+        .find(part => part.startsWith(label));
+      return match ? match.slice(label.length).trim() : '';
+    };
 
-    state.user = {
-
-      name: data.full_name || "Learner",
-
-      goal: data.career_goal || "Learner"
-
-    };
+    state.user = {
+      ...state.user,
+      name: data.full_name || "Learner",
+      goal: data.career_goal || "Learner",
+      education: data.education || savedOnboarding.education || '',
+      interests: savedOnboarding.interests || packedInterests,
+      level: savedOnboarding.level || extractMemoryField('Level:'),
+      dailyHours: savedOnboarding.hours || extractMemoryField('Study time:'),
+      learningStyle: savedOnboarding.style || extractMemoryField('Learning style:'),
+      deadline: savedOnboarding.deadline || extractMemoryField('Deadline:'),
+      firstGoal: savedOnboarding.firstGoal || extractMemoryField('First goal:')
+    };
 
 
 
@@ -1098,7 +1112,8 @@ window.enterApp = async function () {
 
 
 
-    go("dashboard");
+    // Complete profiles go to Dashboard; incomplete profiles go to onboarding.
+    await checkLearnMateOnboarding();
 
 
 
@@ -1139,6 +1154,7 @@ learnmateSupabase.auth.onAuthStateChange(async (event, session) => {
 
 
     store.set("lm_user", state.user);
+    await checkLearnMateOnboarding();
 
   }
 

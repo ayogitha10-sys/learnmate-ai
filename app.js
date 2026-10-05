@@ -171,13 +171,324 @@ function landing(){return `
 
 function enterApp(){go('dashboard')}
 
+// =========================================================
+// ONBOARDING — AUTHENTICATED USERS
+// =========================================================
+
+function learnMateOnboardingComplete(profile){
+
+  return !!(
+
+    profile &&
+
+    String(profile.full_name || '').trim() &&
+
+    String(profile.education || '').trim() &&
+
+    String(profile.career_goal || '').trim() &&
+
+    String(profile.career_goal || '').trim().toLowerCase() !== 'learner' &&
+
+    String(profile.interests || '').trim()
+
+  );
+
+}
+
+
+
+async function checkLearnMateOnboarding(){
+
+  try{
+
+    if(typeof learnmateSupabase==='undefined'){
+
+      state.page='dashboard';
+
+      state.sidebar=false;
+
+      render();
+
+      return;
+
+    }
+
+
+
+    const {data:{session}}=await learnmateSupabase.auth.getSession();
+
+
+
+    if(!session?.user){
+
+      state.page='dashboard';
+
+      state.sidebar=false;
+
+      render();
+
+      window.scrollTo(0,0);
+
+      return;
+
+    }
+
+
+
+    const {data:profile,error}=await learnmateSupabase
+
+      .from('profiles')
+
+      .select('full_name, education, career_goal, interests')
+
+      .eq('user_id',session.user.id)
+
+      .maybeSingle();
+
+
+
+    if(error){
+
+      console.error('Onboarding profile check failed:',error);
+
+      toast('We could not check your profile. Please try again.');
+
+      return;
+
+    }
+
+
+
+    if(learnMateOnboardingComplete(profile)){
+
+      state.user={
+
+        ...state.user,
+
+        name:profile.full_name || state.user.name || 'Learner',
+
+        goal:profile.career_goal || state.user.goal || 'Learner'
+
+      };
+
+      state.page='dashboard';
+
+    }else{
+
+      state.page='onboarding';
+
+    }
+
+
+
+    state.sidebar=false;
+
+    store.set('lm_user',state.user);
+
+    render();
+
+    window.scrollTo(0,0);
+
+  }catch(error){
+
+    console.error('LearnMate onboarding check error:',error);
+
+    toast('Could not check onboarding status. Please try again.');
+
+  }
+
+}
+
+
+
+function onboarding(){return `
+
+  <div class="lm-onboarding" style="min-height:100vh;background:radial-gradient(circle at 80% 10%,rgba(91,239,206,.12),transparent 28%),radial-gradient(circle at 10% 80%,rgba(112,124,255,.10),transparent 30%),#071014;color:#edf8f6;padding:34px 20px;box-sizing:border-box;">
+
+    <div style="max-width:820px;margin:0 auto;">
+
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:34px;">
+
+        <div style="width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#7df3d2,#62d9ff);color:#071014;font-weight:900;">✦</div>
+
+        <div><strong style="font-family:Manrope,sans-serif;font-size:19px;">LearnMate</strong><div style="font-size:11px;color:#86a19f;margin-top:2px;">Personalize your learning workspace</div></div>
+
+      </div>
+
+
+
+      <div class="card" style="background:rgba(12,25,30,.88);border:1px solid rgba(255,255,255,.09);padding:30px;border-radius:24px;box-shadow:0 30px 90px rgba(0,0,0,.28);">
+
+        <div class="eyebrow">One-time setup</div>
+
+        <h1 style="margin:10px 0 8px;font-family:Manrope,sans-serif;">Let’s build your LearnMate around you.</h1>
+
+        <p class="muted" style="margin-bottom:26px;">Tell us enough to create your first learning and career plan. You can change these details later in Settings.</p>
+
+
+
+        <div class="form-grid">
+
+          <div class="form-group"><label>Your name</label><input id="lmOnboardName" class="input" value="${esc(state.user.name==='Alex'?'':state.user.name)}" placeholder="e.g. Yogitha"></div>
+
+          <div class="form-group"><label>Education</label><input id="lmOnboardEducation" class="input" placeholder="e.g. B.Tech CSE — AI & ML"></div>
+
+          <div class="form-group"><label>Target career / role</label><input id="lmOnboardGoal" class="input" value="${esc(state.user.goal==='AI Engineer'?'':state.user.goal)}" placeholder="e.g. AI Engineer"></div>
+
+          <div class="form-group"><label>Current level</label><select id="lmOnboardLevel" class="input"><option value="Beginner">Beginner</option><option value="Intermediate">Intermediate</option><option value="Advanced">Advanced</option></select></div>
+
+          <div class="form-group"><label>Hours available per day</label><select id="lmOnboardHours" class="input"><option value="1">1 hour</option><option value="2">2 hours</option><option value="3">3 hours</option><option value="4+">4+ hours</option></select></div>
+
+          <div class="form-group"><label>Preferred learning style</label><select id="lmOnboardStyle" class="input"><option value="Step-by-step">Step-by-step</option><option value="Practice-first">Practice-first</option><option value="Project-first">Project-first</option><option value="Balanced">Balanced</option></select></div>
+
+          <div class="form-group"><label>Goal deadline</label><input id="lmOnboardDeadline" class="input" type="date"></div>
+
+          <div class="form-group full"><label>Interests / skills you already know</label><textarea id="lmOnboardInterests" class="textarea" placeholder="e.g. Python, ML, NLP, SQL, projects, interview preparation"></textarea></div>
+
+          <div class="form-group full"><label>What should LearnMate help you with first?</label><textarea id="lmOnboardFirstGoal" class="textarea" placeholder="e.g. Build a roadmap to become job-ready for AI Engineer roles."></textarea></div>
+
+        </div>
+
+
+
+        <div style="display:flex;justify-content:flex-end;margin-top:22px;">
+
+          <button class="primary" onclick="saveLearnMateOnboarding()">Create my learning workspace →</button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+`}
+
+
+
+async function saveLearnMateOnboarding(){
+
+  const name=document.getElementById('lmOnboardName')?.value.trim();
+
+  const education=document.getElementById('lmOnboardEducation')?.value.trim();
+
+  const goal=document.getElementById('lmOnboardGoal')?.value.trim();
+
+  const level=document.getElementById('lmOnboardLevel')?.value || 'Beginner';
+
+  const hours=document.getElementById('lmOnboardHours')?.value || '1';
+
+  const style=document.getElementById('lmOnboardStyle')?.value || 'Step-by-step';
+
+  const deadline=document.getElementById('lmOnboardDeadline')?.value || '';
+
+  const interests=document.getElementById('lmOnboardInterests')?.value.trim();
+
+  const firstGoal=document.getElementById('lmOnboardFirstGoal')?.value.trim();
+
+
+
+  if(!name || !education || !goal || !interests){
+
+    toast('Please complete your name, education, career goal and interests.');
+
+    return;
+
+  }
+
+
+
+  if(typeof learnmateSupabase==='undefined'){
+
+    state.user={...state.user,name,goal};
+
+    store.set('lm_user',state.user);
+
+    store.set('lm_onboarding',{complete:true,education,level,hours,style,deadline,interests,firstGoal});
+
+    state.page='dashboard';
+
+    render();
+
+    toast('Your LearnMate workspace is ready.');
+
+    return;
+
+  }
+
+
+
+  const {data:{session}}=await learnmateSupabase.auth.getSession();
+
+  if(!session?.user){
+
+    toast('Please log in before completing onboarding.');
+
+    return;
+
+  }
+
+
+
+  const combinedInterests=[interests,`Level: ${level}`,`Study time: ${hours}/day`,`Learning style: ${style}`,deadline?`Deadline: ${deadline}`:'',firstGoal?`First goal: ${firstGoal}`:''].filter(Boolean).join(' | ');
+
+
+
+  const {error}=await learnmateSupabase
+
+    .from('profiles')
+
+    .update({full_name:name,education,career_goal:goal,interests:combinedInterests})
+
+    .eq('user_id',session.user.id);
+
+
+
+  if(error){
+
+    console.error('Onboarding save failed:',error);
+
+    toast('Could not save onboarding. Please try again.');
+
+    return;
+
+  }
+
+
+
+  state.user={...state.user,name,goal};
+
+  store.set('lm_user',state.user);
+
+  store.set('lm_onboarding',{complete:true,education,level,hours,style,deadline,interests,firstGoal});
+
+  state.page='dashboard';
+
+  state.sidebar=false;
+
+  render();
+
+  window.scrollTo(0,0);
+
+  toast('Your LearnMate workspace is ready.');
+
+}
+
+
+
+window.checkLearnMateOnboarding=checkLearnMateOnboarding;
+window.saveLearnMateOnboarding=saveLearnMateOnboarding;
+
+
+
 
 
 function dashboard(){return shell(`<div class="content"><div class="hero"><section class="card hero-card"><div class="eyebrow">Your personal AI companion</div><h1>Good morning, ${esc(state.user.name)}. Let's make today count.</h1><p>Tell LearnMate what you want to achieve. It can turn your goal into a learning path, practice plan, project roadmap or interview session.</p><div class="hero-actions"><button class="primary" onclick="go('ai')">✦ Ask LearnMate</button><button class="ghost-btn" onclick="go('planner')">View today's plan</button></div></section><section class="card focus-card"><div><div class="eyebrow">Today's focus</div><h3 style="font-size:23px;margin-top:10px">AI Engineer readiness</h3><p class="muted">Your next recommended step is strengthening Deep Learning fundamentals.</p></div><div><div class="stat"><div><div class="metric-label">Career readiness</div><strong>72%</strong></div><span class="tag">+8% this month</span></div><div class="progress" style="margin-top:12px"><i style="width:72%"></i></div></div></section></div><div class="grid g4"><div class="card"><div class="metric-label">Learning streak</div><div class="stat"><strong>${state.streak}</strong><span>🔥 days</span></div></div><div class="card"><div class="metric-label">XP earned</div><div class="stat"><strong>${state.xp.toLocaleString()}</strong><span>⭐ XP</span></div></div><div class="card"><div class="metric-label">Hours learned</div><div class="stat"><strong>24.5</strong><span>this month</span></div></div><div class="card"><div class="metric-label">Goals completed</div><div class="stat"><strong>12</strong><span>🎯 goals</span></div></div></div><div class="section-head"><h2>Continue learning</h2><button class="link" onclick="go('learn')">View all →</button></div><div class="grid g3"><div class="card feature-card"><div><div class="feature-icon">🧠</div><h3>Deep Learning</h3><p>Neural networks, backpropagation and practical model building.</p></div><div><div class="progress"><i style="width:65%"></i></div><small class="muted">65% complete</small></div></div><div class="card feature-card"><div><div class="feature-icon">💬</div><h3>Technical Interview</h3><p>Practice explaining ML concepts clearly and confidently.</p></div><button class="ghost-btn" onclick="go('interview')">Practice now →</button></div><div class="card feature-card"><div><div class="feature-icon">🚀</div><h3>Build a project</h3><p>Turn your AI skills into a portfolio project recruiters can understand.</p></div><button class="ghost-btn" onclick="go('projects')">Explore projects →</button></div></div><div class="section-head"><h2>Today's plan</h2><button class="link" onclick="go('planner')">Open planner →</button></div><div class="card"><div class="timeline"><div class="timeline-item"><span class="time">06:00 PM</span><i class="dot"></i><div><b>Deep Learning — Fundamentals</b><div class="muted">45 minutes · Continue lesson</div></div></div><div class="timeline-item"><span class="time">07:00 PM</span><i class="dot"></i><div><b>Interview practice</b><div class="muted">20 minutes · 5 technical questions</div></div></div><div class="timeline-item"><span class="time">07:30 PM</span><i class="dot"></i><div><b>Quick quiz</b><div class="muted">10 questions · Reinforce today's learning</div></div></div></div></div></div>`,'Dashboard')}
 
 
 
-function ai(){return shell(`<div class="content"><div class="chat-layout"><aside class="card chat-side"><div class="eyebrow">AI workspace</div><h3>Conversations</h3><button class="ghost-btn" onclick="newChat()">＋ New conversation</button><div class="list" style="margin-top:6px"><div class="list-row"><div class="left"><div class="round">✦</div><span>My learning plan</span></div><span class="muted">Now</span></div><div class="list-row"><div class="left"><div class="round">🎤</div><span>Interview prep</span></div></div><div class="list-row"><div class="left"><div class="round">🚀</div><span>Project ideas</span></div></div></div></aside><section class="card chat-main"><div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:13px"><div><div class="eyebrow">Adaptive AI</div><h3 style="margin-top:4px">Ask LearnMate</h3></div><span class="tag">Context aware</span></div><div id="chatMessages" class="chat-messages">${state.chats.map(m=>`<div class="bubble ${m.who}">${esc(m.text)}</div>`).join('')}</div><div class="suggestions"><button class="suggestion" onclick="quickChat('Make me a 7-day plan to learn Python')">Make a learning plan</button><button class="suggestion" onclick="quickChat('Prepare me for an AI interview')">Prepare for interview</button><button class="suggestion" onclick="quickChat('Give me a project idea for my skills')">Find a project</button><button class="suggestion" onclick="quickChat('Review my career goal and tell me what to learn next')">What should I learn next?</button></div><form class="chat-input" onsubmit="learnMateAssistantChat(event)"><input id="chatInput" class="input" placeholder="Tell me what you want to learn, build or achieve..." autocomplete="off"><button class="primary">Send →</button></form></section></div></div>`,'AI Assistant')}
+function ai(){return shell(`<div class="content"><div class="chat-layout"><aside class="card chat-side"><div class="eyebrow">AI workspace</div><h3>Conversations</h3><button class="ghost-btn" onclick="newChat()">＋ New conversation</button><div class="list" style="margin-top:6px"><div class="list-row"><div class="left"><div class="round">✦</div><span>My learning plan</span></div><span class="muted">Now</span></div><div class="list-row"><div class="left"><div class="round">🎤</div><span>Interview prep</span></div></div><div class="list-row"><div class="left"><div class="round">🚀</div><span>Project ideas</span></div></div></div></aside><section class="card chat-main"><div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:13px"><div><div class="eyebrow">Adaptive AI</div><h3 style="margin-top:4px">Ask LearnMate</h3></div><span class="tag">Context aware</span></div><div id="chatMessages" class="chat-messages">${state.chats.map(m=>`<div class="bubble ${m.who}">${esc(m.text)}</div>`).join('')}</div><div class="suggestions"><button class="suggestion" onclick="quickChat('Make me a 7-day plan to learn Python')">Make a learning plan</button><button class="suggestion" onclick="quickChat('Prepare me for an AI interview')">Prepare for interview</button><button class="suggestion" onclick="quickChat('Give me a project idea for my skills')">Find a project</button><button class="suggestion" onclick="quickChat('Review my career goal and tell me what to learn next')">What should I learn next?</button></div><form class="chat-input" onsubmit="sendChat(event)"><input id="chatInput" class="input" placeholder="Tell me what you want to learn, build or achieve..." autocomplete="off"><button class="primary">Send →</button></form></section></div></div>`,'AI Assistant')}
 
 
 
@@ -189,7 +500,8 @@ function quickChat(t){document.getElementById('chatInput').value=t;document.quer
 
 
 
-function sendChat(e){ return learnMateAssistantChat(e); }
+function sendChat(e){e.preventDefault();const input=document.getElementById('chatInput');const t=input.value.trim();if(!t)return;state.chats.push({who:'user',text:t});let r='I can help with that. I would break your goal into a clear next step, then a practical plan you can follow. For this MVP, the response is simulated — the real agent router can be connected next.';if(/interview/i.test(t))r='Let’s prepare strategically: first identify the role, then practice technical and behavioral questions, analyze your answers, and turn weak areas into a focused practice plan.';if(/resume/i.test(t))r='For a strong resume, we can align your summary, skills and projects to the target role, improve impact-focused bullets, and run an ATS-style review.';if(/plan|learn/i.test(t))r='I recommend a goal → roadmap → daily tasks → practice → assessment loop. Tell me your deadline and available time and LearnMate can personalize it.';if(/project/i.test(t))r='I can help you choose a project based on your current skills, target career, time available and desired difficulty, then guide you through architecture, development and deployment.';state.chats.push({who:'ai',text:r});store.set('lm_chats',state.chats);render();setTimeout(()=>{const el=document.getElementById('chatMessages');if(el)el.scrollTop=el.scrollHeight},30)}
+
 
 
 function learn(){return shell(`
@@ -830,11 +1142,11 @@ function saveSettings(){state.user.name=document.getElementById('sname').value||
 
 
 
-function render(){let html;switch(state.page){case'landing':html=landing();break;case'dashboard':html=dashboard();break;case'ai':html=ai();break;case'learn':html=learn();break;case'docs':html=docs();break;case'interview':html=interview();break;case'planner':html=planner();break;case'projects':html=projects();break;case'career':html=career();break;case'resume':html=resume();break;case'progress':html=progress();break;case'settings':html=settings();break;default:html=landing()}app.innerHTML=html}
+function render(){let html;switch(state.page){case'landing':html=landing();break;case'onboarding':html=onboarding();break;case'dashboard':html=dashboard();break;case'ai':html=ai();break;case'learn':html=learn();break;case'docs':html=docs();break;case'interview':html=interview();break;case'planner':html=planner();break;case'projects':html=projects();break;case'career':html=career();break;case'resume':html=resume();break;case'progress':html=progress();break;case'settings':html=settings();break;default:html=landing()}app.innerHTML=html}
 
 
 
-window.go=go;window.render=render;window.enterApp=enterApp;window.state=state;window.newChat=newChat;window.quickChat=quickChat;window.sendChat=sendChat;window.uploadDoc=uploadDoc;window.startInterview=startInterview;window.createTask=createTask;window.generateProject=generateProject;window.saveResume=saveResume;window.saveSettings=saveSettings;
+window.go=go;window.render=render;window.enterApp=enterApp;window.state=state;window.checkLearnMateOnboarding=checkLearnMateOnboarding;window.saveLearnMateOnboarding=saveLearnMateOnboarding;window.newChat=newChat;window.quickChat=quickChat;window.sendChat=sendChat;window.uploadDoc=uploadDoc;window.startInterview=startInterview;window.createTask=createTask;window.generateProject=generateProject;window.saveResume=saveResume;window.saveSettings=saveSettings;
 
 
 
