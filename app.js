@@ -46,7 +46,7 @@ function getLearnMatePersonalContext(){
 
   return {
     name:user.name||'Learner',
-    career_goal:user.goal||'Not specified',
+    career_goal:saved.goal||user.goal||'Not specified',
     education:user.education||saved.education||'',
     current_level:user.level||saved.level||learnMateExtractMemoryField(packed,'Level:'),
     daily_hours:user.dailyHours||saved.hours||learnMateExtractMemoryField(packed,'Study time:'),
