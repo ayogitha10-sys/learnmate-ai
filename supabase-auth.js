@@ -41,520 +41,81 @@ const learnmateSupabase = window.supabase.createClient(
 
 
 function showLearnMateAuth() {
-
-
-
-  if (document.getElementById("learnmateAuth")) {
-
-    document.getElementById("learnmateAuth").style.display = "flex";
-
-    return;
-
-  }
-
-
-
-  const modal = document.createElement("div");
-
-
-
-  modal.id = "learnmateAuth";
-
-
-
-  modal.innerHTML = `
-
-    <div style="
-
-      position:fixed;
-
-      inset:0;
-
-      z-index:99999;
-
-      background:rgba(5,12,18,.72);
-
-      backdrop-filter:blur(12px);
-
-      display:flex;
-
-      align-items:center;
-
-      justify-content:center;
-
-      padding:20px;
-
-    ">
-
-
-
-      <div style="
-
-        width:min(430px,100%);
-
-        background:#ffffff;
-
-        border-radius:24px;
-
-        padding:30px;
-
-        box-shadow:0 30px 80px rgba(0,0,0,.30);
-
-      ">
-
-
-
-        <div style="text-align:center;margin-bottom:24px">
-
-
-
-          <div style="
-
-            width:52px;
-
-            height:52px;
-
-            margin:0 auto 14px;
-
-            border-radius:16px;
-
-            display:flex;
-
-            align-items:center;
-
-            justify-content:center;
-
-            background:#083335;
-
-            color:#ffffff;
-
-            font-size:25px;
-
-          ">✦</div>
-
-
-
-          <h2 style="
-
-            margin:0;
-
-            font-family:Manrope,sans-serif;
-
-            font-size:25px;
-
-            color:#102326;
-
-          ">Welcome to LearnMate</h2>
-
-
-
-          <p style="
-
-            margin:8px 0 0;
-
-            color:#647477;
-
-            font-size:14px;
-
-          ">
-
-            Learn anything. Build everything. Grow with AI.
-
-          </p>
-
-
-
-        </div>
-
-
-
-        <div style="
-
-          display:flex;
-
-          gap:8px;
-
-          margin-bottom:18px;
-
-          background:#f2f5f5;
-
-          padding:5px;
-
-          border-radius:12px;
-
-        ">
-
-
-
-          <button
-
-            id="lmLoginTab"
-
-            onclick="showLoginMode()"
-
-            style="
-
-              flex:1;
-
-              border:0;
-
-              border-radius:9px;
-
-              padding:10px;
-
-              cursor:pointer;
-
-              font-weight:700;
-
-              background:#083335;
-
-              color:white;
-
-            "
-
-          >
-
-            Log in
-
-          </button>
-
-
-
-          <button
-
-            id="lmSignupTab"
-
-            onclick="showSignupMode()"
-
-            style="
-
-              flex:1;
-
-              border:0;
-
-              border-radius:9px;
-
-              padding:10px;
-
-              cursor:pointer;
-
-              font-weight:700;
-
-              background:transparent;
-
-              color:#536568;
-
-            "
-
-          >
-
-            Sign up
-
-          </button>
-
-
-
-        </div>
-
-
-
-        <div id="lmNameGroup" style="display:none;margin-bottom:12px">
-
-          <label style="
-
-            display:block;
-
-            margin-bottom:6px;
-
-            font-size:13px;
-
-            font-weight:700;
-
-            color:#304447;
-
-          ">Full name</label>
-
-
-
-          <input
-
-            id="lmName"
-
-            type="text"
-
-            placeholder="Your name"
-
-            style="
-
-              width:100%;
-
-              box-sizing:border-box;
-
-              padding:13px 14px;
-
-              border:1px solid #dce4e4;
-
-              border-radius:11px;
-
-              font-size:14px;
-
-              outline:none;
-
-            "
-
-          >
-
-        </div>
-
-
-
-        <div style="margin-bottom:12px">
-
-
-
-          <label style="
-
-            display:block;
-
-            margin-bottom:6px;
-
-            font-size:13px;
-
-            font-weight:700;
-
-            color:#304447;
-
-          ">Email</label>
-
-
-
-          <input
-
-            id="lmEmail"
-
-            type="email"
-
-            placeholder="you@example.com"
-
-            style="
-
-              width:100%;
-
-              box-sizing:border-box;
-
-              padding:13px 14px;
-
-              border:1px solid #dce4e4;
-
-              border-radius:11px;
-
-              font-size:14px;
-
-              outline:none;
-
-            "
-
-          >
-
-
-
-        </div>
-
-
-
-        <div style="margin-bottom:15px">
-
-
-
-          <label style="
-
-            display:block;
-
-            margin-bottom:6px;
-
-            font-size:13px;
-
-            font-weight:700;
-
-            color:#304447;
-
-          ">Password</label>
-
-
-
-          <input
-
-            id="lmPassword"
-
-            type="password"
-
-            placeholder="Minimum 6 characters"
-
-            style="
-
-              width:100%;
-
-              box-sizing:border-box;
-
-              padding:13px 14px;
-
-              border:1px solid #dce4e4;
-
-              border-radius:11px;
-
-              font-size:14px;
-
-              outline:none;
-
-            "
-
-          >
-
-
-
-        </div>
-
-
-
-        <div
-
-          id="lmAuthMessage"
-
-          style="
-
-            display:none;
-
-            margin-bottom:14px;
-
-            padding:10px 12px;
-
-            border-radius:10px;
-
-            font-size:13px;
-
-            background:#fff4f4;
-
-            color:#b42318;
-
-          "
-
-        ></div>
-
-
-
-        <button
-
-          id="lmAuthButton"
-
-          onclick="handleLearnMateAuth()"
-
-          style="
-
-            width:100%;
-
-            border:0;
-
-            border-radius:12px;
-
-            padding:14px;
-
-            cursor:pointer;
-
-            background:#083335;
-
-            color:white;
-
-            font-size:15px;
-
-            font-weight:700;
-
-          "
-
-        >
-
-          Log in
-
-        </button>
-
-
-
-        <button
-
-          onclick="continueAsGuest()"
-
-          style="
-
-            width:100%;
-
-            border:0;
-
-            background:transparent;
-
-            padding:13px;
-
-            cursor:pointer;
-
-            color:#647477;
-
-            font-size:13px;
-
-          "
-
-        >
-
-          Continue as guest
-
-        </button>
-
-
-
-        <button
-
-          onclick="closeLearnMateAuth()"
-
-          style="
-
-            width:100%;
-
-            border:0;
-
-            background:transparent;
-
-            padding:4px;
-
-            cursor:pointer;
-
-            color:#9aa6a8;
-
-            font-size:12px;
-
-          "
-
-        >
-
-          Close
-
-        </button>
-
-
-
-      </div>
-
-    </div>
-
-  `;
-
-
-
-  document.body.appendChild(modal);
-
+  const existing = document.getElementById("learnmateAuth");
+  if (existing) {
+    existing.style.setProperty("display", "flex", "important");
+    return;
+  }
+
+  const styleId = "learnmate-auth-ui-style";
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.textContent = `
+      #learnmateAuth { position:fixed !important; inset:0 !important; z-index:2147483647 !important; display:flex !important; align-items:center !important; justify-content:center !important; width:100vw !important; height:100vh !important; min-height:100dvh !important; margin:0 !important; padding:24px !important; box-sizing:border-box !important; background:rgba(5,12,18,.78) !important; backdrop-filter:blur(12px) !important; overflow:auto !important; }
+      #learnmateAuth .lm-auth-backdrop { position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; }
+      #learnmateAuth .lm-auth-card { position:relative !important; z-index:1 !important; width:min(460px,100%) !important; max-height:calc(100dvh - 48px) !important; overflow-y:auto !important; margin:auto !important; padding:30px !important; box-sizing:border-box !important; background:#fff !important; border:1px solid rgba(8,51,53,.10) !important; border-radius:24px !important; box-shadow:0 30px 90px rgba(0,0,0,.35) !important; color:#102326 !important; font-family:DM Sans,Arial,sans-serif !important; }
+      #learnmateAuth .lm-auth-header { text-align:center !important; margin-bottom:22px !important; }
+      #learnmateAuth .lm-auth-logo { width:52px !important; height:52px !important; margin:0 auto 14px !important; border-radius:16px !important; display:grid !important; place-items:center !important; background:#083335 !important; color:#fff !important; font-size:25px !important; }
+      #learnmateAuth .lm-auth-title { margin:0 !important; font-family:Manrope,Arial,sans-serif !important; font-size:25px !important; line-height:1.2 !important; color:#102326 !important; }
+      #learnmateAuth .lm-auth-subtitle { margin:8px 0 0 !important; color:#647477 !important; font-size:14px !important; line-height:1.5 !important; }
+      #learnmateAuth .lm-auth-tabs { display:grid !important; grid-template-columns:1fr 1fr !important; gap:6px !important; margin-bottom:20px !important; padding:5px !important; background:#f2f5f5 !important; border-radius:12px !important; box-sizing:border-box !important; }
+      #learnmateAuth .lm-auth-tab { display:block !important; width:100% !important; min-width:0 !important; margin:0 !important; padding:11px 12px !important; border:0 !important; border-radius:9px !important; background:transparent !important; color:#536568 !important; font:700 14px/1.2 DM Sans,Arial,sans-serif !important; text-align:center !important; cursor:pointer !important; box-sizing:border-box !important; }
+      #learnmateAuth .lm-auth-tab.active { background:#083335 !important; color:#fff !important; }
+      #learnmateAuth .lm-auth-field { margin-bottom:14px !important; }
+      #learnmateAuth .lm-auth-label { display:block !important; margin:0 0 6px !important; color:#304447 !important; font:700 13px/1.3 DM Sans,Arial,sans-serif !important; }
+      #learnmateAuth .lm-auth-input { display:block !important; width:100% !important; height:48px !important; min-height:48px !important; margin:0 !important; padding:12px 14px !important; box-sizing:border-box !important; border:1px solid #dce4e4 !important; border-radius:11px !important; background:#fff !important; color:#102326 !important; font:400 14px/1.2 DM Sans,Arial,sans-serif !important; outline:none !important; box-shadow:none !important; }
+      #learnmateAuth .lm-auth-input:focus { border-color:#59dfc1 !important; box-shadow:0 0 0 3px rgba(89,223,193,.16) !important; }
+      #learnmateAuth .lm-auth-message { display:none; margin:0 0 14px !important; padding:10px 12px !important; border-radius:10px !important; font-size:13px !important; background:#fff4f4 !important; color:#b42318 !important; }
+      #learnmateAuth .lm-auth-primary { display:block !important; width:100% !important; height:48px !important; min-height:48px !important; margin:0 !important; padding:12px 16px !important; border:0 !important; border-radius:12px !important; background:#083335 !important; color:#fff !important; font:700 15px/1.2 DM Sans,Arial,sans-serif !important; cursor:pointer !important; box-sizing:border-box !important; }
+      #learnmateAuth .lm-auth-secondary,#learnmateAuth .lm-auth-close { display:block !important; width:100% !important; margin:0 !important; border:0 !important; background:transparent !important; cursor:pointer !important; box-sizing:border-box !important; }
+      #learnmateAuth .lm-auth-secondary { padding:13px !important; color:#536568 !important; font:600 13px/1.2 DM Sans,Arial,sans-serif !important; }
+      #learnmateAuth .lm-auth-close { padding:4px !important; color:#9aa6a8 !important; font:400 12px/1.2 DM Sans,Arial,sans-serif !important; }
+      @media (max-width:520px) { #learnmateAuth { padding:16px !important; } #learnmateAuth .lm-auth-card { max-height:calc(100dvh - 32px) !important; padding:24px !important; border-radius:20px !important; } }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const modal = document.createElement("div");
+  modal.id = "learnmateAuth";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.innerHTML = `
+    <div class="lm-auth-backdrop" aria-hidden="true"></div>
+    <div class="lm-auth-card">
+      <div class="lm-auth-header">
+        <div class="lm-auth-logo">✦</div>
+        <h2 class="lm-auth-title">Welcome to LearnMate</h2>
+        <p class="lm-auth-subtitle">Learn anything. Build everything. Grow with AI.</p>
+      </div>
+      <div class="lm-auth-tabs">
+        <button id="lmLoginTab" class="lm-auth-tab active" type="button" onclick="showLoginMode()">Log in</button>
+        <button id="lmSignupTab" class="lm-auth-tab" type="button" onclick="showSignupMode()">Sign up</button>
+      </div>
+      <div id="lmNameGroup" class="lm-auth-field" style="display:none !important;">
+        <label class="lm-auth-label" for="lmName">Full name</label>
+        <input id="lmName" class="lm-auth-input" type="text" placeholder="Your name" autocomplete="name">
+      </div>
+      <div class="lm-auth-field">
+        <label class="lm-auth-label" for="lmEmail">Email</label>
+        <input id="lmEmail" class="lm-auth-input" type="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="lm-auth-field" style="margin-bottom:15px !important;">
+        <label class="lm-auth-label" for="lmPassword">Password</label>
+        <input id="lmPassword" class="lm-auth-input" type="password" placeholder="Minimum 6 characters" autocomplete="current-password">
+      </div>
+      <div id="lmAuthMessage" class="lm-auth-message"></div>
+      <button id="lmAuthButton" class="lm-auth-primary" type="button" onclick="handleLearnMateAuth()">Log in</button>
+      <button class="lm-auth-secondary" type="button" onclick="continueAsGuest()">Continue as guest</button>
+      <button class="lm-auth-close" type="button" onclick="closeLearnMateAuth()">Close</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 
 
 
 
-
-// =========================================================
 
 // AUTH MODE
 
