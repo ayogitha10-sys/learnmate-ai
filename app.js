@@ -1829,6 +1829,64 @@ function learnMateDocumentShowResultV2(title,text){
 }
 
 async function learnMateDocumentAIV2(prompt){
+  const documentText = learnMateCurrentDocument?.text?.trim() || '';
+
+  if(!documentText){
+    throw new Error('No document text is available.');
+  }
+
+  const finalPrompt = `
+You are LearnMate, an AI learning assistant.
+
+The learner has uploaded a document.
+
+IMPORTANT:
+The document text is included below.
+You MUST use this document text as the source for your answer.
+Do not say that no document was uploaded.
+Do not ask the learner to upload or paste the document again.
+
+LEARNER DOCUMENT:
+--------------------
+${documentText.slice(0,50000)}
+--------------------
+
+TASK:
+${prompt}
+
+Answer the task using the uploaded document.
+If the requested information is genuinely not present in the document, clearly say that the document does not contain enough information.
+`;
+
+  const response=await fetch('/api/chat',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify({
+      message:finalPrompt,
+      history:[],
+      profile:getLearnMatePersonalContext()
+    })
+  });
+
+  const data=await response.json().catch(()=>({}));
+
+  if(!response.ok){
+    throw new Error(
+      data.error ||
+      'LearnMate AI could not respond right now.'
+    );
+  }
+
+  if(!data.output){
+    throw new Error(
+      'LearnMate returned an empty response.'
+    );
+  }
+
+  return data.output;
+}(prompt){
   const response=await fetch('/api/chat',{
     method:'POST',
     headers:{
