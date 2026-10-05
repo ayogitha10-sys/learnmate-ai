@@ -29,6 +29,34 @@ const icons={dashboard:'⌂',ai:'✦',learn:'◈',docs:'▤',interview:'◉',pla
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 
 
+function learnMateExtractMemoryField(text,label){
+  const source=String(text||'');
+  const prefix=String(label||'');
+  const match=source.split(' | ').find(part=>part.startsWith(prefix));
+  return match ? match.slice(prefix.length).trim() : '';
+}
+
+function getLearnMatePersonalContext(){
+  const user=state.user||{};
+  const saved=store.get('lm_onboarding',{});
+  const packed=String(user.interests||'');
+  const cleanInterests=String(saved.interests||packed)
+    .replace(/\s*\|\s*(Level:|Study time:|Learning style:|Deadline:|First goal:)[^|]*/gi,'')
+    .trim();
+
+  return {
+    name:user.name||'Learner',
+    career_goal:user.goal||'Not specified',
+    education:user.education||saved.education||'',
+    current_level:user.level||saved.level||learnMateExtractMemoryField(packed,'Level:'),
+    daily_hours:user.dailyHours||saved.hours||learnMateExtractMemoryField(packed,'Study time:'),
+    learning_style:user.learningStyle||saved.style||learnMateExtractMemoryField(packed,'Learning style:'),
+    goal_deadline:user.deadline||saved.deadline||learnMateExtractMemoryField(packed,'Deadline:'),
+    skills_interests:cleanInterests,
+    first_help:user.firstGoal||saved.firstGoal||learnMateExtractMemoryField(packed,'First goal:')
+  };
+}
+
 
 function toast(msg){toastEl.textContent=msg;toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),2300)}
 
@@ -149,7 +177,7 @@ function dashboard(){return shell(`<div class="content"><div class="hero"><secti
 
 
 
-function ai(){return shell(`<div class="content"><div class="chat-layout"><aside class="card chat-side"><div class="eyebrow">AI workspace</div><h3>Conversations</h3><button class="ghost-btn" onclick="newChat()">＋ New conversation</button><div class="list" style="margin-top:6px"><div class="list-row"><div class="left"><div class="round">✦</div><span>My learning plan</span></div><span class="muted">Now</span></div><div class="list-row"><div class="left"><div class="round">🎤</div><span>Interview prep</span></div></div><div class="list-row"><div class="left"><div class="round">🚀</div><span>Project ideas</span></div></div></div></aside><section class="card chat-main"><div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:13px"><div><div class="eyebrow">Adaptive AI</div><h3 style="margin-top:4px">Ask LearnMate</h3></div><span class="tag">Context aware</span></div><div id="chatMessages" class="chat-messages">${state.chats.map(m=>`<div class="bubble ${m.who}">${esc(m.text)}</div>`).join('')}</div><div class="suggestions"><button class="suggestion" onclick="quickChat('Make me a 7-day plan to learn Python')">Make a learning plan</button><button class="suggestion" onclick="quickChat('Prepare me for an AI interview')">Prepare for interview</button><button class="suggestion" onclick="quickChat('Give me a project idea for my skills')">Find a project</button><button class="suggestion" onclick="quickChat('Review my career goal and tell me what to learn next')">What should I learn next?</button></div><form class="chat-input" onsubmit="sendChat(event)"><input id="chatInput" class="input" placeholder="Tell me what you want to learn, build or achieve..." autocomplete="off"><button class="primary">Send →</button></form></section></div></div>`,'AI Assistant')}
+function ai(){return shell(`<div class="content"><div class="chat-layout"><aside class="card chat-side"><div class="eyebrow">AI workspace</div><h3>Conversations</h3><button class="ghost-btn" onclick="newChat()">＋ New conversation</button><div class="list" style="margin-top:6px"><div class="list-row"><div class="left"><div class="round">✦</div><span>My learning plan</span></div><span class="muted">Now</span></div><div class="list-row"><div class="left"><div class="round">🎤</div><span>Interview prep</span></div></div><div class="list-row"><div class="left"><div class="round">🚀</div><span>Project ideas</span></div></div></div></aside><section class="card chat-main"><div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:13px"><div><div class="eyebrow">Adaptive AI</div><h3 style="margin-top:4px">Ask LearnMate</h3></div><span class="tag">Context aware</span></div><div id="chatMessages" class="chat-messages">${state.chats.map(m=>`<div class="bubble ${m.who}">${esc(m.text)}</div>`).join('')}</div><div class="suggestions"><button class="suggestion" onclick="quickChat('Make me a 7-day plan to learn Python')">Make a learning plan</button><button class="suggestion" onclick="quickChat('Prepare me for an AI interview')">Prepare for interview</button><button class="suggestion" onclick="quickChat('Give me a project idea for my skills')">Find a project</button><button class="suggestion" onclick="quickChat('Review my career goal and tell me what to learn next')">What should I learn next?</button></div><form class="chat-input" onsubmit="learnMateAssistantChat(event)"><input id="chatInput" class="input" placeholder="Tell me what you want to learn, build or achieve..." autocomplete="off"><button class="primary">Send →</button></form></section></div></div>`,'AI Assistant')}
 
 
 
@@ -161,8 +189,7 @@ function quickChat(t){document.getElementById('chatInput').value=t;document.quer
 
 
 
-function sendChat(e){e.preventDefault();const input=document.getElementById('chatInput');const t=input.value.trim();if(!t)return;state.chats.push({who:'user',text:t});let r='I can help with that. I would break your goal into a clear next step, then a practical plan you can follow. For this MVP, the response is simulated — the real agent router can be connected next.';if(/interview/i.test(t))r='Let’s prepare strategically: first identify the role, then practice technical and behavioral questions, analyze your answers, and turn weak areas into a focused practice plan.';if(/resume/i.test(t))r='For a strong resume, we can align your summary, skills and projects to the target role, improve impact-focused bullets, and run an ATS-style review.';if(/plan|learn/i.test(t))r='I recommend a goal → roadmap → daily tasks → practice → assessment loop. Tell me your deadline and available time and LearnMate can personalize it.';if(/project/i.test(t))r='I can help you choose a project based on your current skills, target career, time available and desired difficulty, then guide you through architecture, development and deployment.';state.chats.push({who:'ai',text:r});store.set('lm_chats',state.chats);render();setTimeout(()=>{const el=document.getElementById('chatMessages');if(el)el.scrollTop=el.scrollHeight},30)}
-
+function sendChat(e){ return learnMateAssistantChat(e); }
 
 
 function learn(){return shell(`
@@ -283,10 +310,7 @@ async function learnMateLearningAI(prompt){
       body:JSON.stringify({
         message:prompt,
         history,
-        profile:{
-          name:state.user?.name||'Learner',
-          career_goal:state.user?.goal||'Not specified'
-        }
+        profile:getLearnMatePersonalContext()
       })
     });
 
@@ -693,7 +717,7 @@ async function learnMateAssistantChat(e){
       body:JSON.stringify({
         message,
         history:state.chats.slice(-12).map(m=>({role:m.who==='ai'?'assistant':'user',content:m.text})),
-        profile:{name:state.user?.name||'Learner',career_goal:state.user?.goal||'Not specified'}
+        profile:getLearnMatePersonalContext()
       })
     });
     const data=await response.json().catch(()=>({}));
@@ -715,11 +739,21 @@ async function learnMateAssistantChat(e){
 
 function getLearnMateChatFallback(message){
   const t=String(message||'');
-  if(/interview/i.test(t)) return `**Interview preparation**\n\nI can help you prepare step by step.\n\n1. Choose the target role.\n2. Review the required technical skills.\n3. Practice technical and HR questions.\n4. Improve weak answers with feedback.\n\n**Next step:** Tell me the role you are preparing for and your interview date.`;
-  if(/resume|cv/i.test(t)) return `**Resume improvement**\n\nFocus on the target role first, then align your summary, skills and projects to that role. Use measurable outcomes where possible.\n\n**Next step:** Tell me the job role and I can give you a section-by-section improvement checklist.`;
-  if(/project|build/i.test(t)) return `**Project planning**\n\nA strong project should match your current skills, career goal and available time. Start with the problem, users, features, architecture and first milestone.\n\n**Next step:** Tell me what skills you already know and I’ll suggest a project structure.`;
-  if(/plan|learn|study/i.test(t)) return `**Learning plan**\n\nUse this loop: goal → fundamentals → practice → quiz → project → revision. Keep each study session focused on one measurable outcome.\n\n**Next step:** Tell me the topic, deadline and hours you can study each day.`;
-  return `**LearnMate Demo Mode**\n\nThe live AI service is temporarily unavailable because its current API quota/credits are unavailable. Your LearnMate workspace is still working, and I can continue guiding you with the built-in assistant.\n\n**Next step:** Tell me what you want to learn, build or achieve, and I’ll help you break it into practical steps.`;
+  const context=getLearnMatePersonalContext();
+  const personal=
+    `\n\n**Your current context**\n`+
+    `- Goal: ${context.career_goal}\n`+
+    (context.current_level?`- Level: ${context.current_level}\n`:'')+
+    (context.daily_hours?`- Available time: ${context.daily_hours}\n`:'')+
+    (context.learning_style?`- Learning style: ${context.learning_style}\n`:'')+
+    (context.goal_deadline?`- Deadline: ${context.goal_deadline}\n`:'')+
+    (context.skills_interests?`- Skills/interests: ${context.skills_interests}\n`:'');
+
+  if(/interview/i.test(t)) return `**Interview preparation**\n\nI can help you prepare step by step for **${context.career_goal}**.\n\n1. Choose the target role.\n2. Review the required technical skills.\n3. Practice technical and HR questions.\n4. Improve weak answers with feedback.\n\n**Next step:** Tell me the interview date and I’ll structure the preparation around your available time.${personal}`;
+  if(/resume|cv/i.test(t)) return `**Resume improvement**\n\nWe’ll align your resume to **${context.career_goal}**, using your existing skills instead of treating you like a blank-slate learner.\n\n**Next step:** Tell me the job description or role you are targeting and I’ll give you a section-by-section improvement checklist.${personal}`;
+  if(/project|build/i.test(t)) return `**Project planning**\n\nA strong project should match your current level, **${context.career_goal}** goal, skills and available time.\n\n**Next step:** I’ll help you choose a project that is realistic for your current context.${personal}`;
+  if(/plan|learn|study/i.test(t)) return `**Learning plan**\n\nI’ll use your goal, level, available study time and preferred learning style to shape the plan. The basic loop is goal → roadmap → daily tasks → practice → assessment.\n\n**Next step:** Tell me the topic you want to work on first.${personal}`;
+  return `**LearnMate Demo Mode**\n\nThe live AI service is temporarily unavailable, but your saved learner context is still available locally. I can continue guiding you using your goal and preferences.${personal}\n**Next step:** Tell me what you want to learn, build or achieve.`;
 }
 
 // supabase-auth.js currently installs an older simulated sendChat handler after app.js loads.
