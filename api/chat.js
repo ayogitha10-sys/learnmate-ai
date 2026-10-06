@@ -1,9 +1,10 @@
 // LearnMate AI - Vercel serverless AI endpoint
 // Gemini API key is stored only in Vercel Environment Variables.
-// This endpoint keeps LearnMate's Personal AI Memory / Context intact.
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const GEMINI_INTERACTIONS_URL =
+  "https://generativelanguage.googleapis.com/v1beta/interactions";
+
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
 function json(res, status, body) {
   return res.status(status).json(body);
@@ -27,34 +28,40 @@ export default async function handler(req, res) {
       return json(res, 400, { error: "A message is required." });
     }
 
-    const safeHistory = Array.isArray(history)
-      ? history
-          .filter(item =>
-            item &&
-            (item.role === "user" || item.role === "assistant") &&
-            typeof item.content === "string"
-          )
-          .slice(-12)
-      : [];
-
     const learnerName = String(profile.name || "Learner").slice(0, 100);
-    const careerGoal = String(profile.career_goal || "Not specified").slice(0, 200);
-    const education = String(profile.education || "Not specified").slice(0, 300);
-    const currentLevel = String(profile.current_level || "Not specified").slice(0, 100);
-    const dailyHours = String(profile.daily_hours || "Not specified").slice(0, 100);
-    const learningStyle = String(profile.learning_style || "Not specified").slice(0, 120);
-    const goalDeadline = String(profile.goal_deadline || "Not specified").slice(0, 100);
-    const skillsInterests = String(profile.skills_interests || "Not specified").slice(0, 800);
-    const firstHelp = String(profile.first_help || "Not specified").slice(0, 500);
+    const careerGoal = String(
+      profile.career_goal || "Not specified"
+    ).slice(0, 200);
+    const education = String(
+      profile.education || "Not specified"
+    ).slice(0, 300);
+    const currentLevel = String(
+      profile.current_level || "Not specified"
+    ).slice(0, 100);
+    const dailyHours = String(
+      profile.daily_hours || "Not specified"
+    ).slice(0, 100);
+    const learningStyle = String(
+      profile.learning_style || "Not specified"
+    ).slice(0, 120);
+    const goalDeadline = String(
+      profile.goal_deadline || "Not specified"
+    ).slice(0, 100);
+    const skillsInterests = String(
+      profile.skills_interests || "Not specified"
+    ).slice(0, 800);
+    const firstHelp = String(
+      profile.first_help || "Not specified"
+    ).slice(0, 500);
 
     const systemInstruction = `
 You are LearnMate AI, an intelligent learning and career companion.
 
-Your job is not to give generic chatbot answers. Help the learner move from a goal to a concrete next action.
+Your job is to help the learner move from a goal to a concrete next action.
 
-Learner profile (provided by the learner; use it for personalization, but never invent missing details):
+Learner profile:
 - Name: ${learnerName}
-- Current career/learning goal: ${careerGoal}
+- Career/learning goal: ${careerGoal}
 - Education: ${education}
 - Current level: ${currentLevel}
 - Available study time: ${dailyHours}
@@ -63,78 +70,112 @@ Learner profile (provided by the learner; use it for personalization, but never 
 - Known skills/interests: ${skillsInterests}
 - What the learner wants help with first: ${firstHelp}
 
-Behavior rules:
-1. Understand what the learner is actually trying to accomplish before answering.
-2. Personalize recommendations to the information the learner provides.
-3. If important information is missing, ask only the most useful questions instead of inventing facts.
-4. When the learner asks for a plan, produce a practical plan with clear milestones and actionable tasks.
-5. When teaching, use this sequence when useful: explanation → simple example → practice → check/quiz → next step.
-6. When the learner asks for career guidance, distinguish current skills, target skills, gaps, projects, and interview preparation.
-7. When the learner asks for a project, give a realistic project matched to their level, goal, time, and skills.
-8. Respect the learner's available study time, preferred learning style, deadline, and current level when making plans.
-9. Use known skills/interests to avoid unnecessarily reteaching what the learner already knows and to identify realistic next skills.
-10. If a required personal detail is missing, ask for it instead of guessing.
-11. Do not expose or repeat the entire learner profile unless it is useful to the request.
-12. When the learner is confused, explain simply and progressively; do not overwhelm them with unnecessary jargon.
-13. Do not claim that you performed an action or accessed a document/database unless the application actually provided that information.
-14. Be honest about uncertainty.
-15. End substantial learning responses with a clear "Next step" so the learner knows exactly what to do.
-16. Prefer structured answers with headings, bullets, numbered steps, and short examples.
-17. You are an educational assistant, not a substitute for a qualified professional in medical, legal, financial, or other high-stakes matters.
+Rules:
+1. Personalize responses using the learner information provided.
+2. Never invent missing personal information.
+3. When information is missing and genuinely important, ask a useful question.
+4. When asked for a plan, give practical milestones and actionable tasks.
+5. When teaching, use explanation, simple example, practice, and next step when useful.
+6. For career questions, distinguish current skills, target skills, gaps, projects, and interview preparation.
+7. Match recommendations to the learner's current level, available time, and deadline.
+8. Explain difficult concepts simply and progressively.
+9. Prefer headings, bullets, numbered steps, and examples.
+10. End substantial learning responses with a clear "Next step".
+11. Never claim to have accessed information that was not provided.
+12. Be honest about uncertainty.
 `;
 
-    const contents = [
+    const safeHistory = Array.isArray(history)
+      ? history
+          .filter(
+            item =>
+              item &&
+              (item.role === "user" || item.role === "assistant") &&
+              typeof item.content === "string"
+          )
+          .slice(-12)
+      : [];
+
+    const input = [
       ...safeHistory.map(item => ({
         role: item.role === "assistant" ? "model" : "user",
-        parts: [{ text: item.content.slice(0, 4000) }]
+        content: item.content.slice(0, 4000)
       })),
       {
         role: "user",
-        parts: [{ text: message.trim().slice(0, 8000) }]
+        content: message.trim().slice(0, 8000)
       }
     ];
 
-    const geminiResponse = await fetch(
-      `${GEMINI_API_URL}/${encodeURIComponent(MODEL)}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": process.env.GEMINI_API_KEY
-        },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemInstruction }]
-          },
-          contents,
-          generationConfig: {
-            maxOutputTokens: 1200,
-            temperature: 0.7
-          }
-        })
-      }
-    );
+    const response = await fetch(GEMINI_INTERACTIONS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": process.env.GEMINI_API_KEY
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        system_instruction: systemInstruction,
+        input
+      })
+    });
 
-    const result = await geminiResponse.json();
+    const data = await response.json().catch(() => ({}));
 
-    if (!geminiResponse.ok) {
-      console.error("Gemini API error:", result);
-      const providerMessage =
-        result?.error?.message ||
-        result?.error?.status ||
-        "The AI provider returned an error.";
+    if (!response.ok) {
+      console.error("Gemini Interactions API error:", data);
 
       return json(res, 502, {
-        error: providerMessage
+        error:
+          data?.error?.message ||
+          data?.error?.status ||
+          "The Gemini AI service returned an error."
       });
     }
 
-    const output = result?.candidates?.[0]?.content?.parts
-      ?.map(part => part.text || "")
-      ?.join("\n")
-      ?.trim() || "";
+    let output = "";
+
+    if (typeof data?.output_text === "string") {
+      output = data.output_text.trim();
+    }
+
+    if (!output && Array.isArray(data?.outputs)) {
+      output = data.outputs
+        .map(item => {
+          if (typeof item?.text === "string") return item.text;
+
+          if (Array.isArray(item?.content)) {
+            return item.content
+              .map(part => part?.text || "")
+              .join("\n");
+          }
+
+          return "";
+        })
+        .join("\n")
+        .trim();
+    }
+
+    if (!output && Array.isArray(data?.output)) {
+      output = data.output
+        .map(item => {
+          if (typeof item?.text === "string") return item.text;
+
+          if (Array.isArray(item?.content)) {
+            return item.content
+              .map(part => part?.text || "")
+              .join("\n");
+          }
+
+          return "";
+        })
+        .join("\n")
+        .trim();
+    }
 
     if (!output) {
+      console.error("Gemini returned no readable output:", data);
+
       return json(res, 502, {
         error: "The AI returned an empty response."
       });
@@ -143,6 +184,7 @@ Behavior rules:
     return json(res, 200, { output });
   } catch (error) {
     console.error("LearnMate backend error:", error);
+
     return json(res, 500, {
       error: "LearnMate could not process the request."
     });
