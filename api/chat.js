@@ -97,15 +97,25 @@ Rules:
       : [];
 
     const input = [
-      ...safeHistory.map(item => ({
-        role: item.role === "assistant" ? "model" : "user",
-        content: item.content.slice(0, 4000)
-      })),
+  ...safeHistory.map(item => ({
+    type: item.role === "assistant" ? "model_output" : "user_input",
+    content: [
       {
-        role: "user",
-        content: message.trim().slice(0, 8000)
+        type: "text",
+        text: item.content.slice(0, 4000)
       }
-    ];
+    ]
+  })),
+  {
+    type: "user_input",
+    content: [
+      {
+        type: "text",
+        text: message.trim().slice(0, 8000)
+      }
+    ]
+  }
+];
 
     const response = await fetch(GEMINI_INTERACTIONS_URL, {
       method: "POST",
