@@ -1474,7 +1474,7 @@ function completeLearningModule(id){
 function learn(){
   const paths=lmPaths();
   const cards=paths.length?paths.map(p=>`<div class="card feature-card"><div><span class="tag">${p.progress>=100?'Completed':'In progress'}</span><h3 style="margin-top:12px">${esc(p.topic)}</h3><p>${esc(p.description||'Personalized learning path')}</p></div><div><div class="progress"><i style="width:${p.progress||0}%"></i></div><small class="muted">${p.progress||0}% complete</small><button class="ghost-btn" style="margin-top:10px" onclick="completeLearningModule('${p.id}')">${p.progress>=100?'Review':'Continue'} →</button></div></div>`).join(''):`<div class="empty">No saved learning paths yet. Create one above.</div>`;
-  return shell(`<div class="content"><div class="page-title">Learn anything, your way.</div><p class="sub">Create a practical path, complete modules and let your activity feed your real progress.</p><div class="card"><div class="eyebrow">AI Learning Path</div><h3>What do you want to learn?</h3><div class="learn-create-row"><input id="learnTopicInput" class="input" placeholder="e.g. Python, machine learning, communication"><button class="primary" onclick="generateLearningPath()">Create path →</button></div><div id="learnPathResult" style="margin-top:16px"></div></div><div class="section-head"><h2>Your learning paths</h2><span class="muted">${paths.length} saved</span></div><div class="grid g3">${cards}</div></div>`,'Learn');
+  return shell(`<div class="content"><div class="page-title">Learn anything, your way.</div><p class="sub">Learn with a real path, lessons, quizzes and flashcards — then turn your activity into measurable progress.</p><div class="card"><div class="eyebrow">AI Learning Path</div><h3>What do you want to learn?</h3><div class="learn-create-row"><input id="learnTopicInput" class="input" placeholder="e.g. Python, machine learning, communication" onkeydown="if(event.key==='Enter'){event.preventDefault();generateLearningPath()}"><button class="primary" onclick="generateLearningPath()">Create path →</button></div><div class="suggestions" style="margin-top:12px"><button class="suggestion" onclick="setLearnTopic('Python')">Python</button><button class="suggestion" onclick="setLearnTopic('Machine Learning')">Machine Learning</button><button class="suggestion" onclick="setLearnTopic('Data Science')">Data Science</button><button class="suggestion" onclick="setLearnTopic('English communication')">English</button></div><div id="learnPathResult" style="margin-top:16px"></div></div><div class="section-head"><h2>Study tools</h2><span class="muted">Choose a topic first</span></div><div class="grid g3"><div class="card feature-card"><div><div class="feature-icon">📖</div><h3>Lesson</h3><p>Get a simple explanation, examples, practice and a next step.</p></div><button class="ghost-btn" onclick="openLearningLesson()">Learn →</button></div><div class="card feature-card"><div><div class="feature-icon">🧪</div><h3>Quiz</h3><p>Test your understanding with questions that become progressively harder.</p></div><button class="ghost-btn" onclick="generateLearningQuiz()">Start quiz →</button></div><div class="card feature-card"><div><div class="feature-icon">🗂️</div><h3>Flashcards</h3><p>Quickly revise definitions, concepts and interview-ready points.</p></div><button class="ghost-btn" onclick="generateLearningFlashcards()">Study cards →</button></div></div><div class="section-head"><h2>Your learning paths</h2><span class="muted">${paths.length} saved</span></div><div class="grid g3">${cards}</div></div>`,'Learn');
 }
 
 /* ---------- Document context ---------- */
@@ -1507,22 +1507,51 @@ function ai(){
 }
 function clearDocumentContext(){state.aiContext=null;toast('Document context cleared');render();}
 async function sendChat(e){
-  e?.preventDefault(); const input=document.getElementById('chatInput'); const message=input?.value.trim(); if(!message)return; input.value='';
-  state.chats.push({who:'user',text:message}); lmWrite('lm_chats',state.chats); recordActivity('ai_chat'); render();
-  const ctx=state.aiContext; let reply='';
+  e?.preventDefault();
+  const input=document.getElementById('chatInput');
+  const message=input?.value.trim();
+  if(!message)return;
+  input.value='';
+  state.chats.push({who:'user',text:message});
+  lmWrite('lm_chats',state.chats);
+  recordActivity('ai_chat');
+  render();
+
+  const ctx=state.aiContext;
+  let apiMessage=message;
   if(ctx?.text){
-    const text=ctx.text; const lower=message.toLowerCase();
-    if(/summar|overview|main|key point/.test(lower)) reply=`**Summary of ${ctx.name}**\n\n${text.slice(0,1800)}${text.length>1800?'…':''}\n\n**Next step:** I can also turn this into exam questions, flashcards or a study plan.`;
-    else if(/question|quiz|exam|important/.test(lower)) reply=`**Exam practice from ${ctx.name}**\n\n1. What is the main concept introduced in the document?\n2. Explain the most important definition in your own words.\n3. Which process or workflow is described?\n4. Give one practical example from the material.\n5. What mistakes or limitations should you remember?\n\nPaste or upload a text-readable version if you want exact question generation from every section.`;
-    else if(/study plan|plan|learn/.test(lower)) reply=`**Study plan for ${ctx.name}**\n\n• Session 1: Read and highlight key definitions.\n• Session 2: Explain each section without looking.\n• Session 3: Solve practice questions.\n• Session 4: Revise weak areas.\n• Session 5: Take a timed self-test.\n\nI can personalize this around your deadline and daily study time.`;
-    else reply=`I’m using **${ctx.name}** as the active context.\n\nYour document contains ${text.length.toLocaleString()} characters of extracted text. Based on the available text, here is the relevant context:\n\n${text.slice(0,2200)}${text.length>2200?'…':''}`;
-  } else if(/interview/i.test(message)) reply=`**Interview preparation**\n\nUse Interview Studio for a real question-by-question session. LearnMate will score your answers and feed weak areas into Career and Progress.`;
-  else if(/project|build/i.test(message)) reply=`**Project planning**\n\nChoose a project in Projects, start it, complete its tasks, submit it for review and the completion will update your progress.`;
-  else if(/plan|learn|study/i.test(message)) reply=`**Learning plan**\n\nCreate a path in Learn, add a goal in Planner and complete modules. LearnMate will calculate your progress from those actions.`;
-  else if(/career|roadmap/i.test(message)) reply=`**Career roadmap**\n\nOpen Career → Improve my roadmap. It will calculate skill gaps from your actual activity and recommend the next skills, projects and interview practice.`;
-  else reply=`I can help you with learning, projects, interviews, documents and career planning. Tell me the exact outcome you want and I’ll turn it into the next action.`;
-  state.chats.push({who:'ai',text:reply}); lmWrite('lm_chats',state.chats); render(); setTimeout(()=>{const el=document.getElementById('chatMessages');if(el)el.scrollTop=el.scrollHeight},20);
+    apiMessage=`Use the following uploaded document as the primary context when answering. Document: ${ctx.name}\n\n${ctx.text.slice(0,12000)}\n\nUser question: ${message}`;
+  }
+
+  try{
+    const response=await fetch('/api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        message:apiMessage,
+        history:state.chats.slice(-12).map(m=>({role:m.who==='ai'?'assistant':'user',content:m.text})),
+        profile:getLearnMatePersonalContext()
+      })
+    });
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(data.error||'AI service unavailable');
+    if(!data.output) throw new Error('AI returned an empty response');
+    state.chats.push({who:'ai',text:data.output});
+  }catch(error){
+    console.warn('LearnMate AI unavailable; using built-in fallback:',error);
+    let reply='I can still guide you in Demo Mode. ';
+    if(/interview/i.test(message)) reply+='Open Interview Studio to start a question-by-question mock interview.';
+    else if(/project|build/i.test(message)) reply+='Open Projects to choose a project, build it step by step and submit it.';
+    else if(/career|roadmap/i.test(message)) reply+='Open Career → Improve my roadmap to generate skill-gap actions.';
+    else if(/quiz|flashcard|learn|study|plan/i.test(message)) reply+='Open Learn, enter your topic, then use Lesson, Quiz or Flashcards.';
+    else reply+='Tell me the exact learning or career outcome you want and I will turn it into a practical next action.';
+    state.chats.push({who:'ai',text:reply});
+  }
+  lmWrite('lm_chats',state.chats);
+  render();
+  setTimeout(()=>{const el=document.getElementById('chatMessages');if(el)el.scrollTop=el.scrollHeight},20);
 }
+
 function quickChat(t){const input=document.getElementById('chatInput');if(input){input.value=t;sendChat({preventDefault(){}})}}
 function newChat(){state.chats=[{who:'ai',text:state.aiContext?`New chat with **${state.aiContext.name}** as active document context.`:'New conversation started. What are you working toward?'}];lmWrite('lm_chats',state.chats);render();}
 
