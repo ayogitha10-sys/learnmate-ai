@@ -725,35 +725,7 @@ learnmateSupabase.auth.onAuthStateChange(async (event, session) => {
 
 
 
-async function learnMateLogout() {
-  const { error } = await learnmateSupabase.auth.signOut();
 
-  if (error) {
-    console.error("LearnMate logout error:", error);
-    if (typeof toast === "function") {
-      toast("Could not log out. Please try again.");
-    }
-    return;
-  }
-
-  state.user = {
-    name: "Learner",
-    goal: "Learner",
-    education: "",
-    level: "Beginner",
-    dailyHours: 1,
-    learningStyle: "Step-by-step",
-    deadline: "",
-    interests: ""
-  };
-
-  store.set("lm_user", state.user);
-  store.set("lm_onboarding", {});
-  state.page = "landing";
-
-  render();
-  showLearnMateAuth();
-}
 
 // Make useful functions available to the existing HTML.
 
@@ -768,8 +740,6 @@ window.handleLearnMateAuth = handleLearnMateAuth;
 window.continueAsGuest = continueAsGuest;
 
 window.closeLearnMateAuth = closeLearnMateAuth;
-
-window.learnMateLogout = learnMateLogout;
 
 // =========================================================
 
@@ -932,42 +902,32 @@ window.createTask = function () {
   modal.innerHTML = `
 
     <div style="
-
-      position:fixed;
-
-      inset:0;
-
-      z-index:99999;
-
-      background:rgba(5,12,18,.72);
-
-      backdrop-filter:blur(12px);
-
-      display:flex;
-
-      align-items:center;
-
-      justify-content:center;
-
-      padding:20px;
-
-    ">
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  background:rgba(5,12,18,.72);
+  backdrop-filter:blur(12px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+">
 
 
 
-      <div style="
-
-        width:min(460px,100%);
-
-        background:#ffffff;
-
-        border-radius:24px;
-
-        padding:30px;
-
-        box-shadow:0 30px 80px rgba(0,0,0,.35);
-
-      ">
+    <div style="
+  position:relative;
+  z-index:100000;
+  width:min(460px,100%);
+  max-width:460px;
+  box-sizing:border-box;
+  background:#ffffff !important;
+  color:#102326 !important;
+  border-radius:24px;
+  padding:32px;
+  box-shadow:0 30px 80px rgba(0,0,0,.35);
+  font-family:DM Sans,Arial,sans-serif;
+">
 
 
 
@@ -1621,11 +1581,20 @@ async function loadLearnMatePlannerTasks() {
 
 
 
-          <span class="tag">
+          <div style="display:flex;align-items:center;gap:8px">
+  <span class="tag">
+    ${task.completed ? "Completed" : "Pending"}
+  </span>
 
-            ${task.completed ? "Completed" : "Pending"}
-
-          </span>
+  <button
+    type="button"
+    class="ghost-btn"
+    onclick="deleteLearnMateTask('${task.id}')"
+    style="color:#ff8f8f"
+  >
+    Delete
+  </button>
+</div>
 
 
 
@@ -1771,6 +1740,7 @@ window.completeLearnMateTask = async function (taskId, completed) {
 
 
 
+
   // Reload the Planner so the UI reflects the database.
 
   if (state.page === "planner") {
@@ -1787,7 +1757,59 @@ window.completeLearnMateTask = async function (taskId, completed) {
 
 };
 
+window.deleteLearnMateTask = async function (taskId) {
+  const {
+    data: { session }
+  } = await learnmateSupabase.auth.getSession();
 
+  if (!session?.user) {
+    const index = state.tasks.findIndex(
+      t => typeof t === "object" && t.id === taskId
+    );
+
+    if (index !== -1) {
+      state.tasks.splice(index, 1);
+      store.set("lm_tasks", state.tasks);
+    }
+
+    toast("Goal removed");
+    render();
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "Delete this goal? This cannot be undone."
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const { error } = await learnmateSupabase
+    .from("tasks")
+    .delete()
+    .eq("id", taskId)
+    .eq("user_id", session.user.id);
+
+  if (error) {
+    console.error("Task deletion error:", error);
+    toast("Could not delete goal");
+    return;
+  }
+
+  state.tasks = state.tasks.filter(
+    t => typeof t === "string" || t.id !== taskId
+  );
+
+  store.set("lm_tasks", state.tasks);
+
+  toast("Goal deleted");
+
+  if (state.page === "planner") {
+    await loadLearnMatePlannerTasks();
+    setTimeout(() => addTaskCompletionControls(), 150);
+  }
+};
 
 
 
@@ -3136,3 +3158,8 @@ window.saveResume = async function () {
   toast(`Resume saved • ATS score ${atsScore}%`);
 
 };
+const learnMatePlannerTaskCreator = window.createTask;
+
+setTimeout(() => {
+  window.createTask = learnMatePlannerTaskCreator;
+}, 0);

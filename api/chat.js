@@ -3,7 +3,7 @@
 // This endpoint keeps LearnMate's Personal AI Memory / Context intact.
 
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
 function json(res, status, body) {
   return res.status(status).json(body);

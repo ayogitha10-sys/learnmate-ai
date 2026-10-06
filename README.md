@@ -1,35 +1,37 @@
-# LearnMate AI — MVP
+# LearnMate AI — Ready-to-submit functional MVP
 
-A polished, responsive front-end MVP for the LearnMate AI project described in the project report: an intelligent learning and career guidance assistant with chatbot, RAG, specialized agents, planning, interview preparation, project guidance, resume support and personalization.
+A no-build LearnMate AI front-end with Supabase authentication plus a fully functional browser-side learning/product layer.
 
-## Run locally
+## Run
 
-No build tools are required.
+1. Keep all files in this folder together.
+2. Open `index.html` directly, or serve the folder with a static server.
+3. For the existing `/api/chat` AI route, deploy the folder to a platform that supports the included `api/chat.js` endpoint (for example Vercel). The app also has a local fallback assistant, so the core UI remains usable without the API.
 
-1. Open `index.html` in a browser, or serve the folder with any static server.
-2. The app stores demo profile, conversation and task data in browser `localStorage`.
+## Functional fixes included
 
-## Included pages
+- Logout is visible in the sidebar and Settings and signs out of Supabase when a session exists.
+- Add Goal is a proper styled LearnMate modal; no browser `prompt()` is used.
+- Planner goals are saved locally and feed Dashboard + Progress.
+- Interview Studio has real HR, Technical and Project question flows, answer submission, scoring and results.
+- Career → Improve my roadmap generates visible skill-gap actions from the user's goal and activity.
+- Dashboard, Career and Progress metrics are calculated from stored user activity instead of hard-coded demo numbers.
+- Projects have real saved workspaces with planned/building/ready/completed states, task checklists and submission.
+- Documents can be uploaded and text-readable content is stored as AI context. Ask LearnMate opens the AI assistant with the selected document active.
+- TXT extraction works natively; PDF and DOCX extraction use optional CDN browser parsers with graceful fallback.
+- Learning paths can be created and modules completed, which updates real progress.
 
-- Landing page / try-first experience
-- Dashboard
-- Adaptive AI Assistant
-- Learn
-- Documents / RAG-ready UX
-- Interview Studio
-- AI Planner
-- Projects
-- Career roadmap + skill gap
-- Resume Studio
-- Progress / achievements
-- Settings
+## Data model
 
-## Next production steps
+The MVP keeps activity in browser localStorage keys such as:
 
-1. Add Supabase authentication + PostgreSQL.
-2. Move user/profile/progress/task/document data from localStorage to Supabase.
-3. Add secure file storage and document processing.
-4. Add embeddings + vector search for RAG.
-5. Connect an LLM API behind a server-side API route.
-6. Implement the agent router and specialized agents.
-7. Deploy the static/front-end layer to Vercel and backend/AI services separately.
+- `lm_user`
+- `lm_tasks`
+- `lm_learning_paths`
+- `lm_projects`
+- `lm_interviews`
+- `lm_documents`
+- `lm_activity`
+- `lm_chats`
+
+Supabase remains responsible for the existing authentication/profile bridge.

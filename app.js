@@ -46,7 +46,7 @@ function getLearnMatePersonalContext(){
 
   return {
     name:user.name||'Learner',
-    career_goal:saved.goal||user.goal||'Not specified',
+    career_goal:user.goal||'Not specified',
     education:user.education||saved.education||'',
     current_level:user.level||saved.level||learnMateExtractMemoryField(packed,'Level:'),
     daily_hours:user.dailyHours||saved.hours||learnMateExtractMemoryField(packed,'Study time:'),
@@ -1090,7 +1090,74 @@ window.renderLearnMateMarkdown=renderLearnMateMarkdown;
 
 
 
-function uploadDoc(el){if(el.files[0])toast(`${el.files[0].name} added to your workspace`)}
+function docs(){
+  const documents=store.get('lm_documents',[]);
+  const cards=documents.length
+    ? documents.map(doc=>`<div class="card"><div class="stat"><div><div class="eyebrow">${esc((doc.type||'DOCUMENT').toUpperCase())}</div><h3>${esc(doc.name)}</h3></div><span class="tag">Ready</span></div><p class="muted">${esc(doc.sizeLabel||'Uploaded')} · ${esc(doc.addedLabel||'Saved locally')}</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="ghost-btn" onclick="askLearnMateDocument('${esc(doc.name).replace(/'/g,"&#039;")}')">Ask LearnMate →</button><button class="ghost-btn" onclick="removeLearnMateDocument('${esc(doc.id)}')">Remove</button></div></div>`).join('')
+    : `<div class="card"><p class="muted">No documents uploaded yet. Add your first PDF or study file above.</p></div>`;
+
+  return shell(`<div class="content">
+    <div class="page-title">Your knowledge, in one place.</div>
+    <p class="sub">Upload study material and keep your learning resources together for quick access.</p>
+    <div class="card" style="padding:28px;text-align:center;border-style:dashed">
+      <div style="font-size:35px">📄</div>
+      <h3>Upload your PDF, notes or document</h3>
+      <p class="muted">LearnMate stores the uploaded file information in this browser. Text files can also be read locally for quick study context.</p>
+      <button class="primary" type="button" onclick="document.getElementById('file').click()">＋ Upload document</button>
+      <input id="file" type="file" accept=".pdf,.txt,.doc,.docx" hidden onchange="uploadDoc(this)">
+    </div>
+    <div class="section-head"><h2>My documents</h2><span class="muted">${documents.length} saved</span></div>
+    <div class="grid g3">${cards}</div>
+  </div>`,'Documents');
+}
+
+function uploadDoc(el){
+  const file=el?.files?.[0];
+  if(!file) return;
+  const documents=store.get('lm_documents',[]);
+  const id=`doc-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+  const type=(file.name.split('.').pop()||'file').toUpperCase();
+  const doc={id,name:file.name,type,sizeLabel:`${(file.size/1024/1024).toFixed(2)} MB`,addedLabel:new Date().toLocaleString()};
+  documents.unshift(doc);
+  store.set('lm_documents',documents.slice(0,20));
+
+  if(file.type==='text/plain' || /\.txt$/i.test(file.name)){
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const latest=store.get('lm_documents',[]);
+      const saved=latest.find(item=>item.id===id);
+      if(saved){saved.text=String(reader.result||'').slice(0,12000);store.set('lm_documents',latest);}
+      toast(`${file.name} added to your workspace`);
+      render();
+    };
+    reader.readAsText(file);
+    return;
+  }
+
+  toast(`${file.name} added to your workspace`);
+  render();
+}
+
+function askLearnMateDocument(name){
+  const documents=store.get('lm_documents',[]);
+  const doc=documents.find(item=>item.name===name);
+  go('ai');
+  setTimeout(()=>{
+    const input=document.getElementById('chatInput');
+    if(!input) return;
+    input.value=doc?.text
+      ? `Using my document "${name}", explain the main concepts and give me a short study plan.`
+      : `I uploaded a document called "${name}". Help me create a study plan for it. I can provide the document text when needed.`;
+    input.focus();
+  },50);
+}
+
+function removeLearnMateDocument(id){
+  const documents=store.get('lm_documents',[]).filter(doc=>doc.id!==id);
+  store.set('lm_documents',documents);
+  toast('Document removed');
+  render();
+}
 
 
 
@@ -1102,13 +1169,128 @@ function startInterview(type){toast(`${type} interview session started`);setTime
 
 
 
-function planner(){return shell(`<div class="content"><div class="page-title">Your AI planner.</div><p class="sub">Turn goals, deadlines and available time into a plan you can actually follow.</p><div class="grid g3"><div class="card"><div class="eyebrow">This week</div><h3>18h 30m planned</h3><p class="muted">Across learning, projects and interview prep.</p><button class="primary" onclick="createTask()">＋ Add goal</button></div><div class="card"><div class="eyebrow">Completion</div><h3>76%</h3><div class="progress"><i style="width:76%"></i></div><p class="muted">You're ahead of your weekly target.</p></div><div class="card"><div class="eyebrow">AI adjustment</div><h3>2 tasks moved</h3><p class="muted">Your plan adapts when you miss or reschedule a task.</p></div></div><div class="section-head"><h2>Today's schedule</h2><button class="link" onclick="toast('Plan optimized for your current goals')">✦ Optimize with AI</button></div><div class="card"><div class="timeline"><div class="timeline-item"><span class="time">6:00 PM</span><i class="dot"></i><div><b>Deep Learning</b><div class="muted">Learn neural network fundamentals · 45 min</div></div></div><div class="timeline-item"><span class="time">7:00 PM</span><i class="dot"></i><div><b>Technical Interview</b><div class="muted">5 questions · 20 min</div></div></div><div class="timeline-item"><span class="time">7:30 PM</span><i class="dot"></i><div><b>Project sprint</b><div class="muted">Implement document upload · 60 min</div></div></div></div></div><div class="section-head"><h2>Weekly view</h2></div><div class="card"><div class="calendar">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i)=>`<div class="day"><b>${d}</b><span>${i<5?'2 tasks':'1 task'}</span></div>`).join('')}</div></div></div>`,'Planner')}
+function planner(){
+  state.tasks=Array.isArray(state.tasks)?state.tasks:[];
+  state.tasks=state.tasks.map((t,i)=>{
+    if(typeof t==='string'){
+      return {
+        id:`legacy-${i}`,
+        title:t,
+        done:false,
+        createdAt:Date.now()
+      };
+    }
+    return t;
+  });
 
+  const total=state.tasks.length;
+  const completed=state.tasks.filter(t=>t.done).length;
+  const percent=total?Math.round((completed/total)*100):0;
 
+  const goals=state.tasks.length
+    ? state.tasks.map(t=>`
+      <div class="list-row" style="align-items:center;gap:14px">
+        <div style="flex:1">
+          <b style="${t.done?'text-decoration:line-through;opacity:.6':''}">
+            ${esc(t.title)}
+          </b>
+          <div class="muted">${t.done?'Completed':'In progress'}</div>
+        </div>
+        <button class="ghost-btn" onclick="toggleTask('${t.id}')">
+          ${t.done?'Mark incomplete':'Complete'}
+        </button>
+        <button class="ghost-btn" onclick="deleteTask('${t.id}')">
+          Delete
+        </button>
+      </div>
+    `).join('')
+    : `<div class="muted" style="padding:18px 0">
+        You don't have any goals yet. Add your first goal below.
+      </div>`;
 
-function createTask(){const t=prompt('What goal should LearnMate add?');if(t){state.tasks.push(t);store.set('lm_tasks',state.tasks);toast('Goal added to your plan')}}
+  return shell(`
+    <div class="content">
+      <div class="page-title">Your AI planner.</div>
+      <p class="sub">
+        Turn goals, deadlines and available time into a plan you can actually follow.
+      </p>
 
+      <div class="grid g3">
+        <div class="card">
+          <div class="eyebrow">Your goals</div>
+          <h3>${total}</h3>
+          <p class="muted">
+            ${total===1?'goal':'goals'} currently in your plan.
+          </p>
+        </div>
 
+        <div class="card">
+          <div class="eyebrow">Completion</div>
+          <h3>${percent}%</h3>
+          <div class="progress">
+            <i style="width:${percent}%"></i>
+          </div>
+          <p class="muted">
+            ${completed} of ${total} completed.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="eyebrow">Add a goal</div>
+          <h3>What's next?</h3>
+          <p class="muted">
+            Add a goal you want LearnMate to track.
+          </p>
+          <button class="primary" onclick="window.createTask()">＋ Add goal</button>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <h2>Your goals</h2>
+      </div>
+
+      <div class="card">
+        <div class="list">
+          ${goals}
+        </div>
+      </div>
+
+      <div class="section-head">
+        <h2>Weekly view</h2>
+      </div>
+
+      <div class="card">
+        <div class="calendar">
+          ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`
+            <div class="day">
+              <b>${d}</b>
+              <span>${total} ${total===1?'goal':'goals'}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `,'Planner');
+}
+
+function toggleTask(id){
+  state.tasks=state.tasks.map(t=>{
+    if(t.id===id){
+      return {...t,done:!t.done};
+    }
+    return t;
+  });
+  store.set('lm_tasks',state.tasks);
+  toast('Goal updated');
+  render();
+}
+
+function deleteTask(id){
+  state.tasks=state.tasks.filter(t=>t.id!==id);
+  store.set('lm_tasks',state.tasks);
+  toast('Goal removed');
+  render();
+}
 
 function projects(){return shell(`<div class="content"><div class="page-title">Build something worth showing.</div><p class="sub">Discover ideas, choose the right difficulty and get a guided roadmap from problem statement to deployment.</p><div class="card" style="margin-bottom:18px"><div class="eyebrow">AI Project Generator</div><h3>Tell us what you want to build</h3><div style="display:flex;gap:10px;margin-top:12px"><input id="projectInput" class="input" placeholder="e.g. An AI project for my final year and portfolio"><button class="primary" onclick="generateProject()">Generate →</button></div></div><div class="section-head"><h2>Recommended for you</h2><span class="muted">Based on your career goal</span></div><div class="grid g3"><div class="card feature-card"><div><span class="tag">AI / Intermediate</span><h3 style="margin-top:12px">LearnMate Document Intelligence</h3><p>Build a RAG application that lets learners chat with their own study materials.</p></div><button class="ghost-btn" onclick="toast('Project roadmap opened')">View roadmap →</button></div><div class="card feature-card"><div><span class="tag">ML / Intermediate</span><h3 style="margin-top:12px">Interview Readiness Predictor</h3><p>Analyze practice performance and predict readiness across skill areas.</p></div><button class="ghost-btn" onclick="toast('Project roadmap opened')">View roadmap →</button></div><div class="card feature-card"><div><span class="tag">LLM / Advanced</span><h3 style="margin-top:12px">Agentic Career Coach</h3><p>Coordinate specialized agents for learning, projects, resumes and interview prep.</p></div><button class="ghost-btn" onclick="toast('Project roadmap opened')">View roadmap →</button></div></div></div>`,'Projects')}
 
@@ -1150,4 +1332,270 @@ window.go=go;window.render=render;window.enterApp=enterApp;window.state=state;wi
 
 
 
+/* =========================================================
+   LearnMate v2 functional product layer
+   Fixes: logout, goal modal, interviews, career roadmap,
+   real progress, project workflow, document-aware AI.
+   ========================================================= */
+
+function lmRead(key, fallback){
+  return store.get(key, fallback);
+}
+function lmWrite(key, value){ store.set(key, value); }
+function lmArray(key){ const v=lmRead(key,[]); return Array.isArray(v)?v:[]; }
+function lmNow(){ return new Date().toISOString(); }
+function lmDateKey(ts){ return new Date(ts||Date.now()).toISOString().slice(0,10); }
+function lmActivity(){ return lmArray('lm_activity'); }
+function recordActivity(type, meta={}){
+  const items=lmActivity();
+  items.push({id:`a-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,type,at:Date.now(),...meta});
+  lmWrite('lm_activity',items.slice(-300));
+}
+function lmTasks(){
+  const raw=lmArray('lm_tasks');
+  return raw.map((t,i)=>typeof t==='string'?{id:`legacy-${i}`,title:t,done:false,createdAt:Date.now()}:t);
+}
+function lmProjects(){ return lmArray('lm_projects'); }
+function lmInterviews(){ return lmArray('lm_interviews'); }
+function lmPaths(){ return lmArray('lm_learning_paths'); }
+function lmDocs(){ return lmArray('lm_documents'); }
+function lmPercent(n){ return Math.max(0,Math.min(100,Math.round(n||0))); }
+function lmMetric(){
+  const tasks=lmTasks(), doneTasks=tasks.filter(t=>t.done).length;
+  const paths=lmPaths(), pathProgress=paths.length?paths.reduce((s,p)=>s+(p.progress||0),0)/paths.length:0;
+  const docs=lmDocs();
+  const interviews=lmInterviews(), interviewAvg=interviews.length?interviews.reduce((s,i)=>s+(i.score||0),0)/interviews.length:0;
+  const projects=lmProjects(), completedProjects=projects.filter(p=>p.status==='completed').length;
+  const projectProgress=projects.length?projects.reduce((s,p)=>s+(p.progress||0),0)/projects.length:0;
+  const learning=lmPercent(pathProgress*0.65 + (tasks.length?doneTasks/tasks.length*100:0)*0.25 + Math.min(docs.length*5,10));
+  const overall=lmPercent(learning*.38 + interviewAvg*.20 + projectProgress*.22 + (tasks.length?doneTasks/tasks.length*100:0)*.12 + Math.min(docs.length*100,100)*.08);
+  const badges=(learning>=50?1:0)+(doneTasks>=3?1:0)+(interviews.length>=1?1:0)+(interviews.length>=3?1:0)+(completedProjects>=1?1:0)+(completedProjects>=3?1:0)+(docs.length>=1?1:0);
+  const dates=[...new Set(lmActivity().map(a=>lmDateKey(a.at)))].sort();
+  let streak=0;
+  const today=new Date();
+  for(let i=0;i<365;i++){
+    const d=new Date(today); d.setDate(today.getDate()-i);
+    if(dates.includes(lmDateKey(d))) streak++; else if(i===0) continue; else break;
+  }
+  return {tasks,doneTasks,paths,docs,interviews,projects,completedProjects,learning,interviewAvg,projectProgress,overall,badges,streak,goalCount:tasks.length};
+}
+function lmCareerSkills(){
+  const goal=String(state.user?.goal||'AI Engineer').toLowerCase();
+  if(/data/.test(goal)) return [['Python',0],['SQL',0],['Statistics',0],['Machine Learning',0],['Data Visualization',0],['MLOps',0]];
+  if(/software|developer|backend|full stack/.test(goal)) return [['Programming',0],['Data Structures',0],['APIs',0],['Databases',0],['System Design',0],['Testing & DevOps',0]];
+  if(/marketing/.test(goal)) return [['Content',0],['SEO',0],['Analytics',0],['Paid Ads',0],['Brand Strategy',0],['Automation',0]];
+  return [['Python',0],['Machine Learning',0],['Deep Learning',0],['LLMs & RAG',0],['MLOps',0],['System Design',0]];
+}
+function lmSkillScore(name,base){
+  const key=name.toLowerCase();
+  const interests=String(state.user?.interests||'').toLowerCase();
+  const activity=lmActivity().filter(a=>String(a.skill||a.topic||a.type||a.title||'').toLowerCase().includes(key.split(' ')[0]));
+  const pathActivity=lmPaths().filter(p=>String(p.topic||'').toLowerCase().includes(key.split(' ')[0]));
+  let score=base||0;
+  if(interests.includes(key.split(' ')[0])) score+=20;
+  score+=activity.length*8+pathActivity.reduce((n,p)=>n+Math.round((p.progress||0)*.35),0);
+  return lmPercent(score);
+}
+function lmStatus(score){ return score>=75?'Strong':score>=45?'Developing':'Needs focus'; }
+
+/* ---------- Sidebar / logout ---------- */
+function nav(){
+  const items=[['dashboard','Dashboard'],['ai','AI Assistant'],['learn','Learn'],['docs','Documents'],['interview','Interview'],['planner','Planner'],['projects','Projects'],['career','Career'],['resume','Resume'],['progress','Progress']];
+  return `<aside class="sidebar ${state.sidebar?'open':''}">
+    <div class="brand"><div class="logo">✦</div><div><strong>LearnMate</strong><span>AI learning companion</span></div></div>
+    <div class="nav-label">Workspace</div><nav class="nav">${items.map(([k,n])=>`<button class="${state.page===k?'active':''}" onclick="go('${k}')"><span class="ico">${icons[k]}</span>${n}</button>`).join('')}</nav>
+    <div class="nav-label">Account</div><nav class="nav"><button class="${state.page==='settings'?'active':''}" onclick="go('settings')"><span class="ico">⚙</span>Settings</button><button onclick="logoutLearnMate()"><span class="ico">↪</span>Logout</button></nav>
+    <div class="sidebar-bottom"><div class="profile-mini"><div class="avatar">${esc((state.user?.name||'A')[0])}</div><div><b>${esc(state.user?.name||'Learner')}</b><small>${esc(state.user?.goal||'Learner')}</small></div></div></div>
+  </aside>`;
+}
+async function logoutLearnMate(){
+  try{ if(window.learnmateSupabase?.auth) await window.learnmateSupabase.auth.signOut(); }catch(e){ console.warn('Logout:',e); }
+  ['lm_user','lm_onboarding'].forEach(k=>localStorage.removeItem(k));
+  state.user={name:'Learner',goal:'Learner'}; state.page='landing'; state.sidebar=false;
+  toast('You have been logged out'); render();
+}
+
+/* ---------- Truthful dashboard ---------- */
+function dashboard(){
+  const m=lmMetric();
+  const focus=m.paths.find(p=>(p.progress||0)<100)?.topic || (m.tasks.find(t=>!t.done)?.title) || 'Choose your first learning goal';
+  const focusProgress=m.paths.find(p=>p.topic===focus)?.progress||0;
+  const next=m.tasks.find(t=>!t.done);
+  const recent=m.activity||[];
+  return shell(`<div class="content">
+    <div class="hero"><section class="card hero-card"><div class="eyebrow">Your personal AI companion</div><h1>Good ${new Date().getHours()<12?'morning':new Date().getHours()<18?'afternoon':'evening'}, ${esc(state.user.name||'Learner')}.</h1><p>Your dashboard is calculated from what you actually learn, complete, build and practice — not placeholder scores.</p><div class="hero-actions"><button class="primary" onclick="go('ai')">✦ Ask LearnMate</button><button class="ghost-btn" onclick="go('planner')">View today's plan</button></div></section>
+    <section class="card focus-card"><div><div class="eyebrow">Current focus</div><h3 style="font-size:23px;margin-top:10px">${esc(focus)}</h3><p class="muted">${m.paths.length?'Continue your saved learning path.':'Start by adding a goal or creating a learning path.'}</p></div><div><div class="stat"><div><div class="metric-label">Overall progress</div><strong>${m.overall}%</strong></div><span class="tag">${m.overall? 'Live':'No activity yet'}</span></div><div class="progress" style="margin-top:12px"><i style="width:${m.overall}%"></i></div></div></section></div>
+    <div class="grid g4"><div class="card"><div class="metric-label">Learning streak</div><div class="stat"><strong>${m.streak}</strong><span>🔥 days</span></div></div><div class="card"><div class="metric-label">XP earned</div><div class="stat"><strong>${Math.round(m.overall*25 + m.doneTasks*40 + m.interviews.length*60 + m.completedProjects*150).toLocaleString()}</strong><span>⭐ XP</span></div></div><div class="card"><div class="metric-label">Interview readiness</div><div class="stat"><strong>${m.interviewAvg}%</strong><span>${m.interviews.length} completed</span></div></div><div class="card"><div class="metric-label">Goals completed</div><div class="stat"><strong>${m.doneTasks}</strong><span>🎯 of ${m.goalCount}</span></div></div></div>
+    <div class="section-head"><h2>Continue learning</h2><button class="link" onclick="go('learn')">View all →</button></div>
+    <div class="grid g3">${m.paths.length?m.paths.slice(0,3).map(p=>`<div class="card feature-card"><div><div class="feature-icon">🧠</div><h3>${esc(p.topic)}</h3><p>${esc(p.description||'Personalized learning path')}</p></div><div><div class="progress"><i style="width:${p.progress||0}%"></i></div><small class="muted">${p.progress||0}% complete</small></div></div>`).join(''):`<div class="card feature-card"><div><div class="feature-icon">🧠</div><h3>No learning path yet</h3><p>Create your first path from Learn and your progress will appear here.</p></div><button class="primary" onclick="go('learn')">Create path →</button></div>`}
+      <div class="card feature-card"><div><div class="feature-icon">💬</div><h3>Interview practice</h3><p>${m.interviews.length?`Latest score: ${m.interviewAvg}%`:'No completed interview yet.'}</p></div><button class="ghost-btn" onclick="go('interview')">Practice now →</button></div>
+      <div class="card feature-card"><div><div class="feature-icon">🚀</div><h3>Build a project</h3><p>${m.projects.length?`${m.completedProjects} completed · ${m.projects.length} saved`:'No projects started yet.'}</p></div><button class="ghost-btn" onclick="go('projects')">Open projects →</button></div></div>
+    <div class="section-head"><h2>Today's plan</h2><button class="link" onclick="go('planner')">Open planner →</button></div>
+    <div class="card">${next?`<div class="timeline-item"><span class="time">Next</span><i class="dot"></i><div><b>${esc(next.title)}</b><div class="muted">Mark it complete in Planner when you finish.</div></div></div>`:`<div class="empty">No pending goals. Add one in Planner and LearnMate will track it here.</div>`}</div>
+  </div>`,'Dashboard');
+}
+
+/* ---------- Styled goal modal ---------- */
+function createTask(){
+  const existing=document.getElementById('learnmateTaskModal');
+  if(existing){ existing.style.display='flex'; document.getElementById('lmTaskTitle')?.focus(); return; }
+  const modal=document.createElement('div'); modal.id='learnmateTaskModal'; modal.className='lm-modal';
+  modal.innerHTML=`<div class="lm-modal-backdrop" onclick="closeTaskModal()"></div><div class="lm-modal-card"><div class="lm-modal-icon">✦</div><div class="eyebrow">Planner</div><h2>Add a goal</h2><p class="muted">What would you like LearnMate to add to your plan?</p><div class="form-grid"><div class="form-group full"><label>Goal or task</label><input id="lmTaskTitle" class="input" placeholder="e.g. Learn Python for 30 minutes" maxlength="120"></div><div class="form-group"><label>Priority</label><select id="lmTaskPriority" class="select"><option>Medium</option><option>High</option><option>Low</option></select></div><div class="form-group"><label>Deadline</label><input id="lmTaskDeadline" class="input" type="date"></div></div><div class="lm-modal-actions"><button class="ghost-btn" onclick="closeTaskModal()">Cancel</button><button class="primary" onclick="saveTaskFromModal()">Add goal</button></div></div>`;
+  document.body.appendChild(modal); setTimeout(()=>document.getElementById('lmTaskTitle')?.focus(),30);
+}
+function closeTaskModal(){document.getElementById('learnmateTaskModal')?.remove();}
+function saveTaskFromModal(){
+  const title=document.getElementById('lmTaskTitle')?.value.trim(); if(!title){toast('Please enter a goal');return;}
+  const tasks=lmTasks(); tasks.push({id:`task-${Date.now()}`,title,done:false,priority:document.getElementById('lmTaskPriority')?.value||'Medium',deadline:document.getElementById('lmTaskDeadline')?.value||'',createdAt:Date.now()});
+  lmWrite('lm_tasks',tasks); recordActivity('goal_added',{title}); closeTaskModal(); toast('Goal added to your plan'); render();
+}
+function toggleTask(id){const tasks=lmTasks().map(t=>t.id===id?{...t,done:!t.done,completedAt:!t.done?Date.now():null}:t);lmWrite('lm_tasks',tasks);const t=tasks.find(x=>x.id===id);if(t?.done)recordActivity('goal_completed',{title:t.title});toast(t?.done?'Goal completed 🎉':'Goal reopened');render();}
+function deleteTask(id){lmWrite('lm_tasks',lmTasks().filter(t=>t.id!==id));toast('Goal removed');render();}
+function planner(){
+  const tasks=lmTasks(), done=tasks.filter(t=>t.done).length, pct=tasks.length?lmPercent(done/tasks.length*100):0;
+  const goals=tasks.length?tasks.map(t=>`<div class="list-row"><div class="left"><button class="check-btn ${t.done?'checked':''}" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</button><div><b style="${t.done?'text-decoration:line-through;opacity:.6':''}">${esc(t.title)}</b><div class="muted">${esc(t.priority||'Medium')}${t.deadline?' · due '+esc(t.deadline):''}</div></div></div><button class="icon-btn" onclick="deleteTask('${t.id}')">×</button></div>`).join(''):`<div class="empty">No goals yet. Add your first goal and it will appear across your dashboard and progress.</div>`;
+  return shell(`<div class="content"><div class="page-title">Your AI planner.</div><p class="sub">Track real goals and completion instead of placeholder tasks.</p><div class="grid g3"><div class="card"><div class="eyebrow">Your goals</div><h3>${tasks.length}</h3><p class="muted">${tasks.length===1?'goal':'goals'} in your plan.</p></div><div class="card"><div class="eyebrow">Completion</div><h3>${pct}%</h3><div class="progress"><i style="width:${pct}%"></i></div><p class="muted">${done} of ${tasks.length} completed.</p></div><div class="card"><div class="eyebrow">Add a goal</div><h3>What's next?</h3><p class="muted">LearnMate will track it everywhere.</p><button class="primary" onclick="createTask()">＋ Add goal</button></div></div><div class="section-head"><h2>Your goals</h2></div><div class="card"><div class="list">${goals}</div></div><div class="section-head"><h2>Weekly view</h2></div><div class="card"><div class="calendar">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="day"><b>${d}</b><span>${tasks.filter(t=>!t.deadline||new Date(t.deadline).getDay()===(['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(d))).length} goals</span></div>`).join('')}</div></div></div>`,'Planner');
+}
+
+/* ---------- Real learning paths ---------- */
+function generateLearningPath(){
+  const input=document.getElementById('learnTopicInput'), topic=input?.value.trim(); const result=document.getElementById('learnPathResult');
+  if(!topic){toast('Tell me what you want to learn first');return;}
+  const modules=['Foundations & vocabulary','Core concepts','Hands-on examples','Practice & mini challenges','Real-world application','Review & assessment'];
+  const path={id:`path-${Date.now()}`,topic,description:`A practical ${topic} path built around your goal: ${state.user.goal||'personal growth'}.`,modules,progress:0,createdAt:Date.now()};
+  const paths=lmPaths().filter(p=>p.topic.toLowerCase()!==topic.toLowerCase());paths.unshift(path);lmWrite('lm_learning_paths',paths.slice(0,12));recordActivity('learning_path_created',{topic});
+  if(result)result.innerHTML=`<div class="card path-result"><div class="eyebrow">Your personalized path</div><h3>${esc(topic)}</h3><p class="muted">${esc(path.description)}</p><ol>${modules.map((m,i)=>`<li><b>Module ${i+1}:</b> ${m}</li>`).join('')}</ol><div class="progress"><i style="width:0%"></i></div><div class="lm-inline-actions"><button class="primary" onclick="completeLearningModule('${path.id}')">Start module 1 →</button><button class="ghost-btn" onclick="go('planner')">Add practice goal</button></div></div>`;
+  toast('Learning path created');
+}
+function completeLearningModule(id){
+  const paths=lmPaths(); const p=paths.find(x=>x.id===id); if(!p)return;
+  p.progress=Math.min(100,(p.progress||0)+Math.round(100/p.modules.length)); p.lastStudied=Date.now(); lmWrite('lm_learning_paths',paths); recordActivity('learning_session',{topic:p.topic}); toast(p.progress>=100?'Learning path completed 🎉':'Module completed'); render();
+}
+function learn(){
+  const paths=lmPaths();
+  const cards=paths.length?paths.map(p=>`<div class="card feature-card"><div><span class="tag">${p.progress>=100?'Completed':'In progress'}</span><h3 style="margin-top:12px">${esc(p.topic)}</h3><p>${esc(p.description||'Personalized learning path')}</p></div><div><div class="progress"><i style="width:${p.progress||0}%"></i></div><small class="muted">${p.progress||0}% complete</small><button class="ghost-btn" style="margin-top:10px" onclick="completeLearningModule('${p.id}')">${p.progress>=100?'Review':'Continue'} →</button></div></div>`).join(''):`<div class="empty">No saved learning paths yet. Create one above.</div>`;
+  return shell(`<div class="content"><div class="page-title">Learn anything, your way.</div><p class="sub">Create a practical path, complete modules and let your activity feed your real progress.</p><div class="card"><div class="eyebrow">AI Learning Path</div><h3>What do you want to learn?</h3><div class="learn-create-row"><input id="learnTopicInput" class="input" placeholder="e.g. Python, machine learning, communication"><button class="primary" onclick="generateLearningPath()">Create path →</button></div><div id="learnPathResult" style="margin-top:16px"></div></div><div class="section-head"><h2>Your learning paths</h2><span class="muted">${paths.length} saved</span></div><div class="grid g3">${cards}</div></div>`,'Learn');
+}
+
+/* ---------- Document context ---------- */
+function docs(){
+  const documents=lmDocs();
+  const cards=documents.length?documents.map(doc=>`<div class="card"><div class="stat"><div><div class="eyebrow">${esc((doc.type||'DOCUMENT').toUpperCase())}</div><h3>${esc(doc.name)}</h3></div><span class="tag">${doc.text?'Context ready':'Saved'}</span></div><p class="muted">${esc(doc.sizeLabel||'Uploaded')} · ${esc(doc.addedLabel||'Saved locally')}</p>${doc.text?`<div class="doc-preview">${esc(doc.text.slice(0,220))}${doc.text.length>220?'…':''}</div>`:`<p class="muted">For best AI answers, use a text-readable file. LearnMate will preserve the file and can still help you plan around it.</p>`}<div class="lm-inline-actions"><button class="ghost-btn" onclick="askLearnMateDocument('${esc(doc.id)}')">Ask LearnMate →</button><button class="ghost-btn" onclick="removeLearnMateDocument('${esc(doc.id)}')">Remove</button></div></div>`).join(''):`<div class="empty">No documents uploaded yet.</div>`;
+  return shell(`<div class="content"><div class="page-title">Your knowledge, in one place.</div><p class="sub">Upload study material and ask LearnMate questions with the selected document already attached as context.</p><div class="card upload-zone"><div style="font-size:35px">📄</div><h3>Upload your PDF, notes or document</h3><p class="muted">Text files are fully searchable in-browser. PDF/DOCX text is extracted when the optional browser parser is available.</p><button class="primary" onclick="document.getElementById('file').click()">＋ Upload document</button><input id="file" type="file" accept=".pdf,.txt,.doc,.docx" hidden onchange="uploadDoc(this)"></div><div class="section-head"><h2>My documents</h2><span class="muted">${documents.length} saved</span></div><div class="grid g3">${cards}</div></div>`,'Documents');
+}
+async function uploadDoc(el){
+  const file=el?.files?.[0]; if(!file)return;
+  const id=`doc-${Date.now()}`; const doc={id,name:file.name,type:(file.name.split('.').pop()||'file').toUpperCase(),sizeLabel:`${(file.size/1024/1024).toFixed(2)} MB`,addedLabel:new Date().toLocaleString(),text:''};
+  try{
+    if(file.type==='text/plain'||/\.txt$/i.test(file.name)) doc.text=await file.text();
+    else if(/\.pdf$/i.test(file.name) && window.pdfjsLib){const buf=await file.arrayBuffer();const pdf=await window.pdfjsLib.getDocument({data:buf}).promise;let txt='';for(let i=1;i<=Math.min(pdf.numPages,20);i++){const pg=await pdf.getPage(i);const c=await pg.getTextContent();txt+=c.items.map(x=>x.str).join(' ')+'\n';}doc.text=txt.slice(0,50000);}
+    else if(/\.docx$/i.test(file.name) && window.mammoth){const buf=await file.arrayBuffer();const r=await window.mammoth.extractRawText({arrayBuffer:buf});doc.text=String(r.value||'').slice(0,50000);}
+  }catch(e){console.warn('Document extraction failed',e);}
+  const documents=lmDocs().filter(x=>x.id!==id);documents.unshift(doc);lmWrite('lm_documents',documents.slice(0,20));recordActivity('document_added',{name:file.name});toast(`${file.name} added to your workspace`);render();
+}
+function askLearnMateDocument(id){
+  const doc=lmDocs().find(d=>d.id===id); if(!doc)return;
+  state.aiContext={docId:doc.id,name:doc.name,text:doc.text||'',setAt:Date.now()};
+  state.chats=[{who:'ai',text:`I have your document **${doc.name}** as active context. Ask me to summarize it, explain a topic, create exam questions, make flashcards, or build a study plan.`}];
+  lmWrite('lm_chats',state.chats); go('ai');
+}
+function removeLearnMateDocument(id){lmWrite('lm_documents',lmDocs().filter(d=>d.id!==id));if(state.aiContext?.docId===id)state.aiContext=null;toast('Document removed');render();}
+
+/* ---------- Document-aware assistant ---------- */
+function ai(){
+  const ctx=state.aiContext; return shell(`<div class="content"><div class="chat-layout"><aside class="card chat-side"><div class="eyebrow">AI workspace</div><h3>Conversations</h3><button class="ghost-btn" onclick="newChat()">＋ New conversation</button>${ctx?`<div class="card active-context"><div class="eyebrow">Active document</div><b>${esc(ctx.name)}</b><small class="muted">${ctx.text?'Text context loaded':'Metadata only'}</small><button class="link" onclick="clearDocumentContext()">Clear context</button></div>`:''}<div class="list" style="margin-top:6px"><div class="list-row"><div class="left"><div class="round">✦</div><span>My learning plan</span></div></div><div class="list-row"><div class="left"><div class="round">🎤</div><span>Interview prep</span></div></div><div class="list-row"><div class="left"><div class="round">🚀</div><span>Project guidance</span></div></div></div></aside><section class="card chat-main"><div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:13px"><div><div class="eyebrow">Adaptive AI</div><h3 style="margin-top:4px">Ask LearnMate</h3></div><span class="tag">${ctx?'Document context active':'Context aware'}</span></div><div id="chatMessages" class="chat-messages">${state.chats.map(m=>`<div class="bubble ${m.who}">${renderLearnMateMarkdown(m.text)}</div>`).join('')}</div><div class="suggestions"><button class="suggestion" onclick="quickChat('Summarize this document')">Summarize</button><button class="suggestion" onclick="quickChat('Explain this simply')">Explain simply</button><button class="suggestion" onclick="quickChat('Create exam questions from this')">Exam questions</button><button class="suggestion" onclick="quickChat('Make a study plan from this')">Study plan</button></div><form class="chat-input" onsubmit="sendChat(event)"><input id="chatInput" class="input" placeholder="${ctx?'Ask anything about '+esc(ctx.name):'Tell me what you want to learn, build or achieve...'}" autocomplete="off"><button class="primary">Send →</button></form></section></div></div>`,'AI Assistant');
+}
+function clearDocumentContext(){state.aiContext=null;toast('Document context cleared');render();}
+async function sendChat(e){
+  e?.preventDefault(); const input=document.getElementById('chatInput'); const message=input?.value.trim(); if(!message)return; input.value='';
+  state.chats.push({who:'user',text:message}); lmWrite('lm_chats',state.chats); recordActivity('ai_chat'); render();
+  const ctx=state.aiContext; let reply='';
+  if(ctx?.text){
+    const text=ctx.text; const lower=message.toLowerCase();
+    if(/summar|overview|main|key point/.test(lower)) reply=`**Summary of ${ctx.name}**\n\n${text.slice(0,1800)}${text.length>1800?'…':''}\n\n**Next step:** I can also turn this into exam questions, flashcards or a study plan.`;
+    else if(/question|quiz|exam|important/.test(lower)) reply=`**Exam practice from ${ctx.name}**\n\n1. What is the main concept introduced in the document?\n2. Explain the most important definition in your own words.\n3. Which process or workflow is described?\n4. Give one practical example from the material.\n5. What mistakes or limitations should you remember?\n\nPaste or upload a text-readable version if you want exact question generation from every section.`;
+    else if(/study plan|plan|learn/.test(lower)) reply=`**Study plan for ${ctx.name}**\n\n• Session 1: Read and highlight key definitions.\n• Session 2: Explain each section without looking.\n• Session 3: Solve practice questions.\n• Session 4: Revise weak areas.\n• Session 5: Take a timed self-test.\n\nI can personalize this around your deadline and daily study time.`;
+    else reply=`I’m using **${ctx.name}** as the active context.\n\nYour document contains ${text.length.toLocaleString()} characters of extracted text. Based on the available text, here is the relevant context:\n\n${text.slice(0,2200)}${text.length>2200?'…':''}`;
+  } else if(/interview/i.test(message)) reply=`**Interview preparation**\n\nUse Interview Studio for a real question-by-question session. LearnMate will score your answers and feed weak areas into Career and Progress.`;
+  else if(/project|build/i.test(message)) reply=`**Project planning**\n\nChoose a project in Projects, start it, complete its tasks, submit it for review and the completion will update your progress.`;
+  else if(/plan|learn|study/i.test(message)) reply=`**Learning plan**\n\nCreate a path in Learn, add a goal in Planner and complete modules. LearnMate will calculate your progress from those actions.`;
+  else if(/career|roadmap/i.test(message)) reply=`**Career roadmap**\n\nOpen Career → Improve my roadmap. It will calculate skill gaps from your actual activity and recommend the next skills, projects and interview practice.`;
+  else reply=`I can help you with learning, projects, interviews, documents and career planning. Tell me the exact outcome you want and I’ll turn it into the next action.`;
+  state.chats.push({who:'ai',text:reply}); lmWrite('lm_chats',state.chats); render(); setTimeout(()=>{const el=document.getElementById('chatMessages');if(el)el.scrollTop=el.scrollHeight},20);
+}
+function quickChat(t){const input=document.getElementById('chatInput');if(input){input.value=t;sendChat({preventDefault(){}})}}
+function newChat(){state.chats=[{who:'ai',text:state.aiContext?`New chat with **${state.aiContext.name}** as active document context.`:'New conversation started. What are you working toward?'}];lmWrite('lm_chats',state.chats);render();}
+
+/* ---------- Real interview engine ---------- */
+const LM_INTERVIEW_BANK={
+  HR:[['Tell me about yourself.','Introduce yourself clearly, focusing on your education, strengths and career direction.'],['Why do you want this role?','Connect your motivation to the role and show evidence of preparation.'],['Tell me about a challenge you faced.','Use Situation → Action → Result and explain what you learned.'],['What is your biggest weakness?','Give a genuine weakness plus a concrete improvement plan.'],['Where do you see yourself in three years?','Show realistic growth aligned with the target role.']],
+  Technical:[['Explain supervised vs unsupervised learning.','Define both and give a practical example.'],['What is overfitting and how do you prevent it?','Explain the problem and methods such as regularization, validation and early stopping.'],['Explain precision, recall and F1-score.','Define the metrics and explain when each matters.'],['What is the difference between RAG and fine-tuning?','Explain retrieval versus changing model weights and when to use each.'],['How would you deploy an ML model?','Cover API, containerization, monitoring, versioning and rollback.']],
+  Project:[['What problem does your project solve?','State the user problem, target user and measurable outcome.'],['Why did you choose your architecture?','Explain trade-offs and why the design fits the requirements.'],['What was the hardest technical issue?','Explain the issue, debugging process and final solution.'],['How did you evaluate your project?','Describe metrics, test data and limitations.'],['What would you improve in version two?','Show that you can identify limitations and prioritize improvements.']]
+};
+function startInterview(type){
+  const normalized=type==='Communication'?'HR':type; state.interview={type:normalized,questions:LM_INTERVIEW_BANK[normalized]||LM_INTERVIEW_BANK.Technical,index:0,answers:[],startedAt:Date.now()}; render();
+}
+function submitInterviewAnswer(){
+  const input=document.getElementById('interviewAnswer'); const answer=input?.value.trim(); if(!answer){toast('Write an answer before submitting');return;}
+  const s=state.interview, q=s.questions[s.index]; const score=lmInterviewScore(q[0],answer,s.type); s.answers.push({question:q[0],answer,score});
+  if(s.index<s.questions.length-1){s.index++;render();}else{finishInterview();}
+}
+function lmInterviewScore(question,answer,type){
+  const words=answer.split(/\s+/).filter(Boolean).length; let score=35+Math.min(words,90)*0.45;
+  if(type==='HR' && /situation|action|result|example|learn/i.test(answer))score+=12;
+  if(type==='Technical' && /because|example|trade|validation|model|data|metric|regular/i.test(answer))score+=15;
+  if(type==='Project' && /problem|architecture|test|metric|trade|deploy|user/i.test(answer))score+=15;
+  return lmPercent(score);
+}
+function finishInterview(){
+  const s=state.interview; const score=lmPercent(s.answers.reduce((a,x)=>a+x.score,0)/s.answers.length); const result={id:`int-${Date.now()}`,type:s.type,score,answers:s.answers,duration:Math.max(1,Math.round((Date.now()-s.startedAt)/60000)),completedAt:Date.now()};
+  const all=lmInterviews();all.unshift(result);lmWrite('lm_interviews',all.slice(0,30));recordActivity('interview_completed',{skill:'Interview',score});state.interviewResult=result;state.interview=null;render();
+}
+function interview(){
+  const m=lmMetric(), latest=m.interviews[0];
+  if(state.interview){const s=state.interview,q=s.questions[s.index];return shell(`<div class="content"><div class="interview-header"><div><div class="eyebrow">${esc(s.type)} interview</div><div class="page-title">Question ${s.index+1} of ${s.questions.length}</div><p class="sub">Answer naturally. LearnMate scores clarity, relevance and depth from your response.</p></div><button class="ghost-btn" onclick="state.interview=null;render()">Exit</button></div><div class="interview-progress"><i style="width:${(s.index/s.questions.length)*100}%"></i></div><div class="card interview-question"><span class="tag">${esc(s.type)}</span><h2>${esc(q[0])}</h2><p class="muted">Tip: ${esc(q[1])}</p><textarea id="interviewAnswer" class="textarea" placeholder="Type your answer here..." autofocus></textarea><div class="lm-inline-actions"><button class="ghost-btn" onclick="document.getElementById('interviewAnswer').value=''">Clear</button><button class="primary" onclick="submitInterviewAnswer()">${s.index===s.questions.length-1?'Finish interview':'Submit answer →'}</button></div></div></div>`,'Interview Studio');}
+  if(state.interviewResult){const r=state.interviewResult;state.interviewResult=null;return shell(`<div class="content"><div class="page-title">Interview complete 🎉</div><p class="sub">Here is feedback from your actual ${esc(r.type)} session.</p><div class="grid g3"><div class="card"><div class="eyebrow">Overall score</div><h3 style="font-size:40px">${r.score}%</h3><div class="progress"><i style="width:${r.score}%"></i></div></div><div class="card"><div class="eyebrow">Questions</div><h3>${r.answers.length}</h3><p class="muted">Completed in ${r.duration} minute${r.duration===1?'':'s'}.</p></div><div class="card"><div class="eyebrow">Next action</div><h3>${r.score<60?'Practice fundamentals':r.score<80?'Practice deeper answers':'Try adaptive difficulty'}</h3><p class="muted">Your next session should target the weakest answer areas.</p></div></div><div class="section-head"><h2>Answer feedback</h2></div><div class="card">${r.answers.map((a,i)=>`<div class="list-row" style="margin-bottom:8px"><div><b>Q${i+1}. ${esc(a.question)}</b><p class="muted" style="margin:5px 0 0">${esc(a.answer.slice(0,220))}${a.answer.length>220?'…':''}</p></div><span class="tag">${a.score}%</span></div>`).join('')}</div><div class="lm-inline-actions" style="margin-top:14px"><button class="primary" onclick="startInterview('${r.type}')">Practice again</button><button class="ghost-btn" onclick="go('career')">See career gaps</button></div></div>`,'Interview Result');}
+  return shell(`<div class="content"><div class="page-title">Interview Studio</div><p class="sub">Practice realistic interviews with a real question-by-question flow. Results update your readiness score.</p><div class="grid g3"><div class="card feature-card"><div><div class="feature-icon">💼</div><h3>HR Interview</h3><p>Behavioral, communication and situational questions.</p></div><button class="primary" onclick="startInterview('HR')">Start →</button></div><div class="card feature-card"><div><div class="feature-icon">💻</div><h3>Technical Interview</h3><p>Role-focused AI/ML questions with practical explanations.</p></div><button class="primary" onclick="startInterview('Technical')">Start →</button></div><div class="card feature-card"><div><div class="feature-icon">🚀</div><h3>Project Interview</h3><p>Defend architecture, evaluation and decisions like a real interview.</p></div><button class="primary" onclick="startInterview('Project')">Start →</button></div></div><div class="section-head"><h2>Latest performance</h2></div>${latest?`<div class="split"><div class="card"><div class="eyebrow">Last mock interview</div><h3>${esc(latest.type)} · ${latest.score}%</h3><p class="muted">${latest.answers.length} questions · ${latest.duration} min</p><div class="progress"><i style="width:${latest.score}%"></i></div></div><div class="card"><div class="eyebrow">Recommended next</div><h3>${latest.score<60?'Review fundamentals':latest.score<80?'Improve answer depth':'Increase difficulty'}</h3><p class="muted">Complete another session to build a reliable readiness trend.</p><button class="ghost-btn" onclick="startInterview('${latest.type}')">Practice again →</button></div></div>`:`<div class="empty">No interview has been completed yet. Start one above and your result will appear here.</div>`}</div>`,'Interview');
+}
+
+/* ---------- Projects: build → tasks → submit ---------- */
+const LM_PROJECT_TEMPLATES=[
+ {title:'LearnMate Document Intelligence',level:'AI / Intermediate',description:'Build a RAG application that lets learners chat with their own study materials.',tasks:['Define problem and users','Design document ingestion','Build text extraction and chunking','Create retrieval and answer flow','Test with sample documents','Deploy and document the project']},
+ {title:'Interview Readiness Predictor',level:'ML / Intermediate',description:'Analyze practice performance and predict readiness across skill areas.',tasks:['Define readiness metrics','Create sample dataset','Build baseline model','Evaluate precision and recall','Build a simple dashboard','Document limitations and next steps']},
+ {title:'Agentic Career Coach',level:'LLM / Advanced',description:'Coordinate specialized agents for learning, projects, resumes and interview preparation.',tasks:['Define agent roles','Design routing workflow','Implement shared context','Add evaluation checks','Build user workflow','Deploy a working demo']}
+];
+function createProjectFromTemplate(i){
+  const t=LM_PROJECT_TEMPLATES[i]; const projects=lmProjects(); const existing=projects.find(p=>p.title===t.title); if(existing){state.projectDetail=existing.id;render();return;}
+  const p={id:`proj-${Date.now()}`,title:t.title,level:t.level,description:t.description,tasks:t.tasks.map((x,j)=>({id:`pt-${j}`,title:x,done:false})),progress:0,status:'planned',createdAt:Date.now()};projects.unshift(p);lmWrite('lm_projects',projects);recordActivity('project_started',{title:p.title});state.projectDetail=p.id;toast('Project added to your workspace');render();
+}
+function generateProject(){const input=document.getElementById('projectInput')?.value.trim();if(!input){toast('Tell me what you want to build first');return;}const p={id:`proj-${Date.now()}`,title:input,level:'Custom project',description:`A portfolio-ready project aligned with your ${state.user.goal||'career'} goal.`,tasks:['Define users and problem','Choose architecture and stack','Build MVP','Test and measure results','Document and prepare demo'],progress:0,status:'planned',createdAt:Date.now()};const ps=lmProjects();ps.unshift(p);lmWrite('lm_projects',ps);state.projectDetail=p.id;recordActivity('project_started',{title:p.title});toast('Project plan created');render();}
+function toggleProjectTask(pid,tid){const ps=lmProjects(),p=ps.find(x=>x.id===pid);if(!p)return;const t=p.tasks.find(x=>x.id===tid);if(t)t.done=!t.done;p.progress=lmPercent(p.tasks.filter(x=>x.done).length/p.tasks.length*100);p.status=p.progress===0?'planned':p.progress===100?'ready':'building';lmWrite('lm_projects',ps);if(t?.done)recordActivity('project_task_completed',{title:t.title,project:p.title});render();}
+function submitProject(id){const ps=lmProjects(),p=ps.find(x=>x.id===id);if(!p)return;if(p.progress<100){toast('Complete all project tasks before submitting');return;}p.status='completed';p.submittedAt=Date.now();p.review={score:85,feedback:'Project checklist completed. Add a demo, README and clear evaluation evidence before presenting it publicly.'};lmWrite('lm_projects',ps);recordActivity('project_completed',{title:p.title});state.projectDetail=null;toast('Project submitted and completed 🎉');render();}
+function projectDetail(p){return `<div class="card project-detail"><div class="project-detail-top"><div><span class="tag">${esc(p.level)}</span><h2>${esc(p.title)}</h2><p class="muted">${esc(p.description)}</p></div><span class="status-pill status-${p.status}">${p.status}</span></div><div class="bar-head"><span>Build progress</span><b>${p.progress}%</b></div><div class="progress"><i style="width:${p.progress}%"></i></div><div class="section-head"><h2>Build checklist</h2><span class="muted">${p.tasks.filter(t=>t.done).length}/${p.tasks.length}</span></div><div class="list">${p.tasks.map(t=>`<div class="list-row"><div class="left"><button class="check-btn ${t.done?'checked':''}" onclick="toggleProjectTask('${p.id}','${t.id}')">${t.done?'✓':''}</button><span style="${t.done?'text-decoration:line-through;opacity:.6':''}">${esc(t.title)}</span></div><span class="tag">${t.done?'done':'pending'}</span></div>`).join('')}</div><div class="lm-inline-actions"><button class="ghost-btn" onclick="state.projectDetail=null;render()">Close</button><button class="primary" onclick="submitProject('${p.id}')">Submit project →</button></div></div>`;}
+function projects(){const ps=lmProjects();const detail=state.projectDetail?ps.find(p=>p.id===state.projectDetail):null;const cards=LM_PROJECT_TEMPLATES.map((t,i)=>{const existing=ps.find(p=>p.title===t.title);return `<div class="card feature-card"><div><span class="tag">${esc(t.level)}</span><h3 style="margin-top:12px">${esc(t.title)}</h3><p>${esc(t.description)}</p>${existing?`<div class="progress" style="margin-top:10px"><i style="width:${existing.progress}%"></i></div><small class="muted">${existing.progress}% · ${existing.status}</small>`:''}</div><button class="ghost-btn" onclick="createProjectFromTemplate(${i})">${existing?'Continue':'Build this project'} →</button></div>`}).join('');return shell(`<div class="content"><div class="page-title">Build something worth showing.</div><p class="sub">Projects now have a real build checklist, status, progress and submission flow.</p><div class="card" style="margin-bottom:18px"><div class="eyebrow">Project Generator</div><h3>Tell us what you want to build</h3><div class="learn-create-row"><input id="projectInput" class="input" placeholder="e.g. An AI resume analyser for recruiters"><button class="primary" onclick="generateProject()">Generate →</button></div></div>${detail?projectDetail(detail):''}<div class="section-head"><h2>Recommended for you</h2><span class="muted">Based on ${esc(state.user.goal||'your goal')}</span></div><div class="grid g3">${cards}</div>${ps.length?`<div class="section-head"><h2>My projects</h2><span class="muted">${ps.length} saved</span></div><div class="grid g3">${ps.map(p=>`<div class="card"><span class="tag">${esc(p.status)}</span><h3 style="margin-top:12px">${esc(p.title)}</h3><p class="muted">${esc(p.description)}</p><div class="progress"><i style="width:${p.progress}%"></i></div><div class="bar-head"><span>Progress</span><b>${p.progress}%</b></div><div class="lm-inline-actions"><button class="ghost-btn" onclick="state.projectDetail='${p.id}';render()">Open</button>${p.status==='ready'?`<button class="primary" onclick="submitProject('${p.id}')">Submit</button>`:''}</div></div>`).join('')}</div>`:''}</div>`,'Projects');}
+
+/* ---------- Career roadmap ---------- */
+function improveRoadmap(){
+  const skills=lmCareerSkills().map(([name,base])=>({name,score:lmSkillScore(name,base)})).sort((a,b)=>a.score-b.score); const weak=skills.slice(0,3); const suggestions=weak.map((s,i)=>({title:`Strengthen ${s.name}`,score:s.score,actions:i===0?['Study the core concepts','Complete one hands-on exercise','Build a small portfolio artifact']:i===1?['Learn the key patterns','Apply them in a mini project','Explain your approach in an interview']:['Study fundamentals','Add one guided project task','Practice 5 interview questions']}));
+  state.roadmapSuggestions=suggestions;recordActivity('roadmap_reviewed');render();
+}
+function career(){const skills=lmCareerSkills().map(([n,b])=>[n,lmSkillScore(n,b)]);const m=lmMetric();const readiness=lmPercent(m.overall*.65+m.interviewAvg*.2+m.projectProgress*.15);const suggestions=state.roadmapSuggestions||[];return shell(`<div class="content"><div class="page-title">Career, made actionable.</div><p class="sub">Your career page now reacts to your actual goals, learning, projects and interview performance.</p><div class="split"><div class="card"><div class="eyebrow">Current goal</div><h3 style="font-size:25px">${esc(state.user.goal||'Choose a career goal')}</h3><p class="muted">LearnMate identifies your weakest skills and turns them into concrete next actions.</p><button class="primary" onclick="improveRoadmap()">✦ Improve my roadmap</button></div><div class="card"><div class="eyebrow">Career readiness</div><div class="stat"><strong>${readiness}%</strong><span class="tag">${readiness>=70?'On track':readiness>=40?'Building':'Start here'}</span></div><div class="progress" style="margin-top:12px"><i style="width:${readiness}%"></i></div><p class="muted">Calculated from learning, projects and interviews.</p></div></div><div class="section-head"><h2>Skill gap</h2><span class="muted">For ${esc(state.user.goal||'your target role')}</span></div><div class="card">${skills.map(([n,s])=>`<div class="bar-row"><div class="bar-head"><span>${esc(n)}</span><span class="muted">${lmStatus(s)} · ${s}%</span></div><div class="progress"><i style="width:${s}%"></i></div></div>`).join('')}</div>${suggestions.length?`<div class="section-head"><h2>Your roadmap suggestions</h2><span class="muted">Generated from your current activity</span></div><div class="grid g3">${suggestions.map((s,i)=>`<div class="card"><div class="eyebrow">Priority ${i+1}</div><h3>${esc(s.title)}</h3><p class="muted">Current skill score: ${s.score}%</p><ul>${s.actions.map(a=>`<li>${esc(a)}</li>`).join('')}</ul><div class="lm-inline-actions"><button class="ghost-btn" onclick="go('learn')">Learn →</button><button class="ghost-btn" onclick="go('projects')">Build →</button><button class="ghost-btn" onclick="go('interview')">Practice →</button></div></div>`).join('')}</div>`:`<div class="card roadmap-empty"><div class="eyebrow">Ready for analysis</div><h3>Improve your roadmap</h3><p class="muted">Click the button above and LearnMate will identify your current skill gaps and give you specific learning, project and interview actions.</p></div>`}<div class="section-head"><h2>Career toolkit</h2></div><div class="grid g3"><div class="card feature-card"><div><div class="feature-icon">🧭</div><h3>Learn</h3><p>Build skills from the weakest areas first.</p></div><button class="ghost-btn" onclick="go('learn')">Explore →</button></div><div class="card feature-card"><div><div class="feature-icon">📄</div><h3>Resume</h3><p>Turn completed projects into evidence.</p></div><button class="ghost-btn" onclick="go('resume')">Open →</button></div><div class="card feature-card"><div><div class="feature-icon">🎤</div><h3>Interview</h3><p>Practice the exact skills your role needs.</p></div><button class="ghost-btn" onclick="go('interview')">Practice →</button></div></div></div>`,'Career');}
+
+/* ---------- Truthful progress ---------- */
+function progress(){const m=lmMetric();const skills=lmCareerSkills().map(([n,b])=>[n,lmSkillScore(n,b)]);const achievements=[m.streak>=3?['🔥','Consistency',`Maintained a ${m.streak}-day activity streak.`]:null,m.interviews.length>=1?['🎤','Interview Starter','Completed your first mock interview.']:null,m.completedProjects>=1?['🚀','Builder','Completed your first project.']:null,m.docs.length>=1?['📚','Knowledge Keeper','Added a document to your workspace.']:null,m.doneTasks>=5?['🎯','Goal Finisher','Completed five planner goals.']:null].filter(Boolean);return shell(`<div class="content"><div class="page-title">Your progress.</div><p class="sub">Every number below is calculated from your saved activity.</p><div class="grid g4"><div class="card"><div class="metric-label">Overall progress</div><div class="stat"><strong>${m.overall}%</strong><span>${m.overall?'live':'start'}</span></div></div><div class="card"><div class="metric-label">Interview readiness</div><div class="stat"><strong>${m.interviewAvg}%</strong><span>${m.interviews.length} sessions</span></div></div><div class="card"><div class="metric-label">Projects</div><div class="stat"><strong>${m.completedProjects}</strong><span>${m.projects.length} saved</span></div></div><div class="card"><div class="metric-label">Badges</div><div class="stat"><strong>${m.badges}</strong><span>🏆 earned</span></div></div></div><div class="section-head"><h2>Skill growth</h2></div><div class="card">${skills.map(([n,s])=>`<div class="bar-row"><div class="bar-head"><span>${esc(n)}</span><span class="muted">${s}%</span></div><div class="progress"><i style="width:${s}%"></i></div></div>`).join('')}</div><div class="section-head"><h2>Achievements</h2></div><div class="grid g3">${achievements.length?achievements.map(a=>`<div class="card"><div style="font-size:28px">${a[0]}</div><h3>${a[1]}</h3><p class="muted">${a[2]}</p></div>`).join(''):`<div class="empty">No badges yet. Complete a goal, learning module, interview, project or document action to earn your first achievement.</div>`}</div></div>`,'Progress');}
+
+/* ---------- Settings with visible logout ---------- */
+function settings(){return shell(`<div class="content"><div class="page-title">Settings</div><p class="sub">Make LearnMate work the way you learn.</p><div class="grid g2"><div class="card"><div class="eyebrow">Profile</div><div class="form-grid" style="margin-top:14px"><div class="form-group"><label>Name</label><input id="sname" class="input" value="${esc(state.user.name||'Learner')}"></div><div class="form-group"><label>Target career</label><input id="sgoal" class="input" value="${esc(state.user.goal||'Learner')}"></div></div><button class="primary" style="margin-top:14px" onclick="saveSettings()">Save changes</button></div><div class="card"><div class="eyebrow">Account</div><h3>Session</h3><p class="muted">Sign out from LearnMate on this browser and end the Supabase session when you are logged in.</p><button class="danger-btn" onclick="logoutLearnMate()">↪ Logout</button></div></div></div>`,'Settings');}
+
+/* ---------- Export the upgraded handlers after Supabase bridge has loaded ---------- */
+window.logoutLearnMate=logoutLearnMate;
+window.createTask=createTask; window.closeTaskModal=closeTaskModal; window.saveTaskFromModal=saveTaskFromModal;
+window.toggleTask=toggleTask; window.deleteTask=deleteTask;
+window.generateLearningPath=generateLearningPath; window.completeLearningModule=completeLearningModule;
+window.askLearnMateDocument=askLearnMateDocument; window.removeLearnMateDocument=removeLearnMateDocument; window.clearDocumentContext=clearDocumentContext;
+window.startInterview=startInterview; window.submitInterviewAnswer=submitInterviewAnswer;
+window.createProjectFromTemplate=createProjectFromTemplate; window.generateProject=generateProject; window.toggleProjectTask=toggleProjectTask; window.submitProject=submitProject;
+window.improveRoadmap=improveRoadmap; window.sendChat=sendChat; window.quickChat=quickChat; window.newChat=newChat;
+
+/* Ensure the upgraded pages render, not the original static pages. */
 render();

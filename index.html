@@ -25,11 +25,19 @@
   <!-- Supabase JavaScript client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- Optional client-side document parsers for PDF/DOCX context -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>if(window.pdfjsLib){window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}</script>
+  <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+
   <!-- Existing LearnMate application -->
   <script src="app.js"></script>
 
   <!-- Supabase authentication bridge -->
   <script src="supabase-auth.js"></script>
+
+  <!-- Final functional LearnMate overrides -->
+  <script src="learnmate-upgrades.js"></script>
 
 </body>
 </html>
