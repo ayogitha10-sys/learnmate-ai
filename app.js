@@ -1628,3 +1628,10 @@ window.improveRoadmap=improveRoadmap; window.sendChat=sendChat; window.quickChat
 
 /* Ensure the upgraded pages render, not the original static pages. */
 render();
+
+
+// Keep the LearnMate Add Goal modal after all scripts load
+const learnMateAppCreateTask = createTask;
+window.addEventListener('load', () => {
+  window.createTask = learnMateAppCreateTask;
+});
