@@ -115,6 +115,7 @@ function landing(){return `
 <main>
   <section class="lm-hero">
     <div class="lm-glow"></div>
+    <div class="lm-orbit" aria-hidden="true"><span class="lm-orbit-dot"></span><span class="lm-orbit-dot"></span><span class="lm-orbit-dot"></span></div>
     <div class="lm-reveal">
       <div class="lm-badge"><i></i> Intelligent learning, built around you</div>
       <h1>Learn smarter.<br><span>Build faster.</span><br>Grow with purpose.</h1>
@@ -1436,6 +1437,11 @@ function lmProjects(){
           steps:Array.isArray(task.steps)&&task.steps.length?task.steps:guidance.steps
         };
       }).filter(Boolean);
+      if (!project.roadmapVersion && tasks.length && tasks.every(task => !task.done && !task.evidence)) {
+        tasks.splice(0, tasks.length, ...projectPlanFallback(project.title, project.goal || state.user?.goal));
+        project.roadmapVersion = 2;
+        project.goal = project.goal || state.user?.goal || '';
+      }
       const progress = tasks.length
         ? lmPercent(tasks.filter(task => task.done).length / tasks.length * 100)
         : lmPercent(project.progress);
@@ -1496,9 +1502,16 @@ function lmMetric(){
 }
 function lmCareerSkills(){
   const goal=String(state.user?.goal||'AI Engineer').toLowerCase();
-  if(/data/.test(goal)) return [['Python',0],['SQL',0],['Statistics',0],['Machine Learning',0],['Data Visualization',0],['MLOps',0]];
+  if(/data|analyst|business intelligence/.test(goal)) return [['SQL',0],['Spreadsheets',0],['Statistics',0],['Python',0],['Data Visualization',0],['Business Communication',0]];
   if(/software|developer|backend|full stack/.test(goal)) return [['Programming',0],['Data Structures',0],['APIs',0],['Databases',0],['System Design',0],['Testing & DevOps',0]];
-  if(/marketing/.test(goal)) return [['Content',0],['SEO',0],['Analytics',0],['Paid Ads',0],['Brand Strategy',0],['Automation',0]];
+  if(/cyber|security/.test(goal)) return [['Networking',0],['Linux',0],['Security Fundamentals',0],['Threat Analysis',0],['Incident Response',0],['Cloud Security',0]];
+  if(/cloud|devops|site reliability/.test(goal)) return [['Linux',0],['Networking',0],['Cloud Fundamentals',0],['Containers',0],['CI/CD',0],['Infrastructure as Code',0]];
+  if(/design|ux|ui/.test(goal)) return [['User Research',0],['Interaction Design',0],['Visual Design',0],['Accessibility',0],['Prototyping',0],['Usability Testing',0]];
+  if(/product manager|product management/.test(goal)) return [['User Research',0],['Product Strategy',0],['Prioritization',0],['Analytics',0],['Roadmapping',0],['Stakeholder Communication',0]];
+  if(/account|finance|acca|audit/.test(goal)) return [['Financial Accounting',0],['Financial Reporting',0],['Taxation',0],['Audit & Assurance',0],['Management Accounting',0],['Excel & Analysis',0]];
+  if(/marketing/.test(goal)) return [['Content Strategy',0],['SEO',0],['Analytics',0],['Paid Ads',0],['Brand Strategy',0],['Marketing Automation',0]];
+  if(/teacher|educat|instructional/.test(goal)) return [['Subject Knowledge',0],['Lesson Planning',0],['Assessment Design',0],['Classroom Practice',0],['Inclusive Teaching',0],['Learning Technology',0]];
+  if(/nurse|health|medical/.test(goal)) return [['Anatomy & Physiology',0],['Clinical Fundamentals',0],['Patient Communication',0],['Evidence-Based Practice',0],['Safety & Ethics',0],['Clinical Documentation',0]];
   return [['Python',0],['Machine Learning',0],['Deep Learning',0],['LLMs & RAG',0],['MLOps',0],['System Design',0]];
 }
 function lmSkillScore(name,base){
@@ -1672,7 +1685,7 @@ function renderLearningModuleQuiz(){
     return;
   }
   const feedback=current.selected===null?'':`<div class="card" style="margin-top:14px;background:${current.selected===q.correctIndex?'#e9f8f1':'#fff3e8'}"><b>${current.selected===q.correctIndex?'Correct!':'Not quite.'}</b><p style="margin:6px 0 0">${esc(q.explanation)}</p></div>`;
-  const options=q.options.map((option,index)=>`<button type="button" class="${current.selected===index?'primary':'ghost-btn'}" style="display:block;width:100%;text-align:left;margin:8px 0;white-space:normal" ${current.selected!==null?'disabled':''} onclick="answerLearningModuleQuiz(${index})">${String.fromCharCode(65+index)}. ${esc(option)}</button>`).join('');
+  const options=q.options.map((option,index)=>`<button type="button" class="${current.selected===index?'primary':'ghost-btn lm-quiz-option'}" style="display:block;width:100%;text-align:left;margin:8px 0;white-space:normal" ${current.selected!==null?'disabled':''} onclick="answerLearningModuleQuiz(${index})"><span class="lm-quiz-letter">${String.fromCharCode(65+index)}</span><span>${esc(option)}</span></button>`).join('');
   const next=current.selected===null?'':`<button class="primary" style="margin-top:16px" onclick="advanceLearningModuleQuiz()">${current.questionIndex===current.questions.length-1?'See result →':'Next question →'}</button>`;
   showInteractiveLearningModal(`${path.topic} · ${module.title}`,
     `<div class="eyebrow">Question ${current.questionIndex+1} of ${current.questions.length}</div><h3 style="margin:8px 0 14px">${esc(q.question)}</h3>${options}${feedback}${next}`);
@@ -1866,7 +1879,47 @@ function createProjectFromTemplate(i){
   const t=LM_PROJECT_TEMPLATES[i]; const projects=lmProjects(); const existing=projects.find(p=>p.title===t.title); if(existing){state.projectDetail=existing.id;render();return;}
   const p={id:`proj-${Date.now()}`,title:t.title,level:t.level,description:t.description,tasks:t.tasks.map((x,j)=>({id:`pt-${j}`,title:x,done:false})),progress:0,status:'planned',createdAt:Date.now()};projects.unshift(p);lmWrite('lm_projects',projects);recordActivity('project_started',{title:p.title});state.projectDetail=p.id;toast('Project added to your workspace');render();
 }
-function generateProject(){const input=document.getElementById('projectInput')?.value.trim();if(!input){toast('Tell me what you want to build first');return;}const p={id:`proj-${Date.now()}`,title:input,level:'Custom project',description:`A portfolio-ready project aligned with your ${state.user.goal||'career'} goal.`,tasks:['Define users and problem','Choose architecture and stack','Build MVP','Test and measure results','Document and prepare demo'].map((title,index)=>({id:`pt-${index}`,title,done:false,...projectTaskGuidance(title,input)})),progress:0,status:'planned',createdAt:Date.now()};const ps=lmProjects();ps.unshift(p);lmWrite('lm_projects',ps);state.projectDetail=p.id;recordActivity('project_started',{title:p.title});toast('Project plan created');render();}
+function projectPlanFallback(projectTitle,careerGoal){
+  const title=String(projectTitle||'your project'),goal=String(careerGoal||'your learning goal');
+  let phases;
+  if(/chatbot|assistant|generative|llm|resume|document|ai\b/i.test(title)) phases=[
+    ['Define the user problem','Choose one person and one task this AI product should help with. List what a good answer must do and what it must never guess.',['Write the target user and task in one paragraph.','Create 5 sample questions and expected helpful answers.','Set a privacy rule for any personal or uploaded data.']],
+    ['Design the AI workflow','Map input, context retrieval, model request, response checks and the interface. Decide how the app responds when information is missing.',['Draw the request flow from user input to final answer.','Choose which data is sent to the model and which stays local.','Sketch loading, success, empty and error states.']],
+    ['Build a small working AI feature','Connect one screen to a model endpoint through a server-side key. Keep the key out of browser code and return a clear answer to one sample request.',['Build the single most useful user flow first.','Add input validation and a useful error state.','Confirm API secrets are read only on the server.']],
+    ['Add context and safety checks','Use a small set of relevant source material. Make the assistant distinguish source facts from missing information and test unsafe or irrelevant instructions in uploaded content.',['Add source snippets or examples to the context.','Test a question answered by the source and one it cannot answer.','Check that instructions inside a document are treated as untrusted data.']],
+    ['Evaluate answer quality','Compare answers against your sample cases for accuracy, usefulness, latency and failure handling. Fix the most common issue before adding more features.',['Run all 5 sample questions and record results.','Add one confusing or out-of-scope question.','Record the main limitation and one improvement.']],
+    ['Polish, deploy and demonstrate','Make the key flow usable on mobile, document setup, deploy it and prepare a short demo showing the problem, solution and limitations.',['Check keyboard access and mobile layout.','Write setup, environment variable names and test instructions.','Publish a demo and README without exposing secrets.']]
+  ];
+  else if(/data|analytics|forecast|predict|machine learning| ml\b/i.test(title)) phases=[
+    ['Frame the decision','Define who will use the result, what decision it supports and what a successful outcome means.',['Write the question the project answers.','Choose a target metric before modeling.','Record likely sources of bias or missing data.']],
+    ['Find and inspect data','Use a lawful sample dataset, inspect its columns and quality, and keep a reproducible copy of the preparation steps.',['Document where the data came from.','Check types, missing values, duplicates and target balance.','Create a small data dictionary.']],
+    ['Prepare features and baseline','Build a simple reproducible baseline and split data correctly so evaluation examples are not used for training.',['Create train and test sets.','Implement a simple baseline.','Save the exact preprocessing steps.']],
+    ['Train and compare a model','Try one suitable model, compare it with the baseline and explain why the chosen measure fits the problem.',['Train one candidate model.','Report at least two useful metrics.','Compare errors across representative examples.']],
+    ['Explain results in a usable interface','Build a chart or small application that communicates the result, uncertainty and the cases where the model should not be trusted.',['Show the most important result and its limitations.','Add one example input and output.','Test the display with a non-technical reader.']],
+    ['Reproduce and present','Package the project so another person can run it and understand what the results do and do not show.',['Write setup and data instructions.','Add evaluation results and limitations.','Prepare a short demo with one realistic example.']]
+  ];
+  else phases=[
+    ['Define users and success','Describe the person this project serves, the problem they face and the result that would make the project useful.',['Write a one-sentence problem statement.','List 3 user needs and how they solve them today.','Choose one measurable success signal.']],
+    ['Plan the user journey and tools','Turn the goal into a small first release. Map the user steps, data needed and simplest tools that can deliver the main outcome.',['Sketch the main user journey.','List the screens, inputs, outputs and data.','Choose a simple stack and explain why it fits.']],
+    ['Build the core workflow','Implement the smallest end-to-end version that lets a user complete the primary task.',['Create the basic project structure.','Implement one full user flow using sample data.','Add clear loading, success and error feedback.']],
+    ['Add project-specific functionality','Build the feature that makes this particular project useful, using the user needs and success signal from the first step.',['Implement the most important feature first.','Try it with 3 realistic examples.','Write down one issue and adjust the feature.']],
+    ['Test and improve','Check normal use, edge cases, accessibility and reliability. Fix the issues that block the main task and record the results.',['Test at least 5 realistic cases.','Check keyboard use and phone-sized layout.','Record what passed, failed and changed.']],
+    ['Prepare a portfolio-ready demo','Make the project easy to run, review and explain. Show what it does, how you built it and what you would improve next.',['Write setup and usage steps.','Add screenshots or a short demo.','Explain decisions, results and known limitations.']]
+  ];
+  return phases.map(([stepTitle,description,steps],i)=>({title:stepTitle,description:`For “${title},” ${description} Keep the outcome connected to the learner’s goal: ${goal}.`,steps,done:false,id:`pt-${i}`}));
+}
+function parseProjectPlan(raw,title,goal){
+  try{const cleaned=String(raw||'').replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');const parsed=JSON.parse(cleaned.slice(cleaned.indexOf('{'),cleaned.lastIndexOf('}')+1));const tasks=(Array.isArray(parsed.tasks)?parsed.tasks:[]).slice(0,8).map((task,i)=>({id:`pt-${i}`,title:String(task.title||`Step ${i+1}`),description:String(task.description||''),steps:Array.isArray(task.steps)?task.steps.map(String).slice(0,6):[],done:false})).filter(task=>task.description&&task.steps.length>=2);if(tasks.length>=4)return {description:String(parsed.description||''),level:String(parsed.level||'Custom project'),tasks};}catch{}return null;
+}
+async function generateProject(){
+  const input=document.getElementById('projectInput')?.value.trim();if(!input){toast('Tell me what you want to build first');return;}
+  const button=document.querySelector('#projectInput + button'),status=document.getElementById('projectStatus');if(button){button.disabled=true;button.textContent='Planning your steps…';}if(status)status.textContent='Creating a project-specific build roadmap…';
+  const goal=state.user?.goal||'personal learning';let planned=null;
+  try{const raw=await learnMateLearningAI(`Create a complete beginner-friendly implementation roadmap for this exact project idea: "${input}". The learner's career goal is "${goal}". Make steps specific to the idea and appropriate to that goal. Return ONLY valid JSON: {"description":"one-sentence project outcome","level":"beginner/intermediate/advanced","tasks":[{"title":"specific phase","description":"explain why this phase matters and what result to make","steps":["concrete action","concrete action","concrete action"]}]}. Return 5 to 7 phases in dependency order, from problem definition through implementation, testing, and demo. Each phase must have 3-5 specific actions; avoid generic placeholders such as just 'build MVP'.`);planned=parseProjectPlan(raw,input,goal);}catch(error){console.warn('Project roadmap AI unavailable; using tailored starter plan:',error);}
+  const tasks=planned?.tasks||projectPlanFallback(input,goal);const p={id:`proj-${Date.now()}`,title:input,level:planned?.level||'Custom project',description:planned?.description||`A guided project tailored to “${input}” and your goal of ${goal}.`,tasks,progress:0,status:'planned',createdAt:Date.now(),goal,roadmapVersion:2};
+  const ps=lmProjects();ps.unshift(p);lmWrite('lm_projects',ps);state.projectDetail=p.id;recordActivity('project_started',{title:p.title});toast(planned?'Project roadmap created':'AI is unavailable; a detailed starter roadmap is ready');render();
+}
+async function regenerateProjectRoadmap(pid){const projects=lmProjects(),project=projects.find(item=>item.id===pid);if(!project)return;const raw=await learnMateLearningAI(`Create a detailed implementation roadmap for project "${project.title}". Context: ${project.description||''}. Target career: ${state.user?.goal||'not specified'}. Return ONLY JSON {"description":"...","level":"...","tasks":[{"title":"...","description":"...","steps":["...","...","..."]}]}. Give 5-7 project-specific phases with 3-5 concrete actions each, including design, implementation, testing, and presentation.`);const plan=parseProjectPlan(raw,project.title,state.user?.goal);if(!plan){toast('Could not create a detailed roadmap. Try again.');return;}project.description=plan.description;project.level=plan.level;project.tasks=plan.tasks;project.progress=0;project.status='planned';project.roadmapVersion=2;lmWrite('lm_projects',projects);toast('Project steps tailored to this idea');render();}
 function toggleProjectTask(pid,tid){const ps=lmProjects(),p=ps.find(x=>x.id===pid);if(!p)return;const t=p.tasks.find(x=>x.id===tid);if(t)t.done=!t.done;p.progress=lmPercent(p.tasks.filter(x=>x.done).length/p.tasks.length*100);p.status=p.progress===0?'planned':p.progress===100?'ready':'building';lmWrite('lm_projects',ps);if(t?.done)recordActivity('project_task_completed',{title:t.title,project:p.title});render();}
 function submitProject(id){const ps=lmProjects(),p=ps.find(x=>x.id===id);if(!p)return;if(p.progress<100){toast('Complete all project tasks before submitting');return;}p.status='completed';p.submittedAt=Date.now();p.review={score:85,feedback:'Project checklist completed. Add a demo, README and clear evaluation evidence before presenting it publicly.'};lmWrite('lm_projects',ps);recordActivity('project_completed',{title:p.title});state.projectDetail=null;toast('Project submitted and completed 🎉');render();}
 function projectDetail(p){return `<div class="card project-detail"><div class="project-detail-top"><div><span class="tag">${esc(p.level)}</span><h2>${esc(p.title)}</h2><p class="muted">${esc(p.description)}</p></div><span class="status-pill status-${p.status}">${esc(p.status)}</span></div><div class="bar-head"><span>Build progress</span><b>${p.progress}%</b></div><div class="progress"><i style="width:${p.progress}%"></i></div><div class="section-head"><h2>Build checklist</h2><span class="muted">${p.tasks.filter(t=>t.done).length}/${p.tasks.length}</span></div><div class="project-task-list">${p.tasks.map(t=>`<article class="project-task ${t.done?'project-task-done':''}"><button class="check-btn ${t.done?'checked':''}" aria-label="${t.done?'Mark incomplete':'Mark complete'}: ${esc(t.title)}" onclick="toggleProjectTask('${p.id}','${t.id}')">${t.done?'✓':''}</button><div class="project-task-info"><div class="project-task-heading"><b>${esc(t.title)}</b><span class="tag">${t.done?'done':'pending'}</span></div><p>${esc(t.description)}</p><b class="project-steps-label">What to do</b><ol>${(t.steps||[]).map(step=>`<li>${esc(step)}</li>`).join('')}</ol></div></article>`).join('')}</div><div class="lm-inline-actions"><button class="ghost-btn" onclick="state.projectDetail=null;render()">Close</button><button class="primary" onclick="submitProject('${p.id}')">Submit project →</button></div></div>`;}
