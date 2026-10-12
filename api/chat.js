@@ -119,12 +119,74 @@ Rules:
           body: JSON.stringify({ model: process.env.XAI_MODEL || "grok-4.6", messages, temperature: 0.7, max_tokens: 1200 })
         });
         const result = await response.json().catch(() => ({}));
-        if (!response.ok) return json(res, 502, { error: result?.error?.message || `xAI returned HTTP ${response.status}.` });
+        if (!response.ok) {
+          console.error("xAI chat API error:", response.status, result);
+          // Keep chat available when a Grok key, model entitlement, or billing
+          // issue occurs, provided the project also has a Gemini key configured.
+          if (process.env.GEMINI_API_KEY) {
+            const fallback = await fetch(GEMINI_INTERACTIONS_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": process.env.GEMINI_API_KEY
+              },
+              body: JSON.stringify({
+                model: MODEL,
+                system_instruction: systemInstruction,
+                input: [
+                  ...safeHistory.map(item => ({
+                    type: item.role === "assistant" ? "model_output" : "user_input",
+                    content: [{ type: "text", text: item.content.slice(0, 4000) }]
+                  })),
+                  { type: "user_input", content: [{ type: "text", text: message.trim().slice(0, 8000) }] }
+                ]
+              })
+            });
+            const fallbackData = await fallback.json().catch(() => ({}));
+            if (fallback.ok) {
+              const fallbackOutput = fallbackData?.output_text ||
+                (Array.isArray(fallbackData?.outputs) ? fallbackData.outputs.map(item => item?.text || item?.content?.map(part => part?.text || "").join("\n") || "").join("\n") : "") ||
+                (Array.isArray(fallbackData?.output) ? fallbackData.output.map(item => item?.text || item?.content?.map(part => part?.text || "").join("\n") || "").join("\n") : "");
+              if (typeof fallbackOutput === "string" && fallbackOutput.trim()) {
+                return json(res, 200, { output: fallbackOutput.trim(), provider: "gemini-fallback" });
+              }
+            }
+            console.error("Gemini fallback failed:", fallback.status, fallbackData);
+            return json(res, 502, { error: "Grok failed and the Gemini fallback also failed. Check Vercel function logs for provider details." });
+          }
+          return json(res, 502, { error: result?.error?.message || `xAI returned HTTP ${response.status}. Add a working GEMINI_API_KEY for automatic fallback.` });
+        }
         const output = result?.choices?.[0]?.message?.content;
         if (typeof output !== "string" || !output.trim()) return json(res, 502, { error: "Grok returned an empty response." });
         return json(res, 200, { output: output.trim(), provider: "xai" });
       } catch (error) {
         console.error("xAI request failed:", error);
+        if (process.env.GEMINI_API_KEY) {
+          try {
+            const fallback = await fetch(GEMINI_INTERACTIONS_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
+              body: JSON.stringify({
+                model: MODEL,
+                system_instruction: systemInstruction,
+                input: [
+                  ...safeHistory.map(item => ({ type: item.role === "assistant" ? "model_output" : "user_input", content: [{ type: "text", text: item.content.slice(0, 4000) }] })),
+                  { type: "user_input", content: [{ type: "text", text: message.trim().slice(0, 8000) }] }
+                ]
+              })
+            });
+            const fallbackData = await fallback.json().catch(() => ({}));
+            const fallbackOutput = fallbackData?.output_text ||
+              (Array.isArray(fallbackData?.outputs) ? fallbackData.outputs.map(item => item?.text || item?.content?.map(part => part?.text || "").join("\n") || "").join("\n") : "") ||
+              (Array.isArray(fallbackData?.output) ? fallbackData.output.map(item => item?.text || item?.content?.map(part => part?.text || "").join("\n") || "").join("\n") : "");
+            if (fallback.ok && typeof fallbackOutput === "string" && fallbackOutput.trim()) {
+              return json(res, 200, { output: fallbackOutput.trim(), provider: "gemini-fallback" });
+            }
+            console.error("Gemini fallback failed:", fallback.status, fallbackData);
+          } catch (fallbackError) {
+            console.error("Gemini fallback request failed:", fallbackError);
+          }
+        }
         return json(res, 502, { error: "Could not connect to xAI. Check the deployment network and XAI_API_KEY." });
       }
     }
