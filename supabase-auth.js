@@ -8,7 +8,7 @@
 
 // Your LearnMate Supabase project URL
 
-const SUPABASE_URL = "https\://gkjjpehdrbbyuvwasdjp.supabase.co";
+const SUPABASE_URL = "https://gkjjpehdrbbyuvwasdjp.supabase.co";
 
 
 
@@ -22,9 +22,9 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_kmBPQHZmBhdwdHBkzKIO8g_ecXIIZEO
 
 const learnmateSupabase = window.supabase.createClient(
 
-  SUPABASE_URL,
+  SUPABASE_URL,
 
-  SUPABASE_PUBLISHABLE_KEY
+  SUPABASE_PUBLISHABLE_KEY
 
 );
 
@@ -44,6 +44,10 @@ function showLearnMateAuth() {
   const existing = document.getElementById("learnmateAuth");
   if (existing) {
     existing.style.setProperty("display", "flex", "important");
+    if (!existing._escapeHandler) {
+      existing._escapeHandler = (event) => { if (event.key === "Escape") closeLearnMateAuth(); };
+      document.addEventListener("keydown", existing._escapeHandler);
+    }
     return;
   }
 
@@ -59,9 +63,11 @@ function showLearnMateAuth() {
       #learnmateAuth .lm-auth-logo { width:52px !important; height:52px !important; margin:0 auto 14px !important; border-radius:16px !important; display:grid !important; place-items:center !important; background:#083335 !important; color:#fff !important; font-size:25px !important; }
       #learnmateAuth .lm-auth-title { margin:0 !important; font-family:Manrope,Arial,sans-serif !important; font-size:25px !important; line-height:1.2 !important; color:#102326 !important; }
       #learnmateAuth .lm-auth-subtitle { margin:8px 0 0 !important; color:#647477 !important; font-size:14px !important; line-height:1.5 !important; }
-      #learnmateAuth .lm-auth-tabs { display:grid !important; grid-template-columns:1fr 1fr !important; gap:6px !important; margin-bottom:20px !important; padding:5px !important; background:#f2f5f5 !important; border-radius:12px !important; box-sizing:border-box !important; }
-      #learnmateAuth .lm-auth-tab { display:block !important; width:100% !important; min-width:0 !important; margin:0 !important; padding:11px 12px !important; border:0 !important; border-radius:9px !important; background:transparent !important; color:#536568 !important; font:700 14px/1.2 DM Sans,Arial,sans-serif !important; text-align:center !important; cursor:pointer !important; box-sizing:border-box !important; }
-      #learnmateAuth .lm-auth-tab.active { background:#083335 !important; color:#fff !important; }
+      #learnmateAuth .lm-auth-tabs { position:relative !important; display:grid !important; grid-template-columns:1fr 1fr !important; gap:6px !important; margin-bottom:20px !important; padding:5px !important; background:#f2f5f5 !important; border-radius:12px !important; box-sizing:border-box !important; }
+      #learnmateAuth .lm-auth-tab-indicator { position:absolute !important; top:5px !important; bottom:5px !important; left:5px !important; width:calc(50% - 3px) !important; border-radius:9px !important; background:#083335 !important; transition:transform .24s cubic-bezier(.2,.8,.2,1) !important; }
+      #learnmateAuth .lm-auth-tabs.signup-mode .lm-auth-tab-indicator { transform:translateX(100%) !important; }
+      #learnmateAuth .lm-auth-tab { position:relative !important; z-index:1 !important; display:block !important; width:100% !important; min-width:0 !important; margin:0 !important; padding:11px 12px !important; border:0 !important; border-radius:9px !important; background:transparent !important; color:#536568 !important; font:700 14px/1.2 DM Sans,Arial,sans-serif !important; text-align:center !important; cursor:pointer !important; box-sizing:border-box !important; transition:color .2s !important; }
+      #learnmateAuth .lm-auth-tab.active { color:#fff !important; }
       #learnmateAuth .lm-auth-field { margin-bottom:14px !important; }
       #learnmateAuth .lm-auth-label { display:block !important; margin:0 0 6px !important; color:#304447 !important; font:700 13px/1.3 DM Sans,Arial,sans-serif !important; }
       #learnmateAuth .lm-auth-input { display:block !important; width:100% !important; height:48px !important; min-height:48px !important; margin:0 !important; padding:12px 14px !important; box-sizing:border-box !important; border:1px solid #dce4e4 !important; border-radius:11px !important; background:#fff !important; color:#102326 !important; font:400 14px/1.2 DM Sans,Arial,sans-serif !important; outline:none !important; box-shadow:none !important; }
@@ -71,6 +77,7 @@ function showLearnMateAuth() {
       #learnmateAuth .lm-auth-secondary,#learnmateAuth .lm-auth-close { display:block !important; width:100% !important; margin:0 !important; border:0 !important; background:transparent !important; cursor:pointer !important; box-sizing:border-box !important; }
       #learnmateAuth .lm-auth-secondary { padding:13px !important; color:#536568 !important; font:600 13px/1.2 DM Sans,Arial,sans-serif !important; }
       #learnmateAuth .lm-auth-close { padding:4px !important; color:#9aa6a8 !important; font:400 12px/1.2 DM Sans,Arial,sans-serif !important; }
+      #learnmateAuth .lm-auth-dismiss { position:absolute !important; top:12px !important; right:12px !important; z-index:2 !important; width:36px !important; height:36px !important; border:0 !important; border-radius:50% !important; background:#f2f5f5 !important; color:#304447 !important; font-size:22px !important; cursor:pointer !important; }
       @media (max-width:520px) { #learnmateAuth { padding:16px !important; } #learnmateAuth .lm-auth-card { max-height:calc(100dvh - 32px) !important; padding:24px !important; border-radius:20px !important; } }
     `;
     document.head.appendChild(style);
@@ -88,10 +95,12 @@ function showLearnMateAuth() {
         <h2 class="lm-auth-title">Welcome to LearnMate</h2>
         <p class="lm-auth-subtitle">Learn anything. Build everything. Grow with AI.</p>
       </div>
-      <div class="lm-auth-tabs">
+      <div class="lm-auth-tabs" role="tablist" aria-label="Choose sign in or sign up">
+        <span class="lm-auth-tab-indicator" aria-hidden="true"></span>
         <button id="lmLoginTab" class="lm-auth-tab active" type="button" onclick="showLoginMode()">Log in</button>
         <button id="lmSignupTab" class="lm-auth-tab" type="button" onclick="showSignupMode()">Sign up</button>
       </div>
+      <button class="lm-auth-dismiss" type="button" aria-label="Close sign in dialog" onclick="closeLearnMateAuth()">×</button>
       <div id="lmNameGroup" class="lm-auth-field" style="display:none !important;">
         <label class="lm-auth-label" for="lmName">Full name</label>
         <input id="lmName" class="lm-auth-input" type="text" placeholder="Your name" autocomplete="name">
@@ -111,6 +120,13 @@ function showLearnMateAuth() {
     </div>
   `;
   document.body.appendChild(modal);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal || event.target.classList.contains("lm-auth-backdrop")) closeLearnMateAuth();
+  });
+  modal._escapeHandler = (event) => {
+    if (event.key === "Escape") closeLearnMateAuth();
+  };
+  document.addEventListener("keydown", modal._escapeHandler);
 }
 
 
@@ -133,31 +149,27 @@ function showLoginMode() {
 
 
 
-  learnMateAuthMode = "login";
+  learnMateAuthMode = "login";
 
 
 
-  document.getElementById("lmNameGroup").style.display = "none";
+  document.getElementById("lmNameGroup").style.setProperty("display", "none", "important");
 
 
 
-  document.getElementById("lmAuthButton").textContent = "Log in";
+  document.getElementById("lmAuthButton").textContent = "Log in";
 
 
 
-  document.getElementById("lmLoginTab").style.background = "#083335";
-
-  document.getElementById("lmLoginTab").style.color = "white";
-
-
-
-  document.getElementById("lmSignupTab").style.background = "transparent";
-
-  document.getElementById("lmSignupTab").style.color = "#536568";
+  document.querySelector("#learnmateAuth .lm-auth-tabs").classList.remove("signup-mode");
+  document.getElementById("lmLoginTab").classList.add("active");
+  document.getElementById("lmSignupTab").classList.remove("active");
+  document.getElementById("lmLoginTab").setAttribute("aria-selected", "true");
+  document.getElementById("lmSignupTab").setAttribute("aria-selected", "false");
 
 
 
-  clearAuthMessage();
+  clearAuthMessage();
 
 }
 
@@ -169,31 +181,27 @@ function showSignupMode() {
 
 
 
-  learnMateAuthMode = "signup";
+  learnMateAuthMode = "signup";
 
 
 
-  document.getElementById("lmNameGroup").style.display = "block";
+  document.getElementById("lmNameGroup").style.setProperty("display", "block", "important");
 
 
 
-  document.getElementById("lmAuthButton").textContent = "Create account";
+  document.getElementById("lmAuthButton").textContent = "Create account";
 
 
 
-  document.getElementById("lmSignupTab").style.background = "#083335";
-
-  document.getElementById("lmSignupTab").style.color = "white";
-
-
-
-  document.getElementById("lmLoginTab").style.background = "transparent";
-
-  document.getElementById("lmLoginTab").style.color = "#536568";
+  document.querySelector("#learnmateAuth .lm-auth-tabs").classList.add("signup-mode");
+  document.getElementById("lmSignupTab").classList.add("active");
+  document.getElementById("lmLoginTab").classList.remove("active");
+  document.getElementById("lmSignupTab").setAttribute("aria-selected", "true");
+  document.getElementById("lmLoginTab").setAttribute("aria-selected", "false");
 
 
 
-  clearAuthMessage();
+  clearAuthMessage();
 
 }
 
@@ -213,248 +221,253 @@ async function handleLearnMateAuth() {
 
 
 
-  const email = document.getElementById("lmEmail").value.trim();
+  const email = document.getElementById("lmEmail").value.trim();
 
-  const password = document.getElementById("lmPassword").value;
+  const password = document.getElementById("lmPassword").value;
 
 
 
-  if (!email || !password) {
+  if (!email || !password) {
 
-    showAuthMessage("Please enter your email and password.");
+    showAuthMessage("Please enter your email and password.");
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  if (password.length < 6) {
+  if (password.length < 6) {
 
-    showAuthMessage("Password must contain at least 6 characters.");
+    showAuthMessage("Password must contain at least 6 characters.");
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  const button = document.getElementById("lmAuthButton");
+  const button = document.getElementById("lmAuthButton");
 
 
 
-  button.disabled = true;
+  button.disabled = true;
 
-  button.textContent = learnMateAuthMode === "login"
+  button.textContent = learnMateAuthMode === "login"
 
-    ? "Logging in..."
+    ? "Logging in..."
 
-    : "Creating account...";
+    : "Creating account...";
 
 
 
-  clearAuthMessage();
+  clearAuthMessage();
 
 
 
-  try {
+  try {
 
 
 
-    let result;
+    let result;
 
 
 
-    if (learnMateAuthMode === "signup") {
+    if (learnMateAuthMode === "signup") {
 
 
 
-      const name =
+      const name =
 
-        document.getElementById("lmName").value.trim() || "Learner";
+        document.getElementById("lmName").value.trim() || "Learner";
 
 
 
-      result = await learnmateSupabase.auth.signUp({
+      result = await learnmateSupabase.auth.signUp({
 
-        email,
+        email,
 
-        password,
+        password,
 
-        options: {
+        options: {
 
-          data: {
+          data: {
 
-            full_name: name
+            full_name: name
 
-          }
+          }
 
-        }
+        }
 
-      });
+      });
 
 
 
-    } else {
+    } else {
 
 
 
-      result = await learnmateSupabase.auth.signInWithPassword({
+      result = await learnmateSupabase.auth.signInWithPassword({
 
-        email,
+        email,
 
-        password
+        password
 
-      });
+      });
 
 
 
-    }
+    }
 
 
 
-    if (result.error) {
+    if (result.error) {
 
-      throw result.error;
+      throw result.error;
 
-    }
+    }
 
 
 
-    const user = result.data.user;
+    const user = result.data.user;
 
 
 
-    if (!user) {
+    if (!user) {
 
-      throw new Error("Account was created, but no user session was returned.");
+      throw new Error("Account was created, but no user session was returned.");
 
-    }
+    }
 
+    if (learnMateAuthMode === "signup" && !result.data.session) {
+      showAuthMessage("Your account was created. Check your email to confirm it, then log in to finish setting up your profile.");
+      return;
+    }
 
 
-    // For signup, create the LearnMate profile.
 
-    if (learnMateAuthMode === "signup") {
+    // For signup, create the LearnMate profile.
 
+    if (learnMateAuthMode === "signup") {
 
 
-      const name =
 
-        document.getElementById("lmName").value.trim() || "Learner";
+      const name =
 
+        document.getElementById("lmName").value.trim() || "Learner";
 
 
-      const { error: profileError } =
 
-        await learnmateSupabase
+      const { error: profileError } =
 
-          .from("profiles")
+        await learnmateSupabase
 
-          .insert({
+          .from("profiles")
 
-            user_id: user.id,
+          .insert({
 
-            full_name: name,
+            user_id: user.id,
 
-            education: "",
+            full_name: name,
 
-            career_goal: "Learner",
+            education: "",
 
-            interests: ""
+            career_goal: "Learner",
 
-          });
+            interests: ""
 
+          });
 
 
-      if (profileError && profileError.code !== "23505") {
 
-        throw profileError;
+      if (profileError && profileError.code !== "23505") {
 
-      }
+        throw profileError;
 
+      }
 
 
-      state.user = {
 
-        name: name,
+      state.user = {
 
-        goal: "Learner"
+        name: name,
 
-      };
+        goal: "Learner"
 
+      };
 
 
-    } else {
 
+    } else {
 
 
-      await loadLearnMateProfile(user.id);
 
+      await loadLearnMateProfile(user.id);
 
 
-    }
 
+    }
 
 
-    store.set("lm_user", state.user);
 
+    store.set("lm_user", state.user);
 
 
-    closeLearnMateAuth();
 
+    closeLearnMateAuth();
 
 
-    // Route through the onboarding/profile check.
+
+    // Route through the onboarding/profile check.
     await checkLearnMateOnboarding();
 
 
 
-    toast(
+    toast(
 
-      learnMateAuthMode === "signup"
+      learnMateAuthMode === "signup"
 
-        ? "Welcome to LearnMate!"
+        ? "Welcome to LearnMate!"
 
-        : "Welcome back!"
+        : "Welcome back!"
 
-    );
-
-
-
-  } catch (error) {
+    );
 
 
 
-    console.error("LearnMate authentication error:", error);
+  } catch (error) {
 
 
 
-    showAuthMessage(
-
-      error.message || "Authentication failed. Please try again."
-
-    );
+    console.error("LearnMate authentication error:", error);
 
 
 
-  } finally {
+    showAuthMessage(
+
+      error.message || "Authentication failed. Please try again."
+
+    );
 
 
 
-    button.disabled = false;
+  } finally {
 
 
 
-    button.textContent =
+    button.disabled = false;
 
-      learnMateAuthMode === "login"
 
-        ? "Log in"
 
-        : "Create account";
+    button.textContent =
 
-  }
+      learnMateAuthMode === "login"
+
+        ? "Log in"
+
+        : "Create account";
+
+  }
 
 }
 
@@ -474,31 +487,31 @@ async function loadLearnMateProfile(userId) {
 
 
 
-  const { data, error } =
+  const { data, error } =
 
-    await learnmateSupabase
+    await learnmateSupabase
 
-      .from("profiles")
+      .from("profiles")
 
-      .select("full_name, career_goal, education, interests")
+      .select("full_name, career_goal, education, interests")
 
-      .eq("user_id", userId)
+      .eq("user_id", userId)
 
-      .maybeSingle();
-
-
-
-  if (error) {
-
-    console.error("Profile loading error:", error);
-
-    return;
-
-  }
+      .maybeSingle();
 
 
 
-  if (data) {
+  if (error) {
+
+    console.error("Profile loading error:", error);
+
+    return;
+
+  }
+
+
+
+  if (data) {
 
     const packedInterests = String(data.interests || '');
     const savedOnboarding = store.get('lm_onboarding', {});
@@ -525,7 +538,7 @@ async function loadLearnMateProfile(userId) {
 
 
 
-  }
+  }
 
 }
 
@@ -545,15 +558,15 @@ function continueAsGuest() {
 
 
 
-  closeLearnMateAuth();
+  closeLearnMateAuth();
 
 
 
-  window._learnMateGuest = true;
+  window._learnMateGuest = true;
 
 
 
-  go("dashboard");
+  go("dashboard");
 
 }
 
@@ -573,15 +586,17 @@ function closeLearnMateAuth() {
 
 
 
-  const modal = document.getElementById("learnmateAuth");
+  const modal = document.getElementById("learnmateAuth");
 
 
 
-  if (modal) {
+  if (modal) {
 
-    modal.style.display = "none";
+    modal.style.setProperty("display", "none", "important");
+    if (modal._escapeHandler) document.removeEventListener("keydown", modal._escapeHandler);
+    modal._escapeHandler = null;
 
-  }
+  }
 
 }
 
@@ -593,17 +608,17 @@ function showAuthMessage(message) {
 
 
 
-  const el = document.getElementById("lmAuthMessage");
+  const el = document.getElementById("lmAuthMessage");
 
 
 
-  if (!el) return;
+  if (!el) return;
 
 
 
-  el.textContent = message;
+  el.textContent = message;
 
-  el.style.display = "block";
+  el.style.display = "block";
 
 }
 
@@ -615,17 +630,17 @@ function clearAuthMessage() {
 
 
 
-  const el = document.getElementById("lmAuthMessage");
+  const el = document.getElementById("lmAuthMessage");
 
 
 
-  if (!el) return;
+  if (!el) return;
 
 
 
-  el.textContent = "";
+  el.textContent = "";
 
-  el.style.display = "none";
+  el.style.display = "none";
 
 }
 
@@ -653,40 +668,40 @@ window.enterApp = async function () {
 
 
 
-  const {
+  const {
 
-    data: { session }
+    data: { session }
 
-  } = await learnmateSupabase.auth.getSession();
-
-
-
-  if (session && session.user) {
+  } = await learnmateSupabase.auth.getSession();
 
 
 
-    await loadLearnMateProfile(session.user.id);
+  if (session && session.user) {
 
 
 
-    store.set("lm_user", state.user);
+    await loadLearnMateProfile(session.user.id);
 
 
 
-    // Complete profiles go to Dashboard; incomplete profiles go to onboarding.
+    store.set("lm_user", state.user);
+
+
+
+    // Complete profiles go to Dashboard; incomplete profiles go to onboarding.
     await checkLearnMateOnboarding();
 
 
 
-  } else {
+  } else {
 
 
 
-    showLearnMateAuth();
+    showLearnMateAuth();
 
 
 
-  }
+  }
 
 };
 
@@ -702,22 +717,26 @@ window.enterApp = async function () {
 
 
 
-learnmateSupabase.auth.onAuthStateChange(async (event, session) => {
+learnmateSupabase.auth.onAuthStateChange((event, session) => {
 
 
 
-  if (event === "SIGNED_IN" && session?.user) {
+  if (event === "SIGNED_IN" && session?.user) {
 
 
 
-    await loadLearnMateProfile(session.user.id);
+    // Let Supabase finish its auth transaction before making further client calls.
+    window.setTimeout(async () => {
+      try {
+        await loadLearnMateProfile(session.user.id);
+        store.set("lm_user", state.user);
+        await checkLearnMateOnboarding();
+      } catch (error) {
+        console.error("LearnMate sign-in routing error:", error);
+      }
+    }, 0);
 
-
-
-    store.set("lm_user", state.user);
-    await checkLearnMateOnboarding();
-
-  }
+  }
 
 
 
@@ -753,105 +772,105 @@ window.saveSettings = async function () {
 
 
 
-  const name =
+  const name =
 
-    document.getElementById("sname").value.trim() || "Learner";
+    document.getElementById("sname").value.trim() || "Learner";
 
 
 
-  const goal =
+  const goal =
 
-    document.getElementById("sgoal").value.trim() || "Learner";
+    document.getElementById("sgoal").value.trim() || "Learner";
 
 
 
-  const {
+  const {
 
-    data: { session }
+    data: { session }
 
-  } = await learnmateSupabase.auth.getSession();
+  } = await learnmateSupabase.auth.getSession();
 
 
 
-  // Guest users don't have a cloud profile.
+  // Guest users don't have a cloud profile.
 
-  if (!session?.user) {
+  if (!session?.user) {
 
-    state.user.name = name;
+    state.user.name = name;
 
-    state.user.goal = goal;
+    state.user.goal = goal;
 
 
 
-    store.set("lm_user", state.user);
+    store.set("lm_user", state.user);
 
 
 
-    toast("Profile updated locally");
+    toast("Profile updated locally");
 
-    render();
+    render();
 
 
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  const { error } =
+  const { error } =
 
-    await learnmateSupabase
+    await learnmateSupabase
 
-      .from("profiles")
+      .from("profiles")
 
-      .update({
+      .update({
 
-        full_name: name,
+        full_name: name,
 
-        career_goal: goal
+        career_goal: goal
 
-      })
+      })
 
-      .eq("user_id", session.user.id);
+      .eq("user_id", session.user.id);
 
 
 
-  if (error) {
+  if (error) {
 
 
 
-    console.error("Profile update error:", error);
+    console.error("Profile update error:", error);
 
 
 
-    toast("Could not save profile");
+    toast("Could not save profile");
 
 
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  // Keep the UI state synchronized with the database.
+  // Keep the UI state synchronized with the database.
 
-  state.user.name = name;
+  state.user.name = name;
 
-  state.user.goal = goal;
+  state.user.goal = goal;
 
 
 
-  store.set("lm_user", state.user);
+  store.set("lm_user", state.user);
 
 
 
-  toast("Profile saved to LearnMate");
+  toast("Profile saved to LearnMate");
 
 
 
-  render();
+  render();
 
 };
 
@@ -877,31 +896,31 @@ window.createTask = function () {
 
 
 
-  // Don't create the popup twice.
+  // Don't create the popup twice.
 
-  if (document.getElementById("learnmateTaskModal")) {
+  if (document.getElementById("learnmateTaskModal")) {
 
-    document.getElementById("learnmateTaskModal").style.display = "flex";
+    document.getElementById("learnmateTaskModal").style.display = "flex";
 
-    document.getElementById("lmTaskTitle").focus();
+    document.getElementById("lmTaskTitle").focus();
 
-    return;
+    return;
 
-  }
-
-
-
-  const modal = document.createElement("div");
+  }
 
 
 
-  modal.id = "learnmateTaskModal";
+  const modal = document.createElement("div");
 
 
 
-  modal.innerHTML = `
+  modal.id = "learnmateTaskModal";
 
-    <div style="
+
+
+  modal.innerHTML = `
+
+    <div style="
   position:fixed;
   inset:0;
   z-index:99999;
@@ -931,213 +950,213 @@ window.createTask = function () {
 
 
 
-        <div style="
+        <div style="
 
-          width:48px;
+          width:48px;
 
-          height:48px;
+          height:48px;
 
-          border-radius:15px;
+          border-radius:15px;
 
-          background:#083335;
+          background:#083335;
 
-          color:#ffffff;
+          color:#ffffff;
 
-          display:flex;
+          display:flex;
 
-          align-items:center;
+          align-items:center;
 
-          justify-content:center;
+          justify-content:center;
 
-          font-size:22px;
+          font-size:22px;
 
-          margin-bottom:18px;
+          margin-bottom:18px;
 
-        ">✦</div>
+        ">✦</div>
 
 
 
-        <h2 style="
+        <h2 style="
 
-          margin:0;
+          margin:0;
 
-          font-family:Manrope,sans-serif;
+          font-family:Manrope,sans-serif;
 
-          color:#102326;
+          color:#102326;
 
-          font-size:24px;
+          font-size:24px;
 
-        ">
+        ">
 
-          Add a goal
+          Add a goal
 
-        </h2>
+        </h2>
 
 
 
-        <p style="
+        <p style="
 
-          margin:8px 0 20px;
+          margin:8px 0 20px;
 
-          color:#647477;
+          color:#647477;
 
-          font-size:14px;
+          font-size:14px;
 
-        ">
+        ">
 
-          What would you like LearnMate to add to your plan?
+          What would you like LearnMate to add to your plan?
 
-        </p>
+        </p>
 
 
 
-        <label style="
+        <label style="
 
-          display:block;
+          display:block;
 
-          margin-bottom:7px;
+          margin-bottom:7px;
 
-          font-size:13px;
+          font-size:13px;
 
-          font-weight:700;
+          font-weight:700;
 
-          color:#304447;
+          color:#304447;
 
-        ">
+        ">
 
-          Goal or task
+          Goal or task
 
-        </label>
+        </label>
 
 
 
-        <input
+        <input
 
-          id="lmTaskTitle"
+          id="lmTaskTitle"
 
-          type="text"
+          type="text"
 
-          placeholder="e.g. Learn Python for 30 minutes"
+          placeholder="e.g. Learn Python for 30 minutes"
 
-          style="
+          style="
 
-            width:100%;
+            width:100%;
 
-            box-sizing:border-box;
+            box-sizing:border-box;
 
-            padding:14px;
+            padding:14px;
 
-            border:1px solid #dce4e4;
+            border:1px solid #dce4e4;
 
-            border-radius:12px;
+            border-radius:12px;
 
-            font-size:14px;
+            font-size:14px;
 
-            outline:none;
+            outline:none;
 
-          "
+          "
 
-        >
+        >
 
 
 
-        <div style="
+        <div style="
 
-          display:flex;
+          display:flex;
 
-          gap:10px;
+          gap:10px;
 
-          margin-top:18px;
+          margin-top:18px;
 
-        ">
+        ">
 
 
 
-          <button
+          <button
 
-            onclick="closeTaskModal()"
+            onclick="closeTaskModal()"
 
-            style="
+            style="
 
-              flex:1;
+              flex:1;
 
-              border:1px solid #dce4e4;
+              border:1px solid #dce4e4;
 
-              background:#ffffff;
+              background:#ffffff;
 
-              color:#536568;
+              color:#536568;
 
-              border-radius:12px;
+              border-radius:12px;
 
-              padding:13px;
+              padding:13px;
 
-              cursor:pointer;
+              cursor:pointer;
 
-              font-weight:700;
+              font-weight:700;
 
-            "
+            "
 
-          >
+          >
 
-            Cancel
+            Cancel
 
-          </button>
+          </button>
 
 
 
-          <button
+          <button
 
-            onclick="saveLearnMateTask()"
+            onclick="saveLearnMateTask()"
 
-            style="
+            style="
 
-              flex:1;
+              flex:1;
 
-              border:0;
+              border:0;
 
-              background:#083335;
+              background:#083335;
 
-              color:#ffffff;
+              color:#ffffff;
 
-              border-radius:12px;
+              border-radius:12px;
 
-              padding:13px;
+              padding:13px;
 
-              cursor:pointer;
+              cursor:pointer;
 
-              font-weight:700;
+              font-weight:700;
 
-            "
+            "
 
-          >
+          >
 
-            Add goal
+            Add goal
 
-          </button>
+          </button>
 
 
 
-        </div>
+        </div>
 
 
 
-      </div>
+      </div>
 
-    </div>
+    </div>
 
-  `;
+  `;
 
 
 
-  document.body.appendChild(modal);
+  document.body.appendChild(modal);
 
 
 
-  setTimeout(() => {
+  setTimeout(() => {
 
-    document.getElementById("lmTaskTitle").focus();
+    document.getElementById("lmTaskTitle").focus();
 
-  }, 50);
+  }, 50);
 
 };
 
@@ -1157,15 +1176,15 @@ window.closeTaskModal = function () {
 
 
 
-  const modal = document.getElementById("learnmateTaskModal");
+  const modal = document.getElementById("learnmateTaskModal");
 
 
 
-  if (modal) {
+  if (modal) {
 
-    modal.style.display = "none";
+    modal.style.display = "none";
 
-  }
+  }
 
 
 
@@ -1187,209 +1206,209 @@ window.saveLearnMateTask = async function () {
 
 
 
-  const input = document.getElementById("lmTaskTitle");
+  const input = document.getElementById("lmTaskTitle");
 
 
 
-  if (!input) return;
+  if (!input) return;
 
 
 
-  const title = input.value.trim();
+  const title = input.value.trim();
 
 
 
-  if (!title) {
+  if (!title) {
 
 
 
-    input.style.borderColor = "#d92d20";
+    input.style.borderColor = "#d92d20";
 
 
 
-    input.focus();
+    input.focus();
 
 
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  const button =
+  const button =
 
-    document.querySelector("#learnmateTaskModal button:last-child");
+    document.querySelector("#learnmateTaskModal button:last-child");
 
 
 
-  if (button) {
+  if (button) {
 
-    button.disabled = true;
+    button.disabled = true;
 
-    button.textContent = "Saving...";
+    button.textContent = "Saving...";
 
-  }
+  }
 
 
 
-  try {
+  try {
 
 
 
-    const {
+    const {
 
-      data: { session }
+      data: { session }
 
-    } = await learnmateSupabase.auth.getSession();
+    } = await learnmateSupabase.auth.getSession();
 
 
 
 
 
-    // =====================================================
+    // =====================================================
 
-    // GUEST MODE
+    // GUEST MODE
 
-    // =====================================================
+    // =====================================================
 
 
 
-    if (!session?.user) {
+    if (!session?.user) {
 
 
 
-      state.tasks.push(title);
+      state.tasks.push(title);
 
 
 
-      store.set("lm_tasks", state.tasks);
+      store.set("lm_tasks", state.tasks);
 
 
 
-      closeTaskModal();
+      closeTaskModal();
 
 
 
-      toast("Goal added to your plan");
+      toast("Goal added to your plan");
 
 
 
-      return;
+      return;
 
-    }
+    }
 
 
 
 
 
-    // =====================================================
+    // =====================================================
 
-    // LOGGED-IN USER
+    // LOGGED-IN USER
 
-    // =====================================================
+    // =====================================================
 
 
 
-    const { data, error } =
+    const { data, error } =
 
-      await learnmateSupabase
+      await learnmateSupabase
 
-        .from("tasks")
+        .from("tasks")
 
-        .insert({
+        .insert({
 
-          user_id: session.user.id,
+          user_id: session.user.id,
 
-          title: title,
+          title: title,
 
-          description: "",
+          description: "",
 
-          priority: "medium",
+          priority: "medium",
 
-          status: "pending",
+          status: "pending",
 
-          completed: false
+          completed: false
 
-        })
+        })
 
-        .select()
+        .select()
 
-        .single();
+        .single();
 
 
 
 
 
-    if (error) {
+    if (error) {
 
 
 
-      console.error("Task creation error:", error);
+      console.error("Task creation error:", error);
 
 
 
-      toast("Could not save task");
+      toast("Could not save task");
 
 
 
-      return;
+      return;
 
-    }
+    }
 
 
 
 
 
-    // Keep local UI synchronized.
+    // Keep local UI synchronized.
 
-    state.tasks.push(data.title);
+    state.tasks.push(data.title);
 
 
 
-    store.set("lm_tasks", state.tasks);
+    store.set("lm_tasks", state.tasks);
 
 
 
-    closeTaskModal();
+    closeTaskModal();
 
 
 
-    toast("Task saved to LearnMate");
+    toast("Task saved to LearnMate");
 
 
 
-  } catch (error) {
+  } catch (error) {
 
 
 
-    console.error("Task error:", error);
+    console.error("Task error:", error);
 
 
 
-    toast("Something went wrong while saving");
+    toast("Something went wrong while saving");
 
 
 
-  } finally {
+  } finally {
 
 
 
-    if (button) {
+    if (button) {
 
 
 
-      button.disabled = false;
+      button.disabled = false;
 
-      button.textContent = "Add goal";
+      button.textContent = "Add goal";
 
 
 
-    }
+    }
 
 
 
-  }
+  }
 
 
 
@@ -1407,181 +1426,181 @@ async function loadLearnMatePlannerTasks() {
 
 
 
-  const {
+  const {
 
-    data: { session }
+    data: { session }
 
-  } = await learnmateSupabase.auth.getSession();
+  } = await learnmateSupabase.auth.getSession();
 
 
 
-  if (!session?.user) {
+  if (!session?.user) {
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  const { data, error } =
+  const { data, error } =
 
-    await learnmateSupabase
+    await learnmateSupabase
 
-      .from("tasks")
+      .from("tasks")
 
-      .select("id, title, description, due_date, priority, status, completed, created_at")
+      .select("id, title, description, due_date, priority, status, completed, created_at")
 
-      .eq("user_id", session.user.id)
+      .eq("user_id", session.user.id)
 
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false });
 
 
 
-  if (error) {
+  if (error) {
 
-    console.error("Planner task loading error:", error);
+    console.error("Planner task loading error:", error);
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  const content = document.querySelector(".content");
+  const content = document.querySelector(".content");
 
 
 
-  if (!content) {
+  if (!content) {
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  // Remove an older saved-task section before adding the latest one.
+  // Remove an older saved-task section before adding the latest one.
 
-  const oldSection =
+  const oldSection =
 
-    document.getElementById("learnmateSavedTasks");
+    document.getElementById("learnmateSavedTasks");
 
 
 
-  if (oldSection) {
+  if (oldSection) {
 
-    oldSection.remove();
+    oldSection.remove();
 
-  }
+  }
 
 
 
-  if (!data || data.length === 0) {
+  if (!data || data.length === 0) {
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  const section = document.createElement("div");
+  const section = document.createElement("div");
 
 
 
-  section.id = "learnmateSavedTasks";
+  section.id = "learnmateSavedTasks";
 
 
 
-  section.innerHTML = `
+  section.innerHTML = `
 
-    <div class="section-head" style="margin-top:28px">
+    <div class="section-head" style="margin-top:28px">
 
-      <h2>Your saved goals</h2>
+      <h2>Your saved goals</h2>
 
-      <span class="muted">${data.length} task${data.length === 1 ? "" : "s"}</span>
+      <span class="muted">${data.length} task${data.length === 1 ? "" : "s"}</span>
 
-    </div>
+    </div>
 
 
 
-    <div class="card">
+    <div class="card">
 
 
 
-      ${data.map(task => `
+      ${data.map(task => `
 
-        <div
+        <div
 
-          style="
+          style="
 
-            display:flex;
+            display:flex;
 
-            align-items:center;
+            align-items:center;
 
-            justify-content:space-between;
+            justify-content:space-between;
 
-            gap:16px;
+            gap:16px;
 
-            padding:16px 0;
+            padding:16px 0;
 
-            border-bottom:1px solid rgba(255,255,255,.08);
+            border-bottom:1px solid rgba(255,255,255,.08);
 
-          "
+          "
 
-        >
+        >
 
 
 
-          <div style="display:flex;align-items:center;gap:14px">
+          <div style="display:flex;align-items:center;gap:14px">
 
 
 
-            <div
+            <div
 
-              style="
+              style="
 
-                width:10px;
+                width:10px;
 
-                height:10px;
+                height:10px;
 
-                border-radius:50%;
+                border-radius:50%;
 
-                background:${task.completed ? "#7ee8c8" : "#66d9ef"};
+                background:${task.completed ? "#7ee8c8" : "#66d9ef"};
 
-              "
+              "
 
-            ></div>
+            ></div>
 
 
 
-            <div>
+            <div>
 
-              <strong>${esc(task.title)}</strong>
+              <strong>${esc(task.title)}</strong>
 
 
 
-              <div
+              <div
 
-                class="muted"
+                class="muted"
 
-                style="margin-top:5px"
+                style="margin-top:5px"
 
-              >
+              >
 
-                ${task.status || "pending"}
+                ${task.status || "pending"}
 
-                · ${task.priority || "medium"} priority
+                · ${task.priority || "medium"} priority
 
-              </div>
+              </div>
 
-            </div>
+            </div>
 
 
 
-          </div>
+          </div>
 
 
 
-          <div style="display:flex;align-items:center;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
   <span class="tag">
     ${task.completed ? "Completed" : "Pending"}
   </span>
@@ -1598,19 +1617,19 @@ async function loadLearnMatePlannerTasks() {
 
 
 
-        </div>
+        </div>
 
-      `).join("")}
-
-
-
-    </div>
-
-  `;
+      `).join("")}
 
 
 
-  content.appendChild(section);
+    </div>
+
+  `;
+
+
+
+  content.appendChild(section);
 
 }
 
@@ -1634,25 +1653,25 @@ window.go = async function(page) {
 
 
 
-  originalLearnMateGo(page);
+  originalLearnMateGo(page);
 
 
 
-  if (page === "planner") {
+  if (page === "planner") {
 
 
 
-    // Give the page a moment to render.
+    // Give the page a moment to render.
 
-    setTimeout(() => {
+    setTimeout(() => {
 
-      loadLearnMatePlannerTasks();
+      loadLearnMatePlannerTasks();
 
-    }, 50);
+    }, 50);
 
 
 
-  }
+  }
 
 
 
@@ -1678,82 +1697,82 @@ window.completeLearnMateTask = async function (taskId, completed) {
 
 
 
-  const {
+  const {
 
-    data: { session }
+    data: { session }
 
-  } = await learnmateSupabase.auth.getSession();
-
-
-
-  if (!session?.user) {
-
-    toast("Log in to save task progress");
-
-    return;
-
-  }
+  } = await learnmateSupabase.auth.getSession();
 
 
 
-  const { error } =
+  if (!session?.user) {
 
-    await learnmateSupabase
+    toast("Log in to save task progress");
 
-      .from("tasks")
+    return;
 
-      .update({
-
-        completed: completed,
-
-        status: completed ? "completed" : "pending"
-
-      })
-
-      .eq("id", taskId)
-
-      .eq("user_id", session.user.id);
+  }
 
 
 
-  if (error) {
+  const { error } =
 
-    console.error("Task completion error:", error);
+    await learnmateSupabase
 
-    toast("Could not update task");
+      .from("tasks")
 
-    return;
+      .update({
 
-  }
+        completed: completed,
 
+        status: completed ? "completed" : "pending"
 
+      })
 
-  toast(
+      .eq("id", taskId)
 
-    completed
-
-      ? "Goal completed! 🎉"
-
-      : "Goal moved back to pending"
-
-  );
+      .eq("user_id", session.user.id);
 
 
 
+  if (error) {
 
-  // Reload the Planner so the UI reflects the database.
+    console.error("Task completion error:", error);
 
-  if (state.page === "planner") {
+    toast("Could not update task");
 
-    setTimeout(() => {
+    return;
 
-      loadLearnMatePlannerTasks();
+  }
 
-      setTimeout(() => addTaskCompletionControls(), 150);
 
-    }, 50);
 
-  }
+  toast(
+
+    completed
+
+      ? "Goal completed! 🎉"
+
+      : "Goal moved back to pending"
+
+  );
+
+
+
+
+  // Reload the Planner so the UI reflects the database.
+
+  if (state.page === "planner") {
+
+    setTimeout(() => {
+
+      loadLearnMatePlannerTasks();
+
+      setTimeout(() => addTaskCompletionControls(), 150);
+
+    }, 50);
+
+  }
 
 };
 
@@ -1825,139 +1844,139 @@ async function addTaskCompletionControls() {
 
 
 
-  const section =
+  const section =
 
-    document.getElementById("learnmateSavedTasks");
+    document.getElementById("learnmateSavedTasks");
 
 
 
-  if (!section) return;
+  if (!section) return;
 
 
 
-  const {
+  const {
 
-    data: { session }
+    data: { session }
 
-  } = await learnmateSupabase.auth.getSession();
+  } = await learnmateSupabase.auth.getSession();
 
 
 
-  if (!session?.user) return;
+  if (!session?.user) return;
 
 
 
-  const { data, error } =
+  const { data, error } =
 
-    await learnmateSupabase
+    await learnmateSupabase
 
-      .from("tasks")
+      .from("tasks")
 
-      .select("id, completed")
+      .select("id, completed")
 
-      .eq("user_id", session.user.id)
+      .eq("user_id", session.user.id)
 
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false });
 
 
 
-  if (error || !data) return;
+  if (error || !data) return;
 
 
 
-  const rows =
+  const rows =
 
-    section.querySelectorAll(".card > div");
+    section.querySelectorAll(".card > div");
 
 
 
-  data.forEach((task, index) => {
+  data.forEach((task, index) => {
 
 
 
-    const row = rows[index];
+    const row = rows[index];
 
 
 
-    if (!row) return;
+    if (!row) return;
 
 
 
-    // Don't add the control twice.
+    // Don't add the control twice.
 
-    if (row.querySelector(".lm-task-check")) return;
+    if (row.querySelector(".lm-task-check")) return;
 
 
 
-    const button = document.createElement("button");
+    const button = document.createElement("button");
 
 
 
-    button.className = "lm-task-check";
+    button.className = "lm-task-check";
 
 
 
-    button.type = "button";
+    button.type = "button";
 
 
 
-    button.textContent =
+    button.textContent =
 
-      task.completed ? "✓ Done" : "Mark done";
+      task.completed ? "✓ Done" : "Mark done";
 
 
 
-    button.style.cssText = `
+    button.style.cssText = `
 
-      border:0;
+      border:0;
 
-      border-radius:10px;
+      border-radius:10px;
 
-      padding:9px 12px;
+      padding:9px 12px;
 
-      cursor:pointer;
+      cursor:pointer;
 
-      font-size:12px;
+      font-size:12px;
 
-      font-weight:700;
+      font-weight:700;
 
-      background:${task.completed ? "#dff8ef" : "#083335"};
+      background:${task.completed ? "#dff8ef" : "#083335"};
 
-      color:${task.completed ? "#17664f" : "#ffffff"};
+      color:${task.completed ? "#17664f" : "#ffffff"};
 
-      white-space:nowrap;
+      white-space:nowrap;
 
-    `;
+    `;
 
 
 
-    button.onclick = () => {
+    button.onclick = () => {
 
 
 
-      button.disabled = true;
+      button.disabled = true;
 
 
 
-      completeLearnMateTask(
+      completeLearnMateTask(
 
-        task.id,
+        task.id,
 
-        !task.completed
+        !task.completed
 
-      );
+      );
 
 
 
-    };
+    };
 
 
 
-    row.appendChild(button);
+    row.appendChild(button);
 
 
 
-  });
+  });
 
 }
 
@@ -1975,7 +1994,7 @@ async function addTaskCompletionControls() {
 
 const learnMateOriginalGoForCompletion =
 
-  window.go;
+  window.go;
 
 
 
@@ -1983,27 +2002,27 @@ window.go = function(page) {
 
 
 
-  learnMateOriginalGoForCompletion(page);
+  learnMateOriginalGoForCompletion(page);
 
 
 
-  if (page === "planner") {
+  if (page === "planner") {
 
 
 
-    setTimeout(() => {
+    setTimeout(() => {
 
 
 
-      addTaskCompletionControls();
+      addTaskCompletionControls();
 
 
 
-    }, 250);
+    }, 250);
 
 
 
-  }
+  }
 
 
 
@@ -2035,107 +2054,107 @@ async function getLearnMateConversation() {
 
 
 
-  const {
+  const {
 
-    data: { session }
+    data: { session }
 
-  } = await learnmateSupabase.auth.getSession();
-
-
-
-  if (!session?.user) {
-
-    return null;
-
-  }
+  } = await learnmateSupabase.auth.getSession();
 
 
 
-  // Reuse the conversation already opened in this session.
+  if (!session?.user) {
 
-  if (learnMateConversationId) {
+    return null;
 
-    return learnMateConversationId;
-
-  }
+  }
 
 
 
-  // Try to load the user's latest conversation.
+  // Reuse the conversation already opened in this session.
 
-  const { data: existing, error: existingError } =
+  if (learnMateConversationId) {
 
-    await learnmateSupabase
+    return learnMateConversationId;
 
-      .from("conversations")
-
-      .select("id")
-
-      .eq("user_id", session.user.id)
-
-      .order("created_at", { ascending: false })
-
-      .limit(1)
-
-      .maybeSingle();
+  }
 
 
 
-  if (existingError) {
+  // Try to load the user's latest conversation.
 
-    console.error("Conversation lookup error:", existingError);
+  const { data: existing, error: existingError } =
 
-  }
+    await learnmateSupabase
 
+      .from("conversations")
 
+      .select("id")
 
-  if (existing?.id) {
+      .eq("user_id", session.user.id)
 
-    learnMateConversationId = existing.id;
+      .order("created_at", { ascending: false })
 
-    return existing.id;
+      .limit(1)
 
-  }
-
-
-
-  // No conversation exists — create one.
-
-  const { data, error } =
-
-    await learnmateSupabase
-
-      .from("conversations")
-
-      .insert({
-
-        user_id: session.user.id,
-
-        title: "My LearnMate conversation"
-
-      })
-
-      .select("id")
-
-      .single();
+      .maybeSingle();
 
 
 
-  if (error) {
+  if (existingError) {
 
-    console.error("Conversation creation error:", error);
+    console.error("Conversation lookup error:", existingError);
 
-    return null;
-
-  }
+  }
 
 
 
-  learnMateConversationId = data.id;
+  if (existing?.id) {
+
+    learnMateConversationId = existing.id;
+
+    return existing.id;
+
+  }
 
 
 
-  return data.id;
+  // No conversation exists — create one.
+
+  const { data, error } =
+
+    await learnmateSupabase
+
+      .from("conversations")
+
+      .insert({
+
+        user_id: session.user.id,
+
+        title: "My LearnMate conversation"
+
+      })
+
+      .select("id")
+
+      .single();
+
+
+
+  if (error) {
+
+    console.error("Conversation creation error:", error);
+
+    return null;
+
+  }
+
+
+
+  learnMateConversationId = data.id;
+
+
+
+  return data.id;
 
 }
 
@@ -2155,61 +2174,61 @@ async function saveLearnMateMessage(role, content) {
 
 
 
-  const {
+  const {
 
-    data: { session }
+    data: { session }
 
-  } = await learnmateSupabase.auth.getSession();
-
-
-
-  if (!session?.user) {
-
-    return;
-
-  }
+  } = await learnmateSupabase.auth.getSession();
 
 
 
-  const conversationId =
+  if (!session?.user) {
 
-    await getLearnMateConversation();
+    return;
 
-
-
-  if (!conversationId) {
-
-    return;
-
-  }
+  }
 
 
 
-  const { error } =
+  const conversationId =
 
-    await learnmateSupabase
-
-      .from("messages")
-
-      .insert({
-
-        user_id: session.user.id,
-
-        conversation_id: conversationId,
-
-        role: role,
-
-        content: content
-
-      });
+    await getLearnMateConversation();
 
 
 
-  if (error) {
+  if (!conversationId) {
 
-    console.error("Message save error:", error);
+    return;
 
-  }
+  }
+
+
+
+  const { error } =
+
+    await learnmateSupabase
+
+      .from("messages")
+
+      .insert({
+
+        user_id: session.user.id,
+
+        conversation_id: conversationId,
+
+        role: role,
+
+        content: content
+
+      });
+
+
+
+  if (error) {
+
+    console.error("Message save error:", error);
+
+  }
 
 }
 
@@ -2229,131 +2248,131 @@ async function loadLearnMateConversation() {
 
 
 
-  const {
+  const {
 
-    data: { session }
+    data: { session }
 
-  } = await learnmateSupabase.auth.getSession();
+  } = await learnmateSupabase.auth.getSession();
 
 
 
-  if (!session?.user) {
+  if (!session?.user) {
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  const { data: conversation, error: conversationError } =
+  const { data: conversation, error: conversationError } =
 
-    await learnmateSupabase
+    await learnmateSupabase
 
-      .from("conversations")
+      .from("conversations")
 
-      .select("id")
+      .select("id")
 
-      .eq("user_id", session.user.id)
+      .eq("user_id", session.user.id)
 
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: false })
 
-      .limit(1)
+      .limit(1)
 
-      .maybeSingle();
+      .maybeSingle();
 
 
 
-  if (conversationError || !conversation) {
+  if (conversationError || !conversation) {
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  learnMateConversationId = conversation.id;
+  learnMateConversationId = conversation.id;
 
 
 
-  const { data: messages, error } =
+  const { data: messages, error } =
 
-    await learnmateSupabase
+    await learnmateSupabase
 
-      .from("messages")
+      .from("messages")
 
-      .select("role, content, created_at")
+      .select("role, content, created_at")
 
-      .eq("user_id", session.user.id)
+      .eq("user_id", session.user.id)
 
-      .eq("conversation_id", conversation.id)
+      .eq("conversation_id", conversation.id)
 
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true });
 
 
 
-  if (error) {
+  if (error) {
 
-    console.error("Conversation loading error:", error);
+    console.error("Conversation loading error:", error);
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  if (!messages || messages.length === 0) {
+  if (!messages || messages.length === 0) {
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  state.chats = messages.map(message => ({
+  state.chats = messages.map(message => ({
 
-    who: message.role === "assistant"
+    who: message.role === "assistant"
 
-      ? "ai"
+      ? "ai"
 
-      : message.role === "user"
+      : message.role === "user"
 
-        ? "user"
+        ? "user"
 
-        : "ai",
+        : "ai",
 
-    text: message.content
+    text: message.content
 
-  }));
+  }));
 
 
 
-  store.set("lm_chats", state.chats);
+  store.set("lm_chats", state.chats);
 
 
 
-  render();
+  render();
 
 
 
-  setTimeout(() => {
+  setTimeout(() => {
 
 
 
-    const el =
+    const el =
 
-      document.getElementById("chatMessages");
+      document.getElementById("chatMessages");
 
 
 
-    if (el) {
+    if (el) {
 
-      el.scrollTop = el.scrollHeight;
+      el.scrollTop = el.scrollHeight;
 
-    }
+    }
 
 
 
-  }, 50);
+  }, 50);
 
 }
 
@@ -2447,8 +2466,9 @@ window.sendChat = async function(e) {
       message => message.text !== "Thinking through your goal..."
     );
 
-    const errorMessage =
-      "I couldn't reach my AI service right now. Please check that the LearnMate AI backend is configured correctly and try again.";
+    const errorMessage = typeof getLearnMateChatFallback === "function"
+      ? getLearnMateChatFallback(text)
+      : "I couldn't reach my AI service right now. Please check that the LearnMate AI backend is configured correctly and try again.";
 
     state.chats.push({
       who: "ai",
@@ -2479,7 +2499,7 @@ window.sendChat = async function(e) {
 
 const learnMatePreviousGoForChat =
 
-  window.go;
+  window.go;
 
 
 
@@ -2487,23 +2507,23 @@ window.go = function(page) {
 
 
 
-  learnMatePreviousGoForChat(page);
+  learnMatePreviousGoForChat(page);
 
 
 
-  if (page === "ai") {
+  if (page === "ai") {
 
 
 
-    setTimeout(() => {
+    setTimeout(() => {
 
-      loadLearnMateConversation();
+      loadLearnMateConversation();
 
-    }, 100);
+    }, 100);
 
 
 
-  }
+  }
 
 
 
@@ -2517,7 +2537,7 @@ window.go = function(page) {
 
 window.loadLearnMateConversation =
 
-  loadLearnMateConversation;
+  loadLearnMateConversation;
 
 // =========================================================
 
@@ -2529,17 +2549,17 @@ window.loadLearnMateConversation =
 
 function learnMateEscapeProjectText(value) {
 
-  return String(value || "")
+  return String(value || "")
 
-    .replace(/&/g, "&amp;")
+    .replace(/&/g, "&amp;")
 
-    .replace(/</g, "&lt;")
+    .replace(/</g, "&lt;")
 
-    .replace(/>/g, "&gt;")
+    .replace(/>/g, "&gt;")
 
-    .replace(/"/g, "&quot;")
+    .replace(/"/g, "&quot;")
 
-    .replace(/'/g, "&#039;");
+    .replace(/'/g, "&#039;");
 
 }
 
@@ -2559,123 +2579,123 @@ window.generateProject = async function () {
 
 
 
-  const input =
+  const input =
 
-    document.getElementById("projectInput");
+    document.getElementById("projectInput");
 
 
 
-  if (!input) return;
+  if (!input) return;
 
 
 
-  const idea = input.value.trim();
+  const idea = input.value.trim();
 
 
 
-  if (!idea) {
+  if (!idea) {
 
-    toast("Tell me what you want to build first");
+    toast("Tell me what you want to build first");
 
-    input.focus();
+    input.focus();
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  const {
+  const {
 
-    data: { session }
+    data: { session }
 
-  } = await learnmateSupabase.auth.getSession();
+  } = await learnmateSupabase.auth.getSession();
 
 
 
-  if (!session?.user) {
+  if (!session?.user) {
 
-    toast("Log in to save your project");
+    toast("Log in to save your project");
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  toast("Creating your project...");
+  toast("Creating your project...");
 
 
 
-  const project = {
+  const project = {
 
-    user_id: session.user.id,
+    user_id: session.user.id,
 
-    title: idea,
+    title: idea,
 
-    description:
+    description:
 
-      `Build ${idea} as a portfolio-ready project with clear requirements, an AI/ML workflow, testing and deployment.`,
+      `Build ${idea} as a portfolio-ready project with clear requirements, an AI/ML workflow, testing and deployment.`,
 
-    category: "AI / ML",
+    category: "AI / ML",
 
-    difficulty: "Intermediate",
+    difficulty: "Intermediate",
 
-    status: "planned",
+    status: "planned",
 
-    tech_stack: [
+    tech_stack: [
 
-      "Python",
+      "Python",
 
-      "Machine Learning",
+      "Machine Learning",
 
-      "AI",
+      "AI",
 
-      "GitHub"
+      "GitHub"
 
-    ]
+    ]
 
-  };
+  };
 
 
 
-  const { data, error } =
+  const { data, error } =
 
-    await learnmateSupabase
+    await learnmateSupabase
 
-      .from("projects")
+      .from("projects")
 
-      .insert(project)
+      .insert(project)
 
-      .select()
+      .select()
 
-      .single();
+      .single();
 
 
 
-  if (error) {
+  if (error) {
 
 
 
-    console.error("Project save error:", error);
+    console.error("Project save error:", error);
 
 
 
-    toast("Could not save project");
+    toast("Could not save project");
 
 
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  toast("Project saved to LearnMate 🚀");
+  toast("Project saved to LearnMate 🚀");
 
 
 
-  showLearnMateSavedProjects();
+  showLearnMateSavedProjects();
 
 
 
@@ -2697,205 +2717,205 @@ async function showLearnMateSavedProjects() {
 
 
 
-  const {
+  const {
 
-    data: { session }
+    data: { session }
 
-  } = await learnmateSupabase.auth.getSession();
+  } = await learnmateSupabase.auth.getSession();
 
 
 
-  if (!session?.user) return;
+  if (!session?.user) return;
 
 
 
-  const { data, error } =
+  const { data, error } =
 
-    await learnmateSupabase
+    await learnmateSupabase
 
-      .from("projects")
+      .from("projects")
 
-      .select(
+      .select(
 
-        "id, title, description, category, difficulty, status, tech_stack, created_at"
+        "id, title, description, category, difficulty, status, tech_stack, created_at"
 
-      )
+      )
 
-      .eq("user_id", session.user.id)
+      .eq("user_id", session.user.id)
 
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false });
 
 
 
-  if (error) {
+  if (error) {
 
 
 
-    console.error("Project loading error:", error);
+    console.error("Project loading error:", error);
 
 
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  const content =
+  const content =
 
-    document.querySelector(".content");
+    document.querySelector(".content");
 
 
 
-  if (!content) return;
+  if (!content) return;
 
 
 
-  const old =
+  const old =
 
-    document.getElementById("learnmateSavedProjects");
+    document.getElementById("learnmateSavedProjects");
 
 
 
-  if (old) old.remove();
+  if (old) old.remove();
 
 
 
-  if (!data || data.length === 0) return;
+  if (!data || data.length === 0) return;
 
 
 
-  const section =
+  const section =
 
-    document.createElement("div");
+    document.createElement("div");
 
 
 
-  section.id =
+  section.id =
 
-    "learnmateSavedProjects";
+    "learnmateSavedProjects";
 
 
 
-  section.innerHTML = `
+  section.innerHTML = `
 
-    <div class="section-head" style="margin-top:30px">
+    <div class="section-head" style="margin-top:30px">
 
-      <h2>My projects</h2>
+      <h2>My projects</h2>
 
-      <span class="muted">
+      <span class="muted">
 
-        ${data.length} saved
+        ${data.length} saved
 
-      </span>
+      </span>
 
-    </div>
+    </div>
 
 
 
-    <div class="grid g3">
+    <div class="grid g3">
 
 
 
-      ${data.map(project => {
+      ${data.map(project => {
 
 
 
-        const title =
+        const title =
 
-          learnMateEscapeProjectText(project.title);
+          learnMateEscapeProjectText(project.title);
 
 
 
-        const description =
+        const description =
 
-          learnMateEscapeProjectText(project.description);
+          learnMateEscapeProjectText(project.description);
 
 
 
-        const category =
+        const category =
 
-          learnMateEscapeProjectText(project.category);
+          learnMateEscapeProjectText(project.category);
 
 
 
-        const difficulty =
+        const difficulty =
 
-          learnMateEscapeProjectText(project.difficulty);
+          learnMateEscapeProjectText(project.difficulty);
 
 
 
-        return `
+        return `
 
-          <div class="card feature-card">
+          <div class="card feature-card">
 
 
 
-            <div>
+            <div>
 
 
 
-              <span class="tag">
+              <span class="tag">
 
-                ${category} · ${difficulty}
+                ${category} · ${difficulty}
 
-              </span>
+              </span>
 
 
 
-              <h3 style="margin-top:12px">
+              <h3 style="margin-top:12px">
 
-                ${title}
+                ${title}
 
-              </h3>
+              </h3>
 
 
 
-              <p>
+              <p>
 
-                ${description}
+                ${description}
 
-              </p>
+              </p>
 
 
 
-            </div>
+            </div>
 
 
 
-            <div style="margin-top:14px">
+            <div style="margin-top:14px">
 
 
 
-              <span class="tag">
+              <span class="tag">
 
-                ${project.status || "planned"}
+                ${project.status || "planned"}
 
-              </span>
+              </span>
 
 
 
-            </div>
+            </div>
 
 
 
-          </div>
+          </div>
 
-        `;
+        `;
 
 
 
-      }).join("")}
+      }).join("")}
 
 
 
-    </div>
+    </div>
 
-  `;
+  `;
 
 
 
-  content.appendChild(section);
+  content.appendChild(section);
 
 
 
@@ -2915,7 +2935,7 @@ async function showLearnMateSavedProjects() {
 
 const learnMatePreviousGoForProjects =
 
-  window.go;
+  window.go;
 
 
 
@@ -2923,23 +2943,23 @@ window.go = function(page) {
 
 
 
-  learnMatePreviousGoForProjects(page);
+  learnMatePreviousGoForProjects(page);
 
 
 
-  if (page === "projects") {
+  if (page === "projects") {
 
 
 
-    setTimeout(() => {
+    setTimeout(() => {
 
-      showLearnMateSavedProjects();
+      showLearnMateSavedProjects();
 
-    }, 100);
+    }, 100);
 
 
 
-  }
+  }
 
 
 
@@ -2949,7 +2969,7 @@ window.go = function(page) {
 
 window.showLearnMateSavedProjects =
 
-  showLearnMateSavedProjects;
+  showLearnMateSavedProjects;
 
 // =========================================================
 
@@ -2963,199 +2983,199 @@ window.saveResume = async function () {
 
 
 
-  const name =
+  const name =
 
-    document.getElementById("rname")?.value.trim() || "Learner";
+    document.getElementById("rname")?.value.trim() || "Learner";
 
 
 
-  const role =
+  const role =
 
-    document.getElementById("rrole")?.value.trim() || "Learner";
+    document.getElementById("rrole")?.value.trim() || "Learner";
 
 
 
-  const summary =
+  const summary =
 
-    document.getElementById("rsummary")?.value.trim() || "";
+    document.getElementById("rsummary")?.value.trim() || "";
 
 
 
-  const {
+  const {
 
-    data: { session }
+    data: { session }
 
-  } = await learnmateSupabase.auth.getSession();
+  } = await learnmateSupabase.auth.getSession();
 
 
 
-  if (!session?.user) {
+  if (!session?.user) {
 
-    toast("Please log in to save your resume");
+    toast("Please log in to save your resume");
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  const resumeData = {
+  const resumeData = {
 
-    full_name: name,
+    full_name: name,
 
-    target_role: role,
+    target_role: role,
 
-    professional_summary: summary,
+    professional_summary: summary,
 
-    skills: [
+    skills: [
 
-      "Python",
+      "Python",
 
-      "Machine Learning",
+      "Machine Learning",
 
-      "NLP",
+      "NLP",
 
-      "LLMs",
+      "LLMs",
 
-      "RAG",
+      "RAG",
 
-      "SQL",
+      "SQL",
 
-      "Git"
+      "Git"
 
-    ],
+    ],
 
-    projects: [
+    projects: [
 
-      "LearnMate AI"
+      "LearnMate AI"
 
-    ],
+    ],
 
-    education:
+    education:
 
-      "B.Tech — Computer Science & Engineering",
+      "B.Tech — Computer Science & Engineering",
 
-    location:
+    location:
 
-      "Hyderabad, India"
+      "Hyderabad, India"
 
-  };
+  };
 
 
 
-  // Simple demo ATS score.
+  // Simple demo ATS score.
 
-  // Later we can replace this with a real AI ATS analyzer.
+  // Later we can replace this with a real AI ATS analyzer.
 
-  let atsScore = 78;
+  let atsScore = 78;
 
 
 
-  if (summary.length >= 100) {
+  if (summary.length >= 100) {
 
-    atsScore += 5;
+    atsScore += 5;
 
-  }
+  }
 
 
 
-  if (role.toLowerCase().includes("ai") ||
+  if (role.toLowerCase().includes("ai") ||
 
-      role.toLowerCase().includes("machine") ||
+      role.toLowerCase().includes("machine") ||
 
-      role.toLowerCase().includes("ml")) {
+      role.toLowerCase().includes("ml")) {
 
-    atsScore += 5;
+    atsScore += 5;
 
-  }
+  }
 
 
 
-  atsScore = Math.min(atsScore, 95);
+  atsScore = Math.min(atsScore, 95);
 
 
 
-  const { error } =
+  const { error } =
 
-    await learnmateSupabase
+    await learnmateSupabase
 
-      .from("resumes")
+      .from("resumes")
 
-      .insert({
+      .insert({
 
-        user_id: session.user.id,
+        user_id: session.user.id,
 
-        title: `${name} - ${role}`,
+        title: `${name} - ${role}`,
 
-        resume_data: resumeData,
+        resume_data: resumeData,
 
-        ats_score: atsScore
+        ats_score: atsScore
 
-      });
+      });
 
 
 
-  if (error) {
+  if (error) {
 
 
 
-    console.error("Resume save error:", error);
+    console.error("Resume save error:", error);
 
 
 
-    toast("Could not save resume");
+    toast("Could not save resume");
 
 
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  // Update the existing preview.
+  // Update the existing preview.
 
-  const previewName =
+  const previewName =
 
-    document.getElementById("previewName");
+    document.getElementById("previewName");
 
 
 
-  const previewSummary =
+  const previewSummary =
 
-    document.getElementById("previewSummary");
+    document.getElementById("previewSummary");
 
 
 
-  if (previewName) {
+  if (previewName) {
 
-    previewName.textContent = name;
+    previewName.textContent = name;
 
-  }
+  }
 
 
 
-  if (previewSummary) {
+  if (previewSummary) {
 
-    previewSummary.textContent = summary;
+    previewSummary.textContent = summary;
 
-  }
+  }
 
 
 
-  // Keep the local profile synchronized too.
+  // Keep the local profile synchronized too.
 
-  state.user.name = name;
+  state.user.name = name;
 
-  state.user.goal = role;
+  state.user.goal = role;
 
 
 
-  store.set("lm_user", state.user);
+  store.set("lm_user", state.user);
 
 
 
-  toast(`Resume saved • ATS score ${atsScore}%`);
+  toast(`Resume saved • ATS score ${atsScore}%`);
 
 };
 const learnMatePlannerTaskCreator = window.createTask;

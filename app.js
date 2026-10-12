@@ -14,7 +14,7 @@ const state={
 
 
 
-  page:'landing', sidebar:false, user:store.get('lm_user',{name:'Alex',goal:'AI Engineer'}), tasks:store.get('lm_tasks',[]), streak:store.get('lm_streak',8), xp:store.get('lm_xp',2480), chats:store.get('lm_chats',[{who:'ai',text:'Hi! I’m LearnMate. Tell me what you’re trying to learn, build, or achieve and I’ll help you figure out the next step.'}])
+  page:'landing', sidebar:false, user:store.get('lm_user',{name:'Alex',goal:'AI Engineer'}), tasks:store.get('lm_tasks',[]), streak:store.get('lm_streak',8), xp:store.get('lm_xp',2480), chats:store.get('lm_chats',[{who:'ai',text:'Hi! I’m LearnMate. Tell me what you’re trying to learn, build, or achieve and I’ll help you figure out the next step.'}])
 
 
 
@@ -78,6 +78,9 @@ function landing(){return `
 <div class="landing lm-home">
 <style>
 .lm-home{min-height:100vh;background:radial-gradient(circle at 72% 18%,rgba(91,239,206,.10),transparent 28%),radial-gradient(circle at 18% 40%,rgba(112,124,255,.10),transparent 25%),#071014;color:#edf8f6;overflow:hidden}
+.lm-home .lm-reveal{opacity:0;transform:translateY(24px);transition:opacity .65s ease,transform .65s cubic-bezier(.2,.75,.25,1)}.lm-home .lm-reveal.is-visible{opacity:1;transform:translateY(0)}
+.lm-home .lm-float{animation:lm-drift 6s ease-in-out infinite}.lm-home .lm-ai-orb{animation:lm-pulse 3.5s ease-in-out infinite}.lm-home .lm-hero:before,.lm-home .lm-hero:after{content:"";position:absolute;z-index:0;pointer-events:none;border-radius:50%;filter:blur(.2px);opacity:.45}.lm-home .lm-hero:before{width:14px;height:14px;top:19%;left:48%;background:#7df3d2;box-shadow:0 0 24px #7df3d2;animation:lm-drift 5s ease-in-out infinite}.lm-home .lm-hero:after{width:9px;height:9px;right:47%;bottom:18%;background:#74d9ff;box-shadow:0 0 20px #74d9ff;animation:lm-drift 7s ease-in-out -2s infinite}
+@keyframes lm-drift{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-12px,0)}}@keyframes lm-pulse{0%,100%{box-shadow:0 0 25px rgba(95,207,255,.14);transform:scale(1)}50%{box-shadow:0 0 38px rgba(95,207,255,.3);transform:scale(1.04)}}
 .lm-home .landing-nav{position:relative;z-index:5;max-width:1180px;margin:0 auto;padding:22px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07)}
 .lm-home .brand{display:flex;align-items:center;gap:12px}.lm-home .brand .logo{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#7df3d2,#62d9ff);color:#071014;font-weight:900;box-shadow:0 0 30px rgba(98,217,255,.18)}
 .lm-home .brand strong{display:block;font-family:Manrope,sans-serif;font-size:18px}.lm-home .brand span{display:block;color:#86a19f;font-size:11px;margin-top:2px}
@@ -93,12 +96,17 @@ function landing(){return `
 .lm-home .lm-window-top{display:flex;justify-content:space-between;align-items:center;padding:3px 4px 15px;border-bottom:1px solid rgba(255,255,255,.07);font-size:11px;color:#77908e}.lm-home .lm-dots{display:flex;gap:5px}.lm-home .lm-dots i{width:7px;height:7px;border-radius:50%;background:#31484a}.lm-home .lm-ai-title{display:flex;gap:12px;align-items:center;padding:20px 8px 15px}.lm-home .lm-ai-orb{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#79efd1,#5fcfff);color:#071014;font-weight:900;box-shadow:0 0 25px rgba(95,207,255,.14)}.lm-home .lm-ai-title b{display:block;font-size:15px}.lm-home .lm-ai-title span{display:block;font-size:11px;color:#78918f;margin-top:3px}
 .lm-home .lm-goal{border:1px solid rgba(125,243,210,.12);background:rgba(125,243,210,.035);border-radius:18px;padding:16px}.lm-home .lm-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#72b5aa;font-weight:800}.lm-home .lm-goal h3{margin:8px 0 13px;font-size:20px}.lm-home .lm-mini-row{display:flex;justify-content:space-between;align-items:center;color:#91aaa7;font-size:11px;margin-top:9px}.lm-home .lm-mini-row b{color:#dcebe8}.lm-home .lm-progress{height:7px;border-radius:99px;background:#1b3033;overflow:hidden;margin-top:8px}.lm-home .lm-progress i{display:block;height:100%;width:72%;background:linear-gradient(90deg,#75e9cc,#69d7ff);border-radius:99px}.lm-home .lm-next{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:9px}.lm-home .lm-next div{padding:13px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)}.lm-home .lm-next small{display:block;color:#6f8987;font-size:9px;text-transform:uppercase;letter-spacing:.06em}.lm-home .lm-next b{display:block;margin-top:5px;font-size:12px}
 .lm-home .lm-section{max-width:1180px;margin:0 auto;padding:75px 28px}.lm-home .lm-section-head{text-align:center;max-width:720px;margin:0 auto 38px}.lm-home .lm-section-head .lm-kicker{color:#79e9ce;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.lm-home .lm-section-head h2{font-family:Manrope,sans-serif;font-size:36px;letter-spacing:-.035em;margin:10px 0}.lm-home .lm-section-head p{color:#829a98;line-height:1.7;margin:0}
+.lm-home .lm-marquee{overflow:hidden;border-block:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.018);padding:15px 0}.lm-home .lm-marquee-track{display:flex;width:max-content;gap:34px;align-items:center;animation:lm-marquee 32s linear infinite}.lm-home .lm-marquee span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#78918f;font-weight:800;white-space:nowrap}.lm-home .lm-marquee i{font-style:normal;color:#72e7cd;font-size:15px}@keyframes lm-marquee{to{transform:translateX(-50%)}}
+.lm-home .lm-path-section{position:relative}.lm-home .lm-path-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.lm-home .lm-path-card{position:relative;isolation:isolate;min-height:245px;padding:24px;border:1px solid rgba(255,255,255,.08);border-radius:22px;overflow:hidden;background:linear-gradient(145deg,rgba(17,36,40,.9),rgba(8,18,22,.9));transition:transform .35s,border-color .35s,box-shadow .35s}.lm-home .lm-path-card:hover{transform:translateY(-7px);border-color:rgba(125,243,210,.35);box-shadow:0 22px 60px rgba(0,0,0,.22)}.lm-home .lm-path-card:after{content:"";position:absolute;z-index:-1;width:180px;height:180px;right:-70px;top:-78px;border-radius:50%;background:var(--path-glow);filter:blur(18px);opacity:.24;transition:opacity .35s,transform .5s}.lm-home .lm-path-card:hover:after{opacity:.5;transform:scale(1.18)}.lm-home .lm-path-icon{display:grid;place-items:center;width:46px;height:46px;border:1px solid rgba(255,255,255,.08);border-radius:15px;background:rgba(255,255,255,.04);font-size:20px}.lm-home .lm-path-card h3{font:700 19px Manrope,sans-serif;margin:22px 0 9px}.lm-home .lm-path-card p{max-width:290px;color:#829a98;font-size:13px;line-height:1.7;margin:0}.lm-home .lm-path-link{display:inline-flex;gap:8px;align-items:center;margin-top:20px;color:#8beed5;font-size:12px;font-weight:800}.lm-home .lm-path-link span{transition:transform .2s}.lm-home .lm-path-card:hover .lm-path-link span{transform:translateX(4px)}
+.lm-home .lm-loop{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center;padding:34px;border:1px solid rgba(255,255,255,.08);border-radius:28px;background:radial-gradient(circle at 15% 15%,rgba(93,224,201,.08),transparent 45%),rgba(255,255,255,.02)}.lm-home .lm-loop h2{font:800 clamp(27px,3vw,38px)/1.12 Manrope,sans-serif;letter-spacing:-.04em;margin:10px 0 14px}.lm-home .lm-loop-copy p{color:#829a98;line-height:1.75;font-size:14px}.lm-home .lm-loop-steps{display:grid;gap:10px}.lm-home .lm-loop-step{display:grid;grid-template-columns:38px 1fr auto;gap:12px;align-items:center;padding:13px;border:1px solid rgba(255,255,255,.06);border-radius:15px;background:rgba(4,13,16,.48)}.lm-home .lm-loop-step>i{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:rgba(125,243,210,.09);color:#83ecd3;font-style:normal;font-size:14px}.lm-home .lm-loop-step b{font-size:12px}.lm-home .lm-loop-step small{color:#708986;font-size:10px}.lm-home .lm-final-cta{position:relative;text-align:center;overflow:hidden;padding:56px 26px;border:1px solid rgba(125,243,210,.14);border-radius:28px;background:radial-gradient(ellipse at 50% 120%,rgba(86,225,197,.17),transparent 55%),linear-gradient(145deg,rgba(17,36,40,.72),rgba(8,18,22,.82))}.lm-home .lm-final-cta h2{position:relative;font:800 clamp(30px,4vw,46px)/1.08 Manrope,sans-serif;letter-spacing:-.045em;margin:0 0 12px}.lm-home .lm-final-cta p{position:relative;color:#8ca5a2;margin:0 auto 22px;max-width:540px;line-height:1.7;font-size:14px}.lm-home .lm-final-cta .primary{position:relative;padding:14px 20px}
 .lm-home .lm-cap-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.lm-home .lm-cap{min-height:205px;padding:22px;border-radius:20px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);transition:transform .2s,border-color .2s,background .2s}.lm-home .lm-cap:hover{transform:translateY(-4px);border-color:rgba(125,243,210,.20);background:rgba(125,243,210,.035)}.lm-home .lm-cap-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(125,243,210,.08);font-size:18px}.lm-home .lm-cap h3{font-size:15px;margin:17px 0 8px}.lm-home .lm-cap p{font-size:12px;line-height:1.65;color:#79918f;margin:0}
 .lm-home .lm-flow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1px solid rgba(255,255,255,.07);border-radius:22px;overflow:hidden;background:rgba(255,255,255,.018)}.lm-home .lm-step{padding:25px 20px;border-right:1px solid rgba(255,255,255,.07)}.lm-home .lm-step:last-child{border-right:0}.lm-home .lm-step-num{color:#6ee5ca;font-size:11px;font-weight:900;letter-spacing:.08em}.lm-home .lm-step h3{font-size:14px;margin:12px 0 7px}.lm-home .lm-step p{font-size:11px;line-height:1.6;color:#748d8a;margin:0}
 .lm-home .lm-career{display:grid;grid-template-columns:.9fr 1.1fr;gap:24px;align-items:stretch}.lm-home .lm-career-copy,.lm-home .lm-career-panel{border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.025);border-radius:24px;padding:30px}.lm-home .lm-career-copy h2{font-family:Manrope,sans-serif;font-size:32px;letter-spacing:-.03em;margin:10px 0 13px}.lm-home .lm-career-copy p{color:#829a98;line-height:1.7}.lm-home .lm-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}.lm-home .lm-pill{padding:7px 10px;border-radius:999px;background:#102225;border:1px solid rgba(255,255,255,.06);font-size:10px;color:#9db4b1}.lm-home .lm-career-panel{background:linear-gradient(145deg,#0e1b20,#0a1418)}.lm-home .lm-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.lm-home .lm-score{font-size:12px;color:#7df3d2;font-weight:800}.lm-home .lm-skill{margin:15px 0}.lm-home .lm-skill-top{display:flex;justify-content:space-between;font-size:11px;color:#8ea6a3}.lm-home .lm-skill-top b{color:#d8e8e5}.lm-home .lm-skill .lm-progress i{width:var(--w)}
 .lm-home .lm-footer{border-top:1px solid rgba(255,255,255,.07);background:#050c10;margin-top:25px}.lm-home .lm-footer-inner{max-width:1180px;margin:0 auto;padding:55px 28px 25px}.lm-home .lm-footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:40px}.lm-home .lm-footer-brand p{color:#6f8987;font-size:12px;line-height:1.7;max-width:310px}.lm-home .lm-footer h4{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#dceae7;margin:0 0 15px}.lm-home .lm-footer a{display:block;color:#718a88;font-size:12px;margin:10px 0;cursor:pointer}.lm-home .lm-footer a:hover{color:#8df0d4}.lm-home .lm-footer-bottom{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-top:42px;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);color:#5e7775;font-size:10px}.lm-home .lm-footer-brand strong{font-family:Manrope,sans-serif;font-size:18px}.lm-home .lm-footer-badge{display:inline-flex;margin-top:16px;padding:7px 10px;border-radius:8px;background:rgba(125,243,210,.06);border:1px solid rgba(125,243,210,.10);color:#78cbb8;font-size:10px}
 @media(max-width:900px){.lm-home .lm-hero,.lm-home .lm-career{grid-template-columns:1fr}.lm-home .lm-cap-grid{grid-template-columns:repeat(2,1fr)}.lm-home .lm-flow{grid-template-columns:1fr}.lm-home .lm-step{border-right:0;border-bottom:1px solid rgba(255,255,255,.07)}.lm-home .lm-step:last-child{border-bottom:0}.lm-home .lm-footer-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.lm-home .landing-nav{padding:17px 18px}.lm-home .actions .ghost-btn{display:none}.lm-home .lm-hero{padding:55px 18px}.lm-home .lm-hero h1{font-size:45px}.lm-home .lm-section{padding:55px 18px}.lm-home .lm-cap-grid{grid-template-columns:1fr}.lm-home .lm-footer-grid{grid-template-columns:1fr 1fr;gap:25px}.lm-home .lm-footer-bottom{align-items:flex-start;flex-direction:column}.lm-home .lm-ai-window{transform:none}}
+@media(max-width:900px){.lm-home .lm-path-grid{grid-template-columns:1fr 1fr}.lm-home .lm-loop{grid-template-columns:1fr}}
+@media(max-width:600px){.lm-home .landing-nav{padding:17px 18px}.lm-home .actions .ghost-btn{display:none}.lm-home .lm-hero{padding:55px 18px}.lm-home .lm-hero h1{font-size:45px}.lm-home .lm-section{padding:55px 18px}.lm-home .lm-cap-grid,.lm-home .lm-path-grid{grid-template-columns:1fr}.lm-home .lm-footer-grid{grid-template-columns:1fr 1fr;gap:25px}.lm-home .lm-footer-bottom{align-items:flex-start;flex-direction:column}.lm-home .lm-ai-window{transform:none}.lm-home .lm-loop{padding:22px}.lm-home .lm-loop-step{grid-template-columns:38px 1fr}.lm-home .lm-loop-step small{grid-column:2}.lm-home .lm-final-cta{padding:42px 20px}}
+@media(prefers-reduced-motion:reduce){.lm-home .lm-reveal{opacity:1;transform:none;transition:none}.lm-home .lm-float,.lm-home .lm-ai-orb,.lm-home .lm-hero:before,.lm-home .lm-hero:after,.lm-home .lm-marquee-track{animation:none}.lm-home *{scroll-behavior:auto!important;transition-duration:.01ms!important}}
 </style>
 <header class="landing-nav">
   <div class="brand"><div class="logo">✦</div><div><strong>LearnMate</strong><span>AI learning & career companion</span></div></div>
@@ -107,14 +115,14 @@ function landing(){return `
 <main>
   <section class="lm-hero">
     <div class="lm-glow"></div>
-    <div>
+    <div class="lm-reveal">
       <div class="lm-badge"><i></i> Intelligent learning, built around you</div>
       <h1>Learn smarter.<br><span>Build faster.</span><br>Grow with purpose.</h1>
       <p class="lm-hero-copy">LearnMate is your AI-powered learning and career companion — helping you understand anything, build real projects, prepare for interviews and turn your goals into a practical next step.</p>
       <div class="lm-cta"><button class="primary" onclick="enterApp()">Start learning for free →</button><button class="ghost-btn" onclick="go('ai')">Talk to LearnMate ✦</button></div>
       <div class="lm-trust"><span><b>✦</b> Personalized</span><span><b>⌁</b> AI-guided</span><span><b>↗</b> Career-focused</span><span><b>∞</b> Learn anything</span></div>
     </div>
-    <div class="lm-ai-window">
+    <div class="lm-ai-window lm-float lm-reveal">
       <div class="lm-window-top"><div class="lm-dots"><i></i><i></i><i></i></div><span>LEARNMATE / AI WORKSPACE</span><span>LIVE</span></div>
       <div class="lm-ai-title"><div class="lm-ai-orb">✦</div><div><b>Your AI learning companion</b><span>Understanding your goal and planning the next move</span></div></div>
       <div class="lm-goal"><div class="lm-label">Goal detected</div><h3>Become an AI Engineer</h3><div class="lm-mini-row"><span>Career readiness</span><b>72%</b></div><div class="lm-progress"><i></i></div><div class="lm-mini-row"><span>Current focus</span><b>Deep Learning</b></div></div>
@@ -122,7 +130,25 @@ function landing(){return `
     </div>
   </section>
 
-  <section class="lm-section">
+  <div class="lm-marquee" aria-label="LearnMate features"><div class="lm-marquee-track" aria-hidden="true">${Array.from({length:2},()=>'<span>Personalized learning</span><i>✦</i><span>Real projects</span><i>✦</i><span>Career roadmaps</span><i>✦</i><span>Interview practice</span><i>✦</i><span>Progress that feels real</span><i>✦</i>').join('')}</div></div>
+
+  <section class="lm-section lm-path-section lm-reveal">
+    <div class="lm-section-head"><div class="lm-kicker">Choose your next move</div><h2>One goal. A path you can actually follow.</h2><p>Start with what matters today. LearnMate helps turn it into focused practice and visible progress.</p></div>
+    <div class="lm-path-grid">
+      <article class="lm-path-card" style="--path-glow:#5ef0cb"><div class="lm-path-icon">⌁</div><h3>Understand something new</h3><p>Break a hard topic into clear lessons, examples, checkpoints and revision.</p><a class="lm-path-link" onclick="go('learn')">Explore learning <span>→</span></a></article>
+      <article class="lm-path-card" style="--path-glow:#68cfff"><div class="lm-path-icon">✧</div><h3>Build a real project</h3><p>Turn an idea into a sequence of practical tasks, decisions and a portfolio-ready result.</p><a class="lm-path-link" onclick="go('projects')">Explore projects <span>→</span></a></article>
+      <article class="lm-path-card" style="--path-glow:#a391ff"><div class="lm-path-icon">↗</div><h3>Move toward your career</h3><p>Map the skills, practice and milestones that connect where you are to what’s next.</p><a class="lm-path-link" onclick="go('career')">Explore career paths <span>→</span></a></article>
+    </div>
+  </section>
+
+  <section class="lm-section lm-reveal">
+    <div class="lm-loop">
+      <div class="lm-loop-copy"><div class="lm-kicker">A smarter learning rhythm</div><h2>Small wins add up to real momentum.</h2><p>LearnMate brings your next lesson, practice, project work and progress together—so each session has a clear purpose and a next step.</p><button class="ghost-btn" onclick="enterApp()">See your workspace →</button></div>
+      <div class="lm-loop-steps"><div class="lm-loop-step"><i>01</i><b>Learn one useful idea</b><small>Clear explanations</small></div><div class="lm-loop-step"><i>02</i><b>Practice until it clicks</b><small>Quizzes & flashcards</small></div><div class="lm-loop-step"><i>03</i><b>Use it in a project</b><small>Concrete build steps</small></div><div class="lm-loop-step"><i>04</i><b>See how far you’ve come</b><small>Progress that guides you</small></div></div>
+    </div>
+  </section>
+
+  <section class="lm-section lm-reveal">
     <div class="lm-section-head"><div class="lm-kicker">One companion. Every stage.</div><h2>Everything you need to move forward.</h2><p>LearnMate connects learning, practice, projects and career preparation into one intelligent workspace.</p></div>
     <div class="lm-cap-grid">
       <div class="lm-cap"><div class="lm-cap-icon">🧠</div><h3>Learn</h3><p>Understand concepts at your level with simple explanations, examples and practice.</p></div>
@@ -133,7 +159,7 @@ function landing(){return `
     </div>
   </section>
 
-  <section class="lm-section">
+  <section class="lm-section lm-reveal">
     <div class="lm-section-head"><div class="lm-kicker">Simple 5-step flow</div><h2>From “I want to learn” to “I can do it.”</h2><p>LearnMate turns a vague goal into a sequence of actions you can actually follow.</p></div>
     <div class="lm-flow">
       <div class="lm-step"><div class="lm-step-num">01</div><h3>Tell LearnMate</h3><p>Share your goal, topic, deadline or problem.</p></div>
@@ -144,7 +170,7 @@ function landing(){return `
     </div>
   </section>
 
-  <section class="lm-section">
+  <section class="lm-section lm-reveal">
     <div class="lm-career">
       <div class="lm-career-copy"><div class="lm-kicker">Career intelligence</div><h2>Your goal becomes a roadmap.</h2><p>Instead of giving you random resources, LearnMate can connect the dots between what you know, what your target role needs, what you should build and what you should practice next.</p><div class="lm-pills"><span class="lm-pill">Skill gaps</span><span class="lm-pill">Projects</span><span class="lm-pill">Resume</span><span class="lm-pill">Interviews</span><span class="lm-pill">Roadmap</span></div></div>
       <div class="lm-career-panel"><div class="lm-panel-head"><div><div class="lm-label">AI Engineer pathway</div><h3 style="margin:6px 0 0">Your skill map</h3></div><span class="lm-score">72% ready</span></div>
@@ -155,6 +181,8 @@ function landing(){return `
       </div>
     </div>
   </section>
+
+  <section class="lm-section lm-reveal"><div class="lm-final-cta"><h2>Your next chapter starts with one step.</h2><p>Tell LearnMate what you want to learn, make or become. We’ll help you find the next move.</p><button class="primary" onclick="enterApp()">Start learning for free →</button></div></section>
 </main>
 <footer class="lm-footer">
   <div class="lm-footer-inner">
@@ -177,21 +205,21 @@ function enterApp(){go('dashboard')}
 
 function learnMateOnboardingComplete(profile){
 
-  return !!(
+  return !!(
 
-    profile &&
+    profile &&
 
-    String(profile.full_name || '').trim() &&
+    String(profile.full_name || '').trim() &&
 
-    String(profile.education || '').trim() &&
+    String(profile.education || '').trim() &&
 
-    String(profile.career_goal || '').trim() &&
+    String(profile.career_goal || '').trim() &&
 
-    String(profile.career_goal || '').trim().toLowerCase() !== 'learner' &&
+    String(profile.career_goal || '').trim().toLowerCase() !== 'learner' &&
 
-    String(profile.interests || '').trim()
+    String(profile.interests || '').trim()
 
-  );
+  );
 
 }
 
@@ -199,103 +227,103 @@ function learnMateOnboardingComplete(profile){
 
 async function checkLearnMateOnboarding(){
 
-  try{
+  try{
 
-    if(typeof learnmateSupabase==='undefined'){
+    if(typeof learnmateSupabase==='undefined'){
 
-      state.page='dashboard';
+      state.page='dashboard';
 
-      state.sidebar=false;
+      state.sidebar=false;
 
-      render();
+      render();
 
-      return;
+      return;
 
-    }
-
-
-
-    const {data:{session}}=await learnmateSupabase.auth.getSession();
+    }
 
 
 
-    if(!session?.user){
-
-      state.page='dashboard';
-
-      state.sidebar=false;
-
-      render();
-
-      window.scrollTo(0,0);
-
-      return;
-
-    }
+    const {data:{session}}=await learnmateSupabase.auth.getSession();
 
 
 
-    const {data:profile,error}=await learnmateSupabase
+    if(!session?.user){
 
-      .from('profiles')
+      state.page='dashboard';
 
-      .select('full_name, education, career_goal, interests')
+      state.sidebar=false;
 
-      .eq('user_id',session.user.id)
+      render();
 
-      .maybeSingle();
+      window.scrollTo(0,0);
 
+      return;
 
-
-    if(error){
-
-      console.error('Onboarding profile check failed:',error);
-
-      toast('We could not check your profile. Please try again.');
-
-      return;
-
-    }
+    }
 
 
 
-    if(learnMateOnboardingComplete(profile)){
+    const {data:profile,error}=await learnmateSupabase
 
-      state.user={
+      .from('profiles')
 
-        ...state.user,
+      .select('full_name, education, career_goal, interests')
 
-        name:profile.full_name || state.user.name || 'Learner',
+      .eq('user_id',session.user.id)
 
-        goal:profile.career_goal || state.user.goal || 'Learner'
-
-      };
-
-      state.page='dashboard';
-
-    }else{
-
-      state.page='onboarding';
-
-    }
+      .maybeSingle();
 
 
 
-    state.sidebar=false;
+    if(error){
 
-    store.set('lm_user',state.user);
+      console.error('Onboarding profile check failed:',error);
 
-    render();
+      toast('We could not check your profile. Please try again.');
 
-    window.scrollTo(0,0);
+      return;
 
-  }catch(error){
+    }
 
-    console.error('LearnMate onboarding check error:',error);
 
-    toast('Could not check onboarding status. Please try again.');
 
-  }
+    if(learnMateOnboardingComplete(profile)){
+
+      state.user={
+
+        ...state.user,
+
+        name:profile.full_name || state.user.name || 'Learner',
+
+        goal:profile.career_goal || state.user.goal || 'Learner'
+
+      };
+
+      state.page='dashboard';
+
+    }else{
+
+      state.page='onboarding';
+
+    }
+
+
+
+    state.sidebar=false;
+
+    store.set('lm_user',state.user);
+
+    render();
+
+    window.scrollTo(0,0);
+
+  }catch(error){
+
+    console.error('LearnMate onboarding check error:',error);
+
+    toast('Could not check onboarding status. Please try again.');
+
+  }
 
 }
 
@@ -303,65 +331,65 @@ async function checkLearnMateOnboarding(){
 
 function onboarding(){return `
 
-  <div class="lm-onboarding" style="min-height:100vh;background:radial-gradient(circle at 80% 10%,rgba(91,239,206,.12),transparent 28%),radial-gradient(circle at 10% 80%,rgba(112,124,255,.10),transparent 30%),#071014;color:#edf8f6;padding:34px 20px;box-sizing:border-box;">
+  <div class="lm-onboarding" style="min-height:100vh;background:radial-gradient(circle at 80% 10%,rgba(91,239,206,.12),transparent 28%),radial-gradient(circle at 10% 80%,rgba(112,124,255,.10),transparent 30%),#071014;color:#edf8f6;padding:34px 20px;box-sizing:border-box;">
 
-    <div style="max-width:820px;margin:0 auto;">
+    <div style="max-width:820px;margin:0 auto;">
 
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:34px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:34px;">
 
-        <div style="width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#7df3d2,#62d9ff);color:#071014;font-weight:900;">✦</div>
+        <div style="width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#7df3d2,#62d9ff);color:#071014;font-weight:900;">✦</div>
 
-        <div><strong style="font-family:Manrope,sans-serif;font-size:19px;">LearnMate</strong><div style="font-size:11px;color:#86a19f;margin-top:2px;">Personalize your learning workspace</div></div>
+        <div><strong style="font-family:Manrope,sans-serif;font-size:19px;">LearnMate</strong><div style="font-size:11px;color:#86a19f;margin-top:2px;">Personalize your learning workspace</div></div>
 
-      </div>
-
-
-
-      <div class="card" style="background:rgba(12,25,30,.88);border:1px solid rgba(255,255,255,.09);padding:30px;border-radius:24px;box-shadow:0 30px 90px rgba(0,0,0,.28);">
-
-        <div class="eyebrow">One-time setup</div>
-
-        <h1 style="margin:10px 0 8px;font-family:Manrope,sans-serif;">Let’s build your LearnMate around you.</h1>
-
-        <p class="muted" style="margin-bottom:26px;">Tell us enough to create your first learning and career plan. You can change these details later in Settings.</p>
+      </div>
 
 
 
-        <div class="form-grid">
+      <div class="card" style="background:rgba(12,25,30,.88);border:1px solid rgba(255,255,255,.09);padding:30px;border-radius:24px;box-shadow:0 30px 90px rgba(0,0,0,.28);">
 
-          <div class="form-group"><label>Your name</label><input id="lmOnboardName" class="input" value="${esc(state.user.name==='Alex'?'':state.user.name)}" placeholder="e.g. Yogitha"></div>
+        <div class="eyebrow">One-time setup</div>
 
-          <div class="form-group"><label>Education</label><input id="lmOnboardEducation" class="input" placeholder="e.g. B.Tech CSE — AI & ML"></div>
+        <h1 style="margin:10px 0 8px;font-family:Manrope,sans-serif;">Let’s build your LearnMate around you.</h1>
 
-          <div class="form-group"><label>Target career / role</label><input id="lmOnboardGoal" class="input" value="${esc(state.user.goal==='AI Engineer'?'':state.user.goal)}" placeholder="e.g. AI Engineer"></div>
-
-          <div class="form-group"><label>Current level</label><select id="lmOnboardLevel" class="input"><option value="Beginner">Beginner</option><option value="Intermediate">Intermediate</option><option value="Advanced">Advanced</option></select></div>
-
-          <div class="form-group"><label>Hours available per day</label><select id="lmOnboardHours" class="input"><option value="1">1 hour</option><option value="2">2 hours</option><option value="3">3 hours</option><option value="4+">4+ hours</option></select></div>
-
-          <div class="form-group"><label>Preferred learning style</label><select id="lmOnboardStyle" class="input"><option value="Step-by-step">Step-by-step</option><option value="Practice-first">Practice-first</option><option value="Project-first">Project-first</option><option value="Balanced">Balanced</option></select></div>
-
-          <div class="form-group"><label>Goal deadline</label><input id="lmOnboardDeadline" class="input" type="date"></div>
-
-          <div class="form-group full"><label>Interests / skills you already know</label><textarea id="lmOnboardInterests" class="textarea" placeholder="e.g. Python, ML, NLP, SQL, projects, interview preparation"></textarea></div>
-
-          <div class="form-group full"><label>What should LearnMate help you with first?</label><textarea id="lmOnboardFirstGoal" class="textarea" placeholder="e.g. Build a roadmap to become job-ready for AI Engineer roles."></textarea></div>
-
-        </div>
+        <p class="muted" style="margin-bottom:26px;">Tell us enough to create your first learning and career plan. You can change these details later in Settings.</p>
 
 
 
-        <div style="display:flex;justify-content:flex-end;margin-top:22px;">
+        <div class="form-grid">
 
-          <button class="primary" onclick="saveLearnMateOnboarding()">Create my learning workspace →</button>
+          <div class="form-group"><label>Your name</label><input id="lmOnboardName" class="input" value="${esc(state.user.name==='Alex'?'':state.user.name)}" placeholder="e.g. Yogitha"></div>
 
-        </div>
+          <div class="form-group"><label>Education</label><input id="lmOnboardEducation" class="input" placeholder="e.g. B.Tech CSE — AI & ML"></div>
 
-      </div>
+          <div class="form-group"><label>Target career / role</label><input id="lmOnboardGoal" class="input" value="${esc(state.user.goal==='AI Engineer'?'':state.user.goal)}" placeholder="e.g. AI Engineer"></div>
 
-    </div>
+          <div class="form-group"><label>Current level</label><select id="lmOnboardLevel" class="input"><option value="Beginner">Beginner</option><option value="Intermediate">Intermediate</option><option value="Advanced">Advanced</option></select></div>
 
-  </div>
+          <div class="form-group"><label>Hours available per day</label><select id="lmOnboardHours" class="input"><option value="1">1 hour</option><option value="2">2 hours</option><option value="3">3 hours</option><option value="4+">4+ hours</option></select></div>
+
+          <div class="form-group"><label>Preferred learning style</label><select id="lmOnboardStyle" class="input"><option value="Step-by-step">Step-by-step</option><option value="Practice-first">Practice-first</option><option value="Project-first">Project-first</option><option value="Balanced">Balanced</option></select></div>
+
+          <div class="form-group"><label>Goal deadline</label><input id="lmOnboardDeadline" class="input" type="date"></div>
+
+          <div class="form-group full"><label>Interests / skills you already know</label><textarea id="lmOnboardInterests" class="textarea" placeholder="e.g. Python, ML, NLP, SQL, projects, interview preparation"></textarea></div>
+
+          <div class="form-group full"><label>What should LearnMate help you with first?</label><textarea id="lmOnboardFirstGoal" class="textarea" placeholder="e.g. Build a roadmap to become job-ready for AI Engineer roles."></textarea></div>
+
+        </div>
+
+
+
+        <div style="display:flex;justify-content:flex-end;margin-top:22px;">
+
+          <button class="primary" onclick="saveLearnMateOnboarding()">Create my learning workspace →</button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
 
 `}
 
@@ -369,109 +397,109 @@ function onboarding(){return `
 
 async function saveLearnMateOnboarding(){
 
-  const name=document.getElementById('lmOnboardName')?.value.trim();
+  const name=document.getElementById('lmOnboardName')?.value.trim();
 
-  const education=document.getElementById('lmOnboardEducation')?.value.trim();
+  const education=document.getElementById('lmOnboardEducation')?.value.trim();
 
-  const goal=document.getElementById('lmOnboardGoal')?.value.trim();
+  const goal=document.getElementById('lmOnboardGoal')?.value.trim();
 
-  const level=document.getElementById('lmOnboardLevel')?.value || 'Beginner';
+  const level=document.getElementById('lmOnboardLevel')?.value || 'Beginner';
 
-  const hours=document.getElementById('lmOnboardHours')?.value || '1';
+  const hours=document.getElementById('lmOnboardHours')?.value || '1';
 
-  const style=document.getElementById('lmOnboardStyle')?.value || 'Step-by-step';
+  const style=document.getElementById('lmOnboardStyle')?.value || 'Step-by-step';
 
-  const deadline=document.getElementById('lmOnboardDeadline')?.value || '';
+  const deadline=document.getElementById('lmOnboardDeadline')?.value || '';
 
-  const interests=document.getElementById('lmOnboardInterests')?.value.trim();
+  const interests=document.getElementById('lmOnboardInterests')?.value.trim();
 
-  const firstGoal=document.getElementById('lmOnboardFirstGoal')?.value.trim();
-
-
-
-  if(!name || !education || !goal || !interests){
-
-    toast('Please complete your name, education, career goal and interests.');
-
-    return;
-
-  }
+  const firstGoal=document.getElementById('lmOnboardFirstGoal')?.value.trim();
 
 
 
-  if(typeof learnmateSupabase==='undefined'){
+  if(!name || !education || !goal || !interests){
 
-    state.user={...state.user,name,goal};
+    toast('Please complete your name, education, career goal and interests.');
 
-    store.set('lm_user',state.user);
+    return;
 
-    store.set('lm_onboarding',{complete:true,education,level,hours,style,deadline,interests,firstGoal});
-
-    state.page='dashboard';
-
-    render();
-
-    toast('Your LearnMate workspace is ready.');
-
-    return;
-
-  }
+  }
 
 
 
-  const {data:{session}}=await learnmateSupabase.auth.getSession();
+  if(typeof learnmateSupabase==='undefined'){
 
-  if(!session?.user){
+    state.user={...state.user,name,goal};
 
-    toast('Please log in before completing onboarding.');
+    store.set('lm_user',state.user);
 
-    return;
+    store.set('lm_onboarding',{complete:true,education,level,hours,style,deadline,interests,firstGoal});
 
-  }
+    state.page='dashboard';
 
+    render();
 
+    toast('Your LearnMate workspace is ready.');
 
-  const combinedInterests=[interests,`Level: ${level}`,`Study time: ${hours}/day`,`Learning style: ${style}`,deadline?`Deadline: ${deadline}`:'',firstGoal?`First goal: ${firstGoal}`:''].filter(Boolean).join(' | ');
+    return;
 
-
-
-  const {error}=await learnmateSupabase
-
-    .from('profiles')
-
-    .update({full_name:name,education,career_goal:goal,interests:combinedInterests})
-
-    .eq('user_id',session.user.id);
+  }
 
 
 
-  if(error){
+  const {data:{session}}=await learnmateSupabase.auth.getSession();
 
-    console.error('Onboarding save failed:',error);
+  if(!session?.user){
 
-    toast('Could not save onboarding. Please try again.');
+    toast('Please log in before completing onboarding.');
 
-    return;
+    return;
 
-  }
+  }
 
 
 
-  state.user={...state.user,name,goal};
+  const combinedInterests=[interests,`Level: ${level}`,`Study time: ${hours}/day`,`Learning style: ${style}`,deadline?`Deadline: ${deadline}`:'',firstGoal?`First goal: ${firstGoal}`:''].filter(Boolean).join(' | ');
 
-  store.set('lm_user',state.user);
 
-  store.set('lm_onboarding',{complete:true,education,level,hours,style,deadline,interests,firstGoal});
 
-  state.page='dashboard';
+  const {error}=await learnmateSupabase
 
-  state.sidebar=false;
+    .from('profiles')
 
-  render();
+    .update({full_name:name,education,career_goal:goal,interests:combinedInterests})
 
-  window.scrollTo(0,0);
+    .eq('user_id',session.user.id);
 
-  toast('Your LearnMate workspace is ready.');
+
+
+  if(error){
+
+    console.error('Onboarding save failed:',error);
+
+    toast('Could not save onboarding. Please try again.');
+
+    return;
+
+  }
+
+
+
+  state.user={...state.user,name,goal};
+
+  store.set('lm_user',state.user);
+
+  store.set('lm_onboarding',{complete:true,education,level,hours,style,deadline,interests,firstGoal});
+
+  state.page='dashboard';
+
+  state.sidebar=false;
+
+  render();
+
+  window.scrollTo(0,0);
+
+  toast('Your LearnMate workspace is ready.');
 
 }
 
@@ -813,9 +841,9 @@ You can still continue practicing **${topic}**.
 
 function setLearnTopic(topic){
 
-  const input=document.getElementById('learnTopicInput');
+  const input=document.getElementById('learnTopicInput');
 
-  if(input){input.value=topic;input.focus();}
+  if(input){input.value=topic;input.focus();}
 
 }
 
@@ -823,11 +851,11 @@ function setLearnTopic(topic){
 
 function getCurrentLearnTopic(){
 
-  const input=document.getElementById('learnTopicInput');
+  const input=document.getElementById('learnTopicInput');
 
-  const saved=localStorage.getItem('lm_learning_topic')||'';
+  const saved=localStorage.getItem('lm_learning_topic')||'';
 
-  return (input?.value.trim()||saved||'').trim();
+  return (input?.value.trim()||saved||'').trim();
 
 }
 
@@ -835,7 +863,7 @@ function getCurrentLearnTopic(){
 
 function saveLearnTopic(topic){
 
-  localStorage.setItem('lm_learning_topic',topic);
+  localStorage.setItem('lm_learning_topic',topic);
 
 }
 
@@ -865,7 +893,7 @@ function renderLearnMateMarkdown(markdown){
 }
 
 
-function showLearnMateLearningModal(title,body){
+function showLearnMateLearningModal(title,body,actionsHtml=''){
 
   const old=document.getElementById('learnMateLearningModal');
 
@@ -890,6 +918,7 @@ function showLearnMateLearningModal(title,body){
         </div>
 
         <div style="margin-top:22px;line-height:1.75;font-size:15px">${renderLearnMateMarkdown(body)}</div>
+        ${actionsHtml?`<div class="lm-modal-actions">${actionsHtml}</div>`:''}
 
       </div>
 
@@ -902,9 +931,10 @@ function showLearnMateLearningModal(title,body){
 
 function closeLearningModal(){
 
-  const modal=document.getElementById('learnMateLearningModal');
+  const modal=document.getElementById('learnMateLearningModal');
 
-  if(modal) modal.remove();
+  if(modal) modal.remove();
+  if(state.learningModule) state.learningModule=null;
 
 }
 
@@ -912,31 +942,31 @@ function closeLearningModal(){
 
 async function generateLearningPath(){
 
-  const input=document.getElementById('learnTopicInput');
+  const input=document.getElementById('learnTopicInput');
 
-  const topic=input?.value.trim()||'';
+  const topic=input?.value.trim()||'';
 
-  const result=document.getElementById('learnPathResult');
+  const result=document.getElementById('learnPathResult');
 
-  if(!topic){toast('Tell me what you want to learn first');input?.focus();return;}
+  if(!topic){toast('Tell me what you want to learn first');input?.focus();return;}
 
-  saveLearnTopic(topic);
+  saveLearnTopic(topic);
 
-  if(result) result.innerHTML='<div class="card" style="padding:18px"><b>LearnMate is building your path...</b><p class="muted" style="margin-top:6px">Analyzing the topic and organizing the best learning sequence.</p></div>';
+  if(result) result.innerHTML='<div class="card" style="padding:18px"><b>LearnMate is building your path...</b><p class="muted" style="margin-top:6px">Analyzing the topic and organizing the best learning sequence.</p></div>';
 
-  try{
+  try{
 
-    const output=await learnMateLearningAI(`Create a practical learning path for the topic: ${topic}. The learner is ${state.user?.name||'a learner'} and their current career goal is ${state.user?.goal||'not specified'}. Start from an appropriate beginner-friendly level unless the topic clearly requires otherwise. Give: 1) goal, 2) prerequisites, 3) 5-8 ordered modules, 4) what to practice in each module, 5) a small project, 6) a first task for today. Keep it actionable and easy to follow.`);
+    const output=await learnMateLearningAI(`Create a practical learning path for the topic: ${topic}. The learner is ${state.user?.name||'a learner'} and their current career goal is ${state.user?.goal||'not specified'}. Start from an appropriate beginner-friendly level unless the topic clearly requires otherwise. Give: 1) goal, 2) prerequisites, 3) 5-8 ordered modules, 4) what to practice in each module, 5) a small project, 6) a first task for today. Keep it actionable and easy to follow.`);
 
-    if(result) result.innerHTML=`<div class="card" style="padding:20px"><div class="eyebrow">Your AI-generated path</div><h3 style="margin-top:6px">${esc(topic)}</h3><div style="margin-top:14px;white-space:pre-wrap;line-height:1.7">${renderLearnMateMarkdown(output)}</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px"><button class="primary" type="button" onclick="openLearningLesson()">Start lesson →</button><button class="ghost-btn" type="button" onclick="generateLearningQuiz()">Test me →</button></div></div>`;
+    if(result) result.innerHTML=`<div class="card" style="padding:20px"><div class="eyebrow">Your AI-generated path</div><h3 style="margin-top:6px">${esc(topic)}</h3><div style="margin-top:14px;white-space:pre-wrap;line-height:1.7">${renderLearnMateMarkdown(output)}</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px"><button class="primary" type="button" onclick="openLearningLesson()">Start lesson →</button><button class="ghost-btn" type="button" onclick="generateLearningQuiz()">Test me →</button></div></div>`;
 
-  }catch(error){
+  }catch(error){
 
-    if(result) result.innerHTML='<div class="card" style="padding:18px"><b>Could not generate the path.</b><p class="muted" style="margin-top:6px">'+esc(error.message)+'</p></div>';
+    if(result) result.innerHTML='<div class="card" style="padding:18px"><b>Could not generate the path.</b><p class="muted" style="margin-top:6px">'+esc(error.message)+'</p></div>';
 
-    toast('AI learning path failed');
+    toast('AI learning path failed');
 
-  }
+  }
 
 }
 
@@ -944,21 +974,21 @@ async function generateLearningPath(){
 
 async function openLearningLesson(){
 
-  const topic=getCurrentLearnTopic();
+  const topic=getCurrentLearnTopic();
 
-  if(!topic){toast('Choose a topic first');document.getElementById('learnTopicInput')?.focus();return;}
+  if(!topic){toast('Choose a topic first');document.getElementById('learnTopicInput')?.focus();return;}
 
-  saveLearnTopic(topic);
+  saveLearnTopic(topic);
 
-  showLearnMateLearningModal('Preparing your lesson...','LearnMate is creating a lesson for '+topic+'...');
+  showLearnMateLearningModal('Preparing your lesson...','LearnMate is creating a lesson for '+topic+'...');
 
-  try{
+  try{
 
-    const output=await learnMateLearningAI(`Teach me ${topic} as a focused lesson. Assume I am learning this for the first time unless my context says otherwise. Use this sequence: simple explanation, intuition, real-world example, small example, common mistakes, then 3 practice questions. Finish with one clear next step. Do not overwhelm me.`);
+    const output=await learnMateLearningAI(`Teach me ${topic} as a focused lesson. Assume I am learning this for the first time unless my context says otherwise. Use this sequence: simple explanation, intuition, real-world example, small example, common mistakes, then 3 practice questions. Finish with one clear next step. Do not overwhelm me.`);
 
-    showLearnMateLearningModal(`Learn: ${topic}`,output);
+    showLearnMateLearningModal(`Learn: ${topic}`,output);
 
-  }catch(error){showLearnMateLearningModal('Lesson unavailable',error.message);}
+  }catch(error){showLearnMateLearningModal('Lesson unavailable',error.message);}
 
 }
 
@@ -966,21 +996,21 @@ async function openLearningLesson(){
 
 async function generateLearningQuiz(){
 
-  const topic=getCurrentLearnTopic();
+  const topic=getCurrentLearnTopic();
 
-  if(!topic){toast('Choose a topic first');document.getElementById('learnTopicInput')?.focus();return;}
+  if(!topic){toast('Choose a topic first');document.getElementById('learnTopicInput')?.focus();return;}
 
-  saveLearnTopic(topic);
+  saveLearnTopic(topic);
 
-  showLearnMateLearningModal('Generating your quiz...','LearnMate is preparing questions for '+topic+'...');
+  showLearnMateLearningModal('Generating your quiz...','LearnMate is preparing questions for '+topic+'...');
 
-  try{
+  try{
 
-    const output=await learnMateLearningAI(`Create a short 5-question quiz on ${topic} for a learner. Mix conceptual and practical questions. For each question give 4 options (A-D), clearly mark the correct answer after the options, and add a one-sentence explanation. Make the difficulty increase gradually.`);
+    const output=await learnMateLearningAI(`Create a short 5-question quiz on ${topic} for a learner. Mix conceptual and practical questions. For each question give 4 options (A-D), clearly mark the correct answer after the options, and add a one-sentence explanation. Make the difficulty increase gradually.`);
 
-    showLearnMateLearningModal(`Quiz: ${topic}`,output);
+    showLearnMateLearningModal(`Quiz: ${topic}`,output);
 
-  }catch(error){showLearnMateLearningModal('Quiz unavailable',error.message);}
+  }catch(error){showLearnMateLearningModal('Quiz unavailable',error.message);}
 
 }
 
@@ -988,21 +1018,21 @@ async function generateLearningQuiz(){
 
 async function generateLearningFlashcards(){
 
-  const topic=getCurrentLearnTopic();
+  const topic=getCurrentLearnTopic();
 
-  if(!topic){toast('Choose a topic first');document.getElementById('learnTopicInput')?.focus();return;}
+  if(!topic){toast('Choose a topic first');document.getElementById('learnTopicInput')?.focus();return;}
 
-  saveLearnTopic(topic);
+  saveLearnTopic(topic);
 
-  showLearnMateLearningModal('Creating flashcards...','LearnMate is selecting the most important ideas from '+topic+'...');
+  showLearnMateLearningModal('Creating flashcards...','LearnMate is selecting the most important ideas from '+topic+'...');
 
-  try{
+  try{
 
-    const output=await learnMateLearningAI(`Create 10 concise study flashcards for ${topic}. Format each as: Card 1 — Front: ... Back: ... Keep each answer short but useful, focus on high-value concepts, definitions, relationships and common interview points.`);
+    const output=await learnMateLearningAI(`Create 10 concise study flashcards for ${topic}. Format each as: Card 1 — Front: ... Back: ... Keep each answer short but useful, focus on high-value concepts, definitions, relationships and common interview points.`);
 
-    showLearnMateLearningModal(`Flashcards: ${topic}`,output);
+    showLearnMateLearningModal(`Flashcards: ${topic}`,output);
 
-  }catch(error){showLearnMateLearningModal('Flashcards unavailable',error.message);}
+  }catch(error){showLearnMateLearningModal('Flashcards unavailable',error.message);}
 
 }
 
@@ -1074,6 +1104,7 @@ setTimeout(()=>{
   window.sendChat=learnMateAssistantChat;
 },0);
 window.learnMateAssistantChat=learnMateAssistantChat;
+window.getLearnMateChatFallback=getLearnMateChatFallback;
 
 window.generateLearningPath=generateLearningPath;
 
@@ -1324,7 +1355,18 @@ function saveSettings(){state.user.name=document.getElementById('sname').value||
 
 
 
-function render(){let html;switch(state.page){case'landing':html=landing();break;case'onboarding':html=onboarding();break;case'dashboard':html=dashboard();break;case'ai':html=ai();break;case'learn':html=learn();break;case'docs':html=docs();break;case'interview':html=interview();break;case'planner':html=planner();break;case'projects':html=projects();break;case'career':html=career();break;case'resume':html=resume();break;case'progress':html=progress();break;case'settings':html=settings();break;default:html=landing()}app.innerHTML=html}
+let landingObserver;
+function initLandingAnimations(){
+  if(landingObserver){landingObserver.disconnect();landingObserver=null;}
+  if(state.page!=='landing')return;
+  const root=document.querySelector('.lm-home');
+  if(!root)return;
+  const targets=root.querySelectorAll('.lm-reveal');
+  if(!('IntersectionObserver' in window)||window.matchMedia('(prefers-reduced-motion: reduce)').matches){targets.forEach(el=>el.classList.add('is-visible'));return;}
+  landingObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('is-visible');landingObserver.unobserve(entry.target);}}),{threshold:.12,rootMargin:'0px 0px -35px 0px'});
+  targets.forEach(el=>landingObserver.observe(el));
+}
+function render(){let html;switch(state.page){case'landing':html=landing();break;case'onboarding':html=onboarding();break;case'dashboard':html=dashboard();break;case'ai':html=ai();break;case'learn':html=learn();break;case'docs':html=docs();break;case'interview':html=interview();break;case'planner':html=planner();break;case'projects':html=projects();break;case'career':html=career();break;case'resume':html=resume();break;case'progress':html=progress();break;case'settings':html=settings();break;default:html=landing()}app.innerHTML=html;initLandingAnimations()}
 
 
 
@@ -1355,9 +1397,82 @@ function lmTasks(){
   const raw=lmArray('lm_tasks');
   return raw.map((t,i)=>typeof t==='string'?{id:`legacy-${i}`,title:t,done:false,createdAt:Date.now()}:t);
 }
-function lmProjects(){ return lmArray('lm_projects'); }
+function projectTaskGuidance(taskTitle,projectTitle){
+  const title=String(taskTitle||'Project task'),project=String(projectTitle||'your project');
+  const guides=[
+    [/agent|route|shared context/i,'Define the job of each component and the information it needs. Build one end-to-end request first, then add routing rules and a clear response when no component can handle a request.',['Draw the request flow and define each component’s input/output.','Test one normal request and one unsupported request.']],
+    [/problem|user/i,'Write a one-sentence problem statement. Name who experiences the problem, when it happens, and what they do today. Talk to or review examples from at least three likely users.',['Write the problem and target user in the README.','List three user needs and one measurable success signal.']],
+    [/design|architecture|feature|ingestion|workflow|role/i,'Sketch how a user moves through the project and how information moves through the system. Decide what the first working version must do, and keep optional features out of the first build.',['Draw the main screens or data flow.','List the inputs, outputs, and core features for the first version.']],
+    [/dataset|sample data|data/i,'Find or create a small, lawful sample dataset that represents the problem. Check its fields, missing values, and whether it contains enough examples for a useful first experiment.',['Save a small sample dataset and document its source.','Record any cleaning or privacy limits.']],
+    [/text extraction|chunk|document/i,'Build the document import path. Extract text from a small PDF or text file, split long text into useful sections, and keep each section linked to its source document.',['Test with two sample documents, including one with multiple pages.','Show a clear message when text cannot be extracted.']],
+    [/retrieval|answer|rag|search/i,'Make a question search the saved document sections and return the most relevant passages. Show the source passages with the answer so users can check where it came from.',['Test questions whose answers are present and absent.','Display citations or source section names with results.']],
+    [/baseline|model/i,'Build the smallest working baseline before trying advanced models. Split your data into training and test portions, train once, and save the exact steps needed to reproduce the result.',['Record the baseline metric and model settings.','Keep a held-out test set for comparison.']],
+    [/evaluate|metric|precision|recall/i,'Choose measures that match the real cost of a wrong result. Evaluate on examples the model did not train on, inspect failures, and compare results against the baseline.',['Report at least two relevant metrics.','Write down three failure examples and what they reveal.']],
+    [/dashboard|interface|screen/i,'Build the simplest screen that lets a user complete the core task. Include loading, empty, success, and error states, and make the main action clear on a phone-sized screen.',['Connect the screen to the working core flow.','Check layout and errors at desktop and mobile widths.']],
+    [/test|practice|exercise/i,'Test the project with realistic examples, including a normal case, an edge case, and an invalid input. Fix any issue that prevents the main task from completing.',['Write down the test cases and expected outcomes.','Run each case and record whether it passed.']],
+    [/deploy|document|readme|limitation|next step/i,'Prepare the project so another person can understand and run it. Explain setup, configuration, the main workflow, known limits, and how to see a working demo.',['Write setup and usage instructions in the README.','Add a demo link or screenshots and list known limitations.']],
+    [/documentation|readme/i,'Prepare the project so another person can understand and run it. Explain setup, configuration, the main workflow, known limits, and how to see a working demo.',['Write setup and usage instructions in the README.','Add a demo link or screenshots and list known limitations.']]
+  ];
+  const guide=guides.find(([pattern])=>pattern.test(title));
+  if(guide)return {description:guide[1].replaceAll('the project',project),steps:guide[2]};
+  return {description:`Complete this step for ${project}: define what a working result looks like, build the smallest version that demonstrates it, and check the result with a real example.`,steps:['Write down the expected result before coding.','Build the smallest working version.','Try one normal example and one edge case; note what you would improve next.']};
+}
+function lmProjects(){
+  return lmArray('lm_projects')
+    .filter(project => project && typeof project === 'object')
+    .map((project, projectIndex) => {
+      const tasks = (Array.isArray(project.tasks) ? project.tasks : []).map((task, taskIndex) => {
+        if (typeof task === 'string') {
+          return { id: `pt-${taskIndex}`, title: task, done: false, ...projectTaskGuidance(task,project.title) };
+        }
+        if (!task || typeof task !== 'object') return null;
+        const guidance=projectTaskGuidance(task.title,project.title);
+        return {
+          ...task,
+          id: task.id || `pt-${taskIndex}`,
+          title: String(task.title || `Task ${taskIndex + 1}`),
+          done: Boolean(task.done),
+          description: task.description||guidance.description,
+          steps:Array.isArray(task.steps)&&task.steps.length?task.steps:guidance.steps
+        };
+      }).filter(Boolean);
+      const progress = tasks.length
+        ? lmPercent(tasks.filter(task => task.done).length / tasks.length * 100)
+        : lmPercent(project.progress);
+      return {
+        ...project,
+        id: project.id || `project-${projectIndex}`,
+        tasks,
+        progress,
+        status: progress === 100 && project.status !== 'completed'
+          ? 'ready'
+          : (project.status || (progress ? 'building' : 'planned'))
+      };
+    });
+}
 function lmInterviews(){ return lmArray('lm_interviews'); }
-function lmPaths(){ return lmArray('lm_learning_paths'); }
+function lmPaths(){
+  return lmArray('lm_learning_paths')
+    .filter(path => path && typeof path === 'object')
+    .map(path => {
+      const modules=(Array.isArray(path.modules)?path.modules:[]).map((module,index)=>{
+        if(typeof module==='string')return {id:`module-${index}`,title:module};
+        if(!module||typeof module!=='object')return null;
+        return {...module,id:module.id||`module-${index}`,title:String(module.title||`Module ${index+1}`)};
+      }).filter(Boolean);
+      const oldProgress=lmPercent(path.progress);
+      const legacyCompleted=Math.round(oldProgress/100*modules.length);
+      const completedModules=Array.isArray(path.completedModules)
+        ? [...new Set(path.completedModules.map(Number).filter(index=>Number.isInteger(index)&&index>=0&&index<modules.length))]
+        : Array.from({length:legacyCompleted},(_,index)=>index);
+      return {
+        ...path,
+        modules,
+        completedModules,
+        quizScores:path.quizScores&&typeof path.quizScores==='object'?path.quizScores:{}
+      };
+    });
+}
 function lmDocs(){ return lmArray('lm_documents'); }
 function lmPercent(n){ return Math.max(0,Math.min(100,Math.round(n||0))); }
 function lmMetric(){
@@ -1409,7 +1524,16 @@ function nav(){
   </aside>`;
 }
 async function logoutLearnMate(){
-  try{ if(window.learnmateSupabase?.auth) await window.learnmateSupabase.auth.signOut(); }catch(e){ console.warn('Logout:',e); }
+  try{
+    if(typeof learnmateSupabase!=='undefined'&&learnmateSupabase?.auth){
+      const {error}=await learnmateSupabase.auth.signOut();
+      if(error) throw error;
+    }
+  }catch(e){
+    console.error('Logout failed:',e);
+    toast('Could not sign out. Please try again.');
+    return;
+  }
   ['lm_user','lm_onboarding'].forEach(k=>localStorage.removeItem(k));
   state.user={name:'Learner',goal:'Learner'}; state.page='landing'; state.sidebar=false;
   toast('You have been logged out'); render();
@@ -1461,20 +1585,146 @@ function planner(){
 function generateLearningPath(){
   const input=document.getElementById('learnTopicInput'), topic=input?.value.trim(); const result=document.getElementById('learnPathResult');
   if(!topic){toast('Tell me what you want to learn first');return;}
-  const modules=['Foundations & vocabulary','Core concepts','Hands-on examples','Practice & mini challenges','Real-world application','Review & assessment'];
-  const path={id:`path-${Date.now()}`,topic,description:`A practical ${topic} path built around your goal: ${state.user.goal||'personal growth'}.`,modules,progress:0,createdAt:Date.now()};
-  const paths=lmPaths().filter(p=>p.topic.toLowerCase()!==topic.toLowerCase());paths.unshift(path);lmWrite('lm_learning_paths',paths.slice(0,12));recordActivity('learning_path_created',{topic});
-  if(result)result.innerHTML=`<div class="card path-result"><div class="eyebrow">Your personalized path</div><h3>${esc(topic)}</h3><p class="muted">${esc(path.description)}</p><ol>${modules.map((m,i)=>`<li><b>Module ${i+1}:</b> ${m}</li>`).join('')}</ol><div class="progress"><i style="width:0%"></i></div><div class="lm-inline-actions"><button class="primary" onclick="completeLearningModule('${path.id}')">Start module 1 →</button><button class="ghost-btn" onclick="go('planner')">Add practice goal</button></div></div>`;
+  const modules=['Foundations & vocabulary','Core concepts','Hands-on examples','Practice & mini challenges','Real-world application','Review & assessment'].map((title,index)=>({id:`module-${index}`,title}));
+  const path={id:`path-${Date.now()}`,topic,description:`A practical ${topic} path built around your goal: ${state.user.goal||'personal growth'}.`,modules,completedModules:[],quizScores:{},progress:0,createdAt:Date.now()};
+  const paths=lmPaths().filter(p=>String(p.topic||'').toLowerCase()!==topic.toLowerCase());paths.unshift(path);lmWrite('lm_learning_paths',paths.slice(0,12));recordActivity('learning_path_created',{topic});
+  if(result)result.innerHTML=`<div class="card path-result"><div class="eyebrow">Your learning path</div><h3>${esc(topic)}</h3><p class="muted">${esc(path.description)}</p><ol>${modules.map((m,i)=>`<li><b>Module ${i+1}:</b> ${esc(m.title)}</li>`).join('')}</ol><div class="progress"><i style="width:0%"></i></div><div class="lm-inline-actions"><button class="primary" onclick="openLearningModule('${path.id}',0)">Open module 1 →</button><button class="ghost-btn" onclick="go('planner')">Add practice goal</button></div></div>`;
   toast('Learning path created');
 }
 function completeLearningModule(id){
-  const paths=lmPaths(); const p=paths.find(x=>x.id===id); if(!p)return;
-  p.progress=Math.min(100,(p.progress||0)+Math.round(100/p.modules.length)); p.lastStudied=Date.now(); lmWrite('lm_learning_paths',paths); recordActivity('learning_session',{topic:p.topic}); toast(p.progress>=100?'Learning path completed 🎉':'Module completed'); render();
+  const path=lmPaths().find(item=>item.id===id); if(!path)return;
+  const nextIndex=path.modules.findIndex((_,index)=>!path.completedModules.includes(index));
+  openLearningModule(id,nextIndex<0?Math.max(0,path.modules.length-1):nextIndex);
+}
+function moduleLessonPrompt(path,module){
+  return `Teach one short, clear lesson for the topic "${path.topic}" and module "${module.title}". Include: a learning objective, a simple explanation, a worked example, a small practice task with steps, and a short recap. Keep it focused on this module. Do not include quiz questions or answer keys; a separate quiz follows.`;
+}
+function showLearningModuleLesson(pathId,index,lesson){
+  const path=lmPaths().find(item=>item.id===pathId), module=path?.modules[index];
+  if(!path||!module)return;
+  state.learningModule={pathId,index,phase:'reading',lesson};
+  showLearnMateLearningModal(`${path.topic} · Module ${index+1}`,lesson,`<button class="primary" onclick="beginLearningModuleQuiz()">I finished reading — start quiz →</button>`);
+}
+async function openLearningModule(pathId,index){
+  const path=lmPaths().find(item=>item.id===pathId);
+  if(!path||!path.modules.length){toast('This learning path has no modules yet.');return;}
+  const firstIncomplete=path.modules.findIndex((_,moduleIndex)=>!path.completedModules.includes(moduleIndex));
+  if(firstIncomplete>=0&&index>firstIncomplete){toast('Complete the previous module and its quiz to unlock this one.');return;}
+  const module=path.modules[index]; if(!module){toast('Module not found.');return;}
+  state.learningModule={pathId,index,phase:'loading',lesson:''};
+  showLearnMateLearningModal('Opening module…',`LearnMate is preparing Module ${index+1}: ${module.title}`);
+  try{
+    const lesson=await learnMateLearningAI(moduleLessonPrompt(path,module));
+    if(state.learningModule?.pathId===pathId&&state.learningModule?.index===index)showLearningModuleLesson(pathId,index,lesson);
+  }catch(error){
+    showLearningModuleLesson(pathId,index,`The lesson could not be generated right now.\n\nYou can still study **${module.title}** in **${path.topic}** by writing down what you already know, working through one small example, and noting what is still unclear.\n\n${error.message||''}`);
+  }
+}
+function moduleQuizFallback(path,module){
+  const topic=path.topic, title=module.title;
+  return [
+    {question:`What is the best way to show that you understand “${title}” in ${topic}?`,options:['Memorize the module title only','Explain the idea and apply it to a small example','Skip the practice and move on','Copy a definition without understanding it'],correctIndex:1,explanation:'Explaining an idea and applying it to an example checks both understanding and use.'},
+    {question:`If a practice task about “${title}” feels difficult, what should you do first?`,options:['Break it into smaller steps and test one example','Give up on the topic','Guess without checking','Skip every related exercise'],correctIndex:0,explanation:'Smaller steps make it easier to find the part that needs more practice.'},
+    {question:'When are you ready to continue to the next module?',options:['As soon as you open this page','After you can explain the main idea and finish a practice task','Before reading the lesson','Only after memorizing every sentence'],correctIndex:1,explanation:'A clear explanation and completed practice task are good signs that the core idea is understood.'}
+  ];
+}
+function parseModuleQuiz(output,path,module){
+  try{
+    const text=String(output||'').replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
+    const parsed=JSON.parse(text.slice(text.indexOf('{'),text.lastIndexOf('}')+1));
+    const questions=Array.isArray(parsed.questions)?parsed.questions:[];
+    const cleaned=questions.map(item=>{
+      const options=Array.isArray(item.options)?item.options.map(option=>String(option)).slice(0,4):[];
+      let correctIndex=Number(item.correctIndex);
+      if(!Number.isInteger(correctIndex)&&typeof item.answer==='string')correctIndex='ABCD'.indexOf(item.answer.trim().toUpperCase());
+      return {question:String(item.question||''),options,correctIndex,explanation:String(item.explanation||'')};
+    }).filter(item=>item.question&&item.options.length>=2&&item.correctIndex>=0&&item.correctIndex<item.options.length);
+    return cleaned.length>=3?cleaned.slice(0,5):moduleQuizFallback(path,module);
+  }catch{return moduleQuizFallback(path,module);}
+}
+async function beginLearningModuleQuiz(){
+  const current=state.learningModule;
+  const path=lmPaths().find(item=>item.id===current?.pathId), module=path?.modules[current?.index];
+  if(!path||!module)return;
+  current.phase='quiz-loading';
+  showLearnMateLearningModal('Preparing your module quiz…',`Creating questions about ${module.title} in ${path.topic}.`);
+  const prompt=`Create a 3-question multiple-choice quiz ONLY about the lesson module "${module.title}" within "${path.topic}". Return valid JSON only, with this schema: {"questions":[{"question":"...","options":["...","...","...","..."],"correctIndex":0,"explanation":"..."}]}. correctIndex must be a zero-based integer. Questions should test the lesson's ideas, not generic study advice.`;
+  let output='';
+  try{output=await learnMateLearningAI(prompt);}catch(error){console.warn('Module quiz generation failed:',error);}
+  if(state.learningModule?.pathId!==path.id||state.learningModule?.index!==current.index)return;
+  const cleanedOutput=String(output||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
+  current.phase='quiz';current.questions=parseModuleQuiz(output,path,module);current.questionIndex=0;current.score=0;current.selected=null;current.usedFallback=!cleanedOutput.startsWith('{');
+  renderLearningModuleQuiz();
+}
+function showInteractiveLearningModal(title,content){
+  document.getElementById('learnMateLearningModal')?.remove();
+  const modal=document.createElement('div');modal.id='learnMateLearningModal';
+  modal.innerHTML=`<div style="position:fixed;inset:0;z-index:100000;background:rgba(5,12,18,.78);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:20px"><div style="width:min(760px,100%);max-height:85vh;overflow:auto;background:#fff;border-radius:24px;padding:30px;box-shadow:0 30px 80px rgba(0,0,0,.35);color:#102326"><div style="display:flex;justify-content:space-between;gap:20px;align-items:flex-start"><div><div style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#17836b">LearnMate · Module quiz</div><h2 style="margin:6px 0 0;font-family:Manrope,sans-serif">${esc(title)}</h2></div><button type="button" onclick="closeLearningModal()" aria-label="Close quiz" style="border:0;background:#eef3f3;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:700">✕</button></div><div style="margin-top:22px;line-height:1.65">${content}</div></div></div>`;
+  document.body.appendChild(modal);
+}
+function renderLearningModuleQuiz(){
+  const current=state.learningModule;if(!current)return;
+  const path=lmPaths().find(item=>item.id===current.pathId), module=path?.modules[current.index];if(!path||!module)return;
+  const q=current.questions[current.questionIndex];
+  if(!q){
+    const passed=current.score;
+    showInteractiveLearningModal(`${module.title} · Quiz complete`,
+      `<div class="card"><div class="eyebrow">Your result</div><h3>${passed} / ${current.questions.length} correct</h3><p>${current.usedFallback?'The AI quiz was unavailable, so this is a short review quiz.':'Review each explanation, then complete the module.'}</p><button class="primary" onclick="finishLearningModuleQuiz()">Complete module & unlock next →</button></div>`);
+    return;
+  }
+  const feedback=current.selected===null?'':`<div class="card" style="margin-top:14px;background:${current.selected===q.correctIndex?'#e9f8f1':'#fff3e8'}"><b>${current.selected===q.correctIndex?'Correct!':'Not quite.'}</b><p style="margin:6px 0 0">${esc(q.explanation)}</p></div>`;
+  const options=q.options.map((option,index)=>`<button type="button" class="${current.selected===index?'primary':'ghost-btn'}" style="display:block;width:100%;text-align:left;margin:8px 0;white-space:normal" ${current.selected!==null?'disabled':''} onclick="answerLearningModuleQuiz(${index})">${String.fromCharCode(65+index)}. ${esc(option)}</button>`).join('');
+  const next=current.selected===null?'':`<button class="primary" style="margin-top:16px" onclick="advanceLearningModuleQuiz()">${current.questionIndex===current.questions.length-1?'See result →':'Next question →'}</button>`;
+  showInteractiveLearningModal(`${path.topic} · ${module.title}`,
+    `<div class="eyebrow">Question ${current.questionIndex+1} of ${current.questions.length}</div><h3 style="margin:8px 0 14px">${esc(q.question)}</h3>${options}${feedback}${next}`);
+}
+function answerLearningModuleQuiz(index){
+  const current=state.learningModule;if(!current||current.selected!==null)return;
+  const question=current.questions[current.questionIndex];if(!question||index<0||index>=question.options.length)return;
+  current.selected=index;if(index===question.correctIndex)current.score++;
+  renderLearningModuleQuiz();
+}
+function advanceLearningModuleQuiz(){
+  const current=state.learningModule;if(!current||current.selected===null)return;
+  current.questionIndex++;current.selected=null;renderLearningModuleQuiz();
+}
+function finishLearningModuleQuiz(){
+  const current=state.learningModule;if(!current)return;
+  const paths=lmPaths(),path=paths.find(item=>item.id===current.pathId);if(!path)return;
+  if(!path.completedModules.includes(current.index))path.completedModules.push(current.index);
+  path.completedModules.sort((a,b)=>a-b);
+  path.quizScores[current.index]={score:current.score,total:current.questions.length,completedAt:Date.now()};
+  path.progress=lmPercent(path.completedModules.length/path.modules.length*100);path.lastStudied=Date.now();
+  lmWrite('lm_learning_paths',paths);recordActivity('learning_module_completed',{topic:path.topic,module:path.modules[current.index].title,score:current.score});
+  state.learningModule=null;closeLearningModal();toast(path.progress===100?'Learning path completed 🎉':'Module complete — next module unlocked');render();
+}
+function runPathStudyTool(pathId,tool){
+  const path=lmPaths().find(item=>item.id===pathId);if(!path)return;
+  saveLearnTopic(path.topic);
+  const topicInput=document.getElementById('learnTopicInput');if(topicInput)topicInput.value=path.topic;
+  if(tool==='quiz')generateLearningQuiz();else generateLearningFlashcards();
+}
+function runLearningStudyTool(tool){
+  const input=document.getElementById('studyToolsTopic');
+  const topic=input?.value.trim()||localStorage.getItem('lm_learning_topic')||'';
+  if(!topic){toast('Enter a topic first.');input?.focus();return;}
+  saveLearnTopic(topic);
+  const topicInput=document.getElementById('learnTopicInput');if(topicInput)topicInput.value=topic;
+  if(tool==='quiz')generateLearningQuiz();else generateLearningFlashcards();
 }
 function learn(){
   const paths=lmPaths();
-  const cards=paths.length?paths.map(p=>`<div class="card feature-card"><div><span class="tag">${p.progress>=100?'Completed':'In progress'}</span><h3 style="margin-top:12px">${esc(p.topic)}</h3><p>${esc(p.description||'Personalized learning path')}</p></div><div><div class="progress"><i style="width:${p.progress||0}%"></i></div><small class="muted">${p.progress||0}% complete</small><button class="ghost-btn" style="margin-top:10px" onclick="completeLearningModule('${p.id}')">${p.progress>=100?'Review':'Continue'} →</button></div></div>`).join(''):`<div class="empty">No saved learning paths yet. Create one above.</div>`;
-  return shell(`<div class="content"><div class="page-title">Learn anything, your way.</div><p class="sub">Learn with a real path, lessons, quizzes and flashcards — then turn your activity into measurable progress.</p><div class="card"><div class="eyebrow">AI Learning Path</div><h3>What do you want to learn?</h3><div class="learn-create-row"><input id="learnTopicInput" class="input" placeholder="e.g. Python, machine learning, communication" onkeydown="if(event.key==='Enter'){event.preventDefault();generateLearningPath()}"><button class="primary" onclick="generateLearningPath()">Create path →</button></div><div class="suggestions" style="margin-top:12px"><button class="suggestion" onclick="setLearnTopic('Python')">Python</button><button class="suggestion" onclick="setLearnTopic('Machine Learning')">Machine Learning</button><button class="suggestion" onclick="setLearnTopic('Data Science')">Data Science</button><button class="suggestion" onclick="setLearnTopic('English communication')">English</button></div><div id="learnPathResult" style="margin-top:16px"></div></div><div class="section-head"><h2>Study tools</h2><span class="muted">Choose a topic first</span></div><div class="grid g3"><div class="card feature-card"><div><div class="feature-icon">📖</div><h3>Lesson</h3><p>Get a simple explanation, examples, practice and a next step.</p></div><button class="ghost-btn" onclick="openLearningLesson()">Learn →</button></div><div class="card feature-card"><div><div class="feature-icon">🧪</div><h3>Quiz</h3><p>Test your understanding with questions that become progressively harder.</p></div><button class="ghost-btn" onclick="generateLearningQuiz()">Start quiz →</button></div><div class="card feature-card"><div><div class="feature-icon">🗂️</div><h3>Flashcards</h3><p>Quickly revise definitions, concepts and interview-ready points.</p></div><button class="ghost-btn" onclick="generateLearningFlashcards()">Study cards →</button></div></div><div class="section-head"><h2>Your learning paths</h2><span class="muted">${paths.length} saved</span></div><div class="grid g3">${cards}</div></div>`,'Learn');
+  const cards=paths.length?paths.map(p=>{
+    const nextIndex=p.modules.findIndex((_,index)=>!p.completedModules.includes(index));
+    const openIndex=nextIndex<0?Math.max(0,p.modules.length-1):nextIndex;
+    const modules=p.modules.map((module,index)=>{
+      const done=p.completedModules.includes(index), unlocked=done||index===openIndex;
+      const quiz=p.quizScores[index];
+      return `<div class="module-row ${done?'module-done':''} ${unlocked?'':'module-locked'}"><div><b>Module ${index+1}: ${esc(module.title)}</b><small>${done?`Completed · quiz ${quiz?.score??0}/${quiz?.total??0}`:unlocked?'Read the lesson, then finish its quiz':'Complete the previous module to unlock this one'}</small></div><button class="ghost-btn" ${unlocked?'':'disabled'} onclick="openLearningModule('${p.id}',${index})">${done?'Review':'Open module'} →</button></div>`;
+    }).join('');
+    return `<div class="card path-card"><div class="stat"><div><span class="tag">${p.progress>=100?'Completed':'In progress'}</span><h3 style="margin-top:12px">${esc(p.topic)}</h3></div><span class="tag">${p.completedModules.length}/${p.modules.length} modules</span></div><p class="muted">${esc(p.description||'Personalized learning path')}</p><div class="progress"><i style="width:${p.progress||0}%"></i></div><small class="muted">${p.progress||0}% complete</small><div class="module-list">${modules}</div><div class="lm-inline-actions"><button class="ghost-btn" onclick="runPathStudyTool('${p.id}','quiz')">Quiz on ${esc(p.topic)}</button><button class="ghost-btn" onclick="runPathStudyTool('${p.id}','flashcards')">Flashcards</button></div></div>`;
+  }).join(''):`<div class="empty">No saved learning paths yet. Create one above.</div>`;
+  return shell(`<div class="content"><div class="page-title">Learn anything, your way.</div><p class="sub">Open each lesson, complete its quiz, and unlock the next module in order.</p><div class="card"><div class="eyebrow">Learning Path</div><h3>What do you want to learn?</h3><div class="learn-create-row"><input id="learnTopicInput" class="input" placeholder="e.g. Python, machine learning, communication"><button class="primary" onclick="generateLearningPath()">Create path →</button></div><div id="learnPathResult" style="margin-top:16px"></div></div><div class="section-head"><h2>Study tools</h2><span class="muted">Practice any topic with a quiz or flashcards</span></div><div class="card"><div class="learn-create-row"><input id="studyToolsTopic" class="input" value="${esc(localStorage.getItem('lm_learning_topic')||'')}" placeholder="Topic for quiz or flashcards"><button class="primary" onclick="runLearningStudyTool('quiz')">Generate quiz</button><button class="ghost-btn" onclick="runLearningStudyTool('flashcards')">Make flashcards</button></div></div><div class="section-head"><h2>Your learning paths</h2><span class="muted">${paths.length} saved</span></div><div class="grid learning-paths">${cards}</div></div>`,'Learn');
 }
 
 /* ---------- Document context ---------- */
@@ -1512,15 +1762,22 @@ async function sendChat(e){
   const message=input?.value.trim();
   if(!message)return;
   input.value='';
-  state.chats.push({who:'user',text:message});
+
+  const previousMessages=state.chats.slice(-12).map(item=>({
+    role:item.who==='user'?'user':'assistant',
+    content:String(item.text||'').slice(0,4000)
+  }));
+  const context=state.aiContext;
+  const requestMessage=context?.text
+    ? `${message}\n\nUse this uploaded document as source context (${context.name}):\n${context.text.slice(0,6000)}`
+    : message;
+
+  state.chats.push({who:'user',text:message},{who:'ai',text:'Thinking through your goal...'});
   lmWrite('lm_chats',state.chats);
   recordActivity('ai_chat');
   render();
-
-  const ctx=state.aiContext;
-  let apiMessage=message;
-  if(ctx?.text){
-    apiMessage=`Use the following uploaded document as the primary context when answering. Document: ${ctx.name}\n\n${ctx.text.slice(0,12000)}\n\nUser question: ${message}`;
+  if(typeof saveLearnMateMessage==='function'){
+    saveLearnMateMessage('user',message).catch(error=>console.warn('Could not sync user chat message:',error));
   }
 
   try{
@@ -1528,30 +1785,39 @@ async function sendChat(e){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        message:apiMessage,
-        history:state.chats.slice(-12).map(m=>({role:m.who==='ai'?'assistant':'user',content:m.text})),
-        profile:getLearnMatePersonalContext()
+        message:requestMessage,
+        history:previousMessages,
+        profile:typeof getLearnMatePersonalContext==='function'
+          ? getLearnMatePersonalContext()
+          : {name:state.user?.name||'Learner',career_goal:state.user?.goal||'Not specified'}
       })
     });
     const data=await response.json().catch(()=>({}));
-    if(!response.ok) throw new Error(data.error||'AI service unavailable');
-    if(!data.output) throw new Error('AI returned an empty response');
-    state.chats.push({who:'ai',text:data.output});
-  }catch(error){
-    console.warn('LearnMate AI unavailable; using built-in fallback:',error);
-    let reply='I can still guide you in Demo Mode. ';
-    if(/interview/i.test(message)) reply+='Open Interview Studio to start a question-by-question mock interview.';
-    else if(/project|build/i.test(message)) reply+='Open Projects to choose a project, build it step by step and submit it.';
-    else if(/career|roadmap/i.test(message)) reply+='Open Career → Improve my roadmap to generate skill-gap actions.';
-    else if(/quiz|flashcard|learn|study|plan/i.test(message)) reply+='Open Learn, enter your topic, then use Lesson, Quiz or Flashcards.';
-    else reply+='Tell me the exact learning or career outcome you want and I will turn it into a practical next action.';
+    if(!response.ok) throw new Error(data.error||`AI service returned HTTP ${response.status}.`);
+    const reply=String(data.output||'The AI service returned an empty response. Please try again.');
+    state.chats=state.chats.filter(item=>item.text!=='Thinking through your goal...');
     state.chats.push({who:'ai',text:reply});
+    if(typeof saveLearnMateMessage==='function'){
+      saveLearnMateMessage('assistant',reply).catch(error=>console.warn('Could not sync assistant chat message:',error));
+    }
+  }catch(error){
+    console.error('LearnMate chat request failed:',error);
+    state.chats=state.chats.filter(item=>item.text!=='Thinking through your goal...');
+    const fallback=typeof getLearnMateChatFallback==='function'
+      ? getLearnMateChatFallback(message)
+      : `I couldn't reach the AI service. ${error.message||'Check that the server is running, then try again.'}`;
+    const detail=error.message?`\n\n_Service detail: ${error.message}_`:'';
+    const chatFallback=`${fallback}${detail}`;
+    state.chats.push({who:'ai',text:chatFallback});
+    if(typeof saveLearnMateMessage==='function'){
+      saveLearnMateMessage('assistant',chatFallback).catch(saveError=>console.warn('Could not sync fallback chat message:',saveError));
+    }
   }
+
   lmWrite('lm_chats',state.chats);
   render();
   setTimeout(()=>{const el=document.getElementById('chatMessages');if(el)el.scrollTop=el.scrollHeight},20);
 }
-
 function quickChat(t){const input=document.getElementById('chatInput');if(input){input.value=t;sendChat({preventDefault(){}})}}
 function newChat(){state.chats=[{who:'ai',text:state.aiContext?`New chat with **${state.aiContext.name}** as active document context.`:'New conversation started. What are you working toward?'}];lmWrite('lm_chats',state.chats);render();}
 
@@ -1597,10 +1863,10 @@ function createProjectFromTemplate(i){
   const t=LM_PROJECT_TEMPLATES[i]; const projects=lmProjects(); const existing=projects.find(p=>p.title===t.title); if(existing){state.projectDetail=existing.id;render();return;}
   const p={id:`proj-${Date.now()}`,title:t.title,level:t.level,description:t.description,tasks:t.tasks.map((x,j)=>({id:`pt-${j}`,title:x,done:false})),progress:0,status:'planned',createdAt:Date.now()};projects.unshift(p);lmWrite('lm_projects',projects);recordActivity('project_started',{title:p.title});state.projectDetail=p.id;toast('Project added to your workspace');render();
 }
-function generateProject(){const input=document.getElementById('projectInput')?.value.trim();if(!input){toast('Tell me what you want to build first');return;}const p={id:`proj-${Date.now()}`,title:input,level:'Custom project',description:`A portfolio-ready project aligned with your ${state.user.goal||'career'} goal.`,tasks:['Define users and problem','Choose architecture and stack','Build MVP','Test and measure results','Document and prepare demo'],progress:0,status:'planned',createdAt:Date.now()};const ps=lmProjects();ps.unshift(p);lmWrite('lm_projects',ps);state.projectDetail=p.id;recordActivity('project_started',{title:p.title});toast('Project plan created');render();}
+function generateProject(){const input=document.getElementById('projectInput')?.value.trim();if(!input){toast('Tell me what you want to build first');return;}const p={id:`proj-${Date.now()}`,title:input,level:'Custom project',description:`A portfolio-ready project aligned with your ${state.user.goal||'career'} goal.`,tasks:['Define users and problem','Choose architecture and stack','Build MVP','Test and measure results','Document and prepare demo'].map((title,index)=>({id:`pt-${index}`,title,done:false,...projectTaskGuidance(title,input)})),progress:0,status:'planned',createdAt:Date.now()};const ps=lmProjects();ps.unshift(p);lmWrite('lm_projects',ps);state.projectDetail=p.id;recordActivity('project_started',{title:p.title});toast('Project plan created');render();}
 function toggleProjectTask(pid,tid){const ps=lmProjects(),p=ps.find(x=>x.id===pid);if(!p)return;const t=p.tasks.find(x=>x.id===tid);if(t)t.done=!t.done;p.progress=lmPercent(p.tasks.filter(x=>x.done).length/p.tasks.length*100);p.status=p.progress===0?'planned':p.progress===100?'ready':'building';lmWrite('lm_projects',ps);if(t?.done)recordActivity('project_task_completed',{title:t.title,project:p.title});render();}
 function submitProject(id){const ps=lmProjects(),p=ps.find(x=>x.id===id);if(!p)return;if(p.progress<100){toast('Complete all project tasks before submitting');return;}p.status='completed';p.submittedAt=Date.now();p.review={score:85,feedback:'Project checklist completed. Add a demo, README and clear evaluation evidence before presenting it publicly.'};lmWrite('lm_projects',ps);recordActivity('project_completed',{title:p.title});state.projectDetail=null;toast('Project submitted and completed 🎉');render();}
-function projectDetail(p){return `<div class="card project-detail"><div class="project-detail-top"><div><span class="tag">${esc(p.level)}</span><h2>${esc(p.title)}</h2><p class="muted">${esc(p.description)}</p></div><span class="status-pill status-${p.status}">${p.status}</span></div><div class="bar-head"><span>Build progress</span><b>${p.progress}%</b></div><div class="progress"><i style="width:${p.progress}%"></i></div><div class="section-head"><h2>Build checklist</h2><span class="muted">${p.tasks.filter(t=>t.done).length}/${p.tasks.length}</span></div><div class="list">${p.tasks.map(t=>`<div class="list-row"><div class="left"><button class="check-btn ${t.done?'checked':''}" onclick="toggleProjectTask('${p.id}','${t.id}')">${t.done?'✓':''}</button><span style="${t.done?'text-decoration:line-through;opacity:.6':''}">${esc(t.title)}</span></div><span class="tag">${t.done?'done':'pending'}</span></div>`).join('')}</div><div class="lm-inline-actions"><button class="ghost-btn" onclick="state.projectDetail=null;render()">Close</button><button class="primary" onclick="submitProject('${p.id}')">Submit project →</button></div></div>`;}
+function projectDetail(p){return `<div class="card project-detail"><div class="project-detail-top"><div><span class="tag">${esc(p.level)}</span><h2>${esc(p.title)}</h2><p class="muted">${esc(p.description)}</p></div><span class="status-pill status-${p.status}">${esc(p.status)}</span></div><div class="bar-head"><span>Build progress</span><b>${p.progress}%</b></div><div class="progress"><i style="width:${p.progress}%"></i></div><div class="section-head"><h2>Build checklist</h2><span class="muted">${p.tasks.filter(t=>t.done).length}/${p.tasks.length}</span></div><div class="project-task-list">${p.tasks.map(t=>`<article class="project-task ${t.done?'project-task-done':''}"><button class="check-btn ${t.done?'checked':''}" aria-label="${t.done?'Mark incomplete':'Mark complete'}: ${esc(t.title)}" onclick="toggleProjectTask('${p.id}','${t.id}')">${t.done?'✓':''}</button><div class="project-task-info"><div class="project-task-heading"><b>${esc(t.title)}</b><span class="tag">${t.done?'done':'pending'}</span></div><p>${esc(t.description)}</p><b class="project-steps-label">What to do</b><ol>${(t.steps||[]).map(step=>`<li>${esc(step)}</li>`).join('')}</ol></div></article>`).join('')}</div><div class="lm-inline-actions"><button class="ghost-btn" onclick="state.projectDetail=null;render()">Close</button><button class="primary" onclick="submitProject('${p.id}')">Submit project →</button></div></div>`;}
 function projects(){const ps=lmProjects();const detail=state.projectDetail?ps.find(p=>p.id===state.projectDetail):null;const cards=LM_PROJECT_TEMPLATES.map((t,i)=>{const existing=ps.find(p=>p.title===t.title);return `<div class="card feature-card"><div><span class="tag">${esc(t.level)}</span><h3 style="margin-top:12px">${esc(t.title)}</h3><p>${esc(t.description)}</p>${existing?`<div class="progress" style="margin-top:10px"><i style="width:${existing.progress}%"></i></div><small class="muted">${existing.progress}% · ${existing.status}</small>`:''}</div><button class="ghost-btn" onclick="createProjectFromTemplate(${i})">${existing?'Continue':'Build this project'} →</button></div>`}).join('');return shell(`<div class="content"><div class="page-title">Build something worth showing.</div><p class="sub">Projects now have a real build checklist, status, progress and submission flow.</p><div class="card" style="margin-bottom:18px"><div class="eyebrow">Project Generator</div><h3>Tell us what you want to build</h3><div class="learn-create-row"><input id="projectInput" class="input" placeholder="e.g. An AI resume analyser for recruiters"><button class="primary" onclick="generateProject()">Generate →</button></div></div>${detail?projectDetail(detail):''}<div class="section-head"><h2>Recommended for you</h2><span class="muted">Based on ${esc(state.user.goal||'your goal')}</span></div><div class="grid g3">${cards}</div>${ps.length?`<div class="section-head"><h2>My projects</h2><span class="muted">${ps.length} saved</span></div><div class="grid g3">${ps.map(p=>`<div class="card"><span class="tag">${esc(p.status)}</span><h3 style="margin-top:12px">${esc(p.title)}</h3><p class="muted">${esc(p.description)}</p><div class="progress"><i style="width:${p.progress}%"></i></div><div class="bar-head"><span>Progress</span><b>${p.progress}%</b></div><div class="lm-inline-actions"><button class="ghost-btn" onclick="state.projectDetail='${p.id}';render()">Open</button>${p.status==='ready'?`<button class="primary" onclick="submitProject('${p.id}')">Submit</button>`:''}</div></div>`).join('')}</div>`:''}</div>`,'Projects');}
 
 /* ---------- Career roadmap ---------- */
@@ -1621,6 +1887,10 @@ window.logoutLearnMate=logoutLearnMate;
 window.createTask=createTask; window.closeTaskModal=closeTaskModal; window.saveTaskFromModal=saveTaskFromModal;
 window.toggleTask=toggleTask; window.deleteTask=deleteTask;
 window.generateLearningPath=generateLearningPath; window.completeLearningModule=completeLearningModule;
+window.openLearningModule=openLearningModule; window.beginLearningModuleQuiz=beginLearningModuleQuiz;
+window.answerLearningModuleQuiz=answerLearningModuleQuiz; window.advanceLearningModuleQuiz=advanceLearningModuleQuiz;
+window.finishLearningModuleQuiz=finishLearningModuleQuiz; window.runPathStudyTool=runPathStudyTool;
+window.runLearningStudyTool=runLearningStudyTool;
 window.askLearnMateDocument=askLearnMateDocument; window.removeLearnMateDocument=removeLearnMateDocument; window.clearDocumentContext=clearDocumentContext;
 window.startInterview=startInterview; window.submitInterviewAnswer=submitInterviewAnswer;
 window.createProjectFromTemplate=createProjectFromTemplate; window.generateProject=generateProject; window.toggleProjectTask=toggleProjectTask; window.submitProject=submitProject;
@@ -1628,10 +1898,3 @@ window.improveRoadmap=improveRoadmap; window.sendChat=sendChat; window.quickChat
 
 /* Ensure the upgraded pages render, not the original static pages. */
 render();
-
-
-// Keep the LearnMate Add Goal modal after all scripts load
-const learnMateAppCreateTask = createTask;
-window.addEventListener('load', () => {
-  window.createTask = learnMateAppCreateTask;
-});
