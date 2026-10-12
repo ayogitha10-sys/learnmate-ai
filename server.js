@@ -137,7 +137,7 @@ const server = http.createServer(async (req, res) => {
         const { message = '', history = [], profile = {}, attachment = null } = payload;
         const apiKey = currentEnv.GEMINI_API_KEY;
         const xaiKey = currentEnv.XAI_API_KEY;
-        const provider = String(currentEnv.AI_PROVIDER || (xaiKey ? 'xai' : 'gemini')).toLowerCase();
+        const provider = String(currentEnv.AI_PROVIDER || 'xai').toLowerCase();
         const preferredModel = currentEnv.GEMINI_MODEL || 'gemini-2.5-flash';
         if (provider === 'xai') {
           if (!xaiKey) {
@@ -254,9 +254,9 @@ server.listen(PORT, () => {
   console.log(`🚀 LearnMate AI is running at: http://localhost:${PORT}`);
   console.log(`==================================================\n`);
   const env = getEnv();
-  if (String(env.AI_PROVIDER || (env.XAI_API_KEY ? 'xai' : 'gemini')).toLowerCase() === 'xai' && env.XAI_API_KEY) {
+  if (String(env.AI_PROVIDER || 'xai').toLowerCase() === 'xai' && env.XAI_API_KEY) {
     console.log(`✅ Grok API key found (Model: ${env.XAI_MODEL || 'grok-4.6'}).`);
-  } else if (String(env.AI_PROVIDER || (env.XAI_API_KEY ? 'xai' : 'gemini')).toLowerCase() === 'xai') {
+  } else if (String(env.AI_PROVIDER || 'xai').toLowerCase() === 'xai') {
     console.log('⚠️  Grok is selected but XAI_API_KEY is missing. Add it to .env and restart.');
   } else if (env.GEMINI_API_KEY) {
     console.log(`✅ Live Google Gemini AI connected! (Model: ${env.GEMINI_MODEL || 'gemini-2.5-flash'})`);

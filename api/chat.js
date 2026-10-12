@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     return json(res, 405, { error: "Method not allowed." });
   }
 
-  const provider = String(process.env.AI_PROVIDER || (process.env.XAI_API_KEY ? "xai" : "gemini")).toLowerCase();
+  const provider = String(process.env.AI_PROVIDER || "xai").toLowerCase();
   if (provider === "xai" && !process.env.XAI_API_KEY) {
     return json(res, 503, { error: "Grok is selected, but XAI_API_KEY is not configured for this deployment." });
   }
