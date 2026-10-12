@@ -3,6 +3,7 @@
 
 const GEMINI_INTERACTIONS_URL =
   "https://generativelanguage.googleapis.com/v1beta/interactions";
+const XAI_CHAT_URL = "https://api.x.ai/v1/chat/completions";
 
 const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 function json(res, status, body) {
@@ -14,10 +15,15 @@ export default async function handler(req, res) {
     return json(res, 405, { error: "Method not allowed." });
   }
 
-  if (!process.env.GEMINI_API_KEY) {
-    return json(res, 500, {
-      error: "GEMINI_API_KEY is not configured on the server."
-    });
+  const provider = String(process.env.AI_PROVIDER || (process.env.XAI_API_KEY ? "xai" : "gemini")).toLowerCase();
+  if (provider === "xai" && !process.env.XAI_API_KEY) {
+    return json(res, 503, { error: "Grok is selected, but XAI_API_KEY is not configured for this deployment." });
+  }
+  if (provider === "gemini" && !process.env.GEMINI_API_KEY) {
+    return json(res, 503, { error: "Gemini is selected, but GEMINI_API_KEY is not configured for this deployment." });
+  }
+  if (provider !== "xai" && provider !== "gemini") {
+    return json(res, 400, { error: "AI_PROVIDER must be xai or gemini." });
   }
 
   try {
@@ -84,6 +90,44 @@ Rules:
 11. Never claim to have accessed information that was not provided.
 12. Be honest about uncertainty.
 `;
+
+    if (provider === "xai") {
+      const safeHistory = Array.isArray(history)
+        ? history.filter(item => item && (item.role === "user" || item.role === "assistant") && typeof item.content === "string").slice(-12)
+        : [];
+      const messages = [
+        { role: "system", content: systemInstruction },
+        ...safeHistory.map(item => ({ role: item.role, content: item.content.slice(0, 4000) }))
+      ];
+      if (attachment && typeof attachment.data === "string" && String(attachment.mime_type || "").toLowerCase().startsWith("image/")) {
+        const mimeType = String(attachment.mime_type).toLowerCase();
+        if (!/^image\/(png|jpeg|jpg)$/.test(mimeType) || attachment.data.length > 4000000) {
+          return json(res, 400, { error: "Grok image questions currently support PNG or JPEG images under 3 MB." });
+        }
+        messages.push({ role: "user", content: [
+          { type: "text", text: message.trim().slice(0, 8000) },
+          { type: "image_url", image_url: { url: `data:${mimeType};base64,${attachment.data}` } }
+        ] });
+      } else {
+        // PDFs and other documents are sent as extracted, untrusted text in the chat prompt.
+        messages.push({ role: "user", content: message.trim().slice(0, 8000) });
+      }
+      try {
+        const response = await fetch(XAI_CHAT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.XAI_API_KEY}` },
+          body: JSON.stringify({ model: process.env.XAI_MODEL || "grok-4.6", messages, temperature: 0.7, max_tokens: 1200 })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) return json(res, 502, { error: result?.error?.message || `xAI returned HTTP ${response.status}.` });
+        const output = result?.choices?.[0]?.message?.content;
+        if (typeof output !== "string" || !output.trim()) return json(res, 502, { error: "Grok returned an empty response." });
+        return json(res, 200, { output: output.trim(), provider: "xai" });
+      } catch (error) {
+        console.error("xAI request failed:", error);
+        return json(res, 502, { error: "Could not connect to xAI. Check the deployment network and XAI_API_KEY." });
+      }
+    }
 
     const safeHistory = Array.isArray(history)
       ? history

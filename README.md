@@ -5,9 +5,9 @@ A no-build LearnMate AI front-end with Supabase authentication plus a fully func
 ## Run
 
 1. Keep all files in this folder together.
-2. Install Node.js, then run `npm start` (or `node server.js`) from this folder. Open `http://localhost:3000`.
-3. For live local Gemini responses, copy `.env.example` to `.env`, add your Gemini API key, and restart the server. `.env` is excluded from Git.
-4. You can also open `index.html` directly for the client-side experience. For deployment, Vercel serves the site and its `api/chat.js` function; configure `GEMINI_API_KEY` in Vercel Project Settings → Environment Variables.
+2. Install Node.js, run `npm start` from this folder, and open the HTTP URL printed by the server (normally `http://localhost:3000`). Do not open `index.html` directly when using AI chat.
+3. Grok is the default assistant provider. Copy `.env.example` to `.env`, add an xAI API key as `XAI_API_KEY`, and restart the server. `.env` is excluded from Git. Grok API usage is billed by xAI.
+4. To use Gemini instead, set `AI_PROVIDER=gemini` and provide `GEMINI_API_KEY`. For Vercel, set `AI_PROVIDER=xai` and `XAI_API_KEY` in Project Settings → Environment Variables, then redeploy. Set `AI_PROVIDER=gemini` and `GEMINI_API_KEY` if using Gemini.
 
 The landing page introduces the product through animated, responsive sections. The first-page calls to action retain the existing app navigation and authentication behavior.
 
