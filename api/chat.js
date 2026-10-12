@@ -10,6 +10,28 @@ function json(res, status, body) {
   return res.status(status).json(body);
 }
 
+function extractGeminiText(data) {
+  if (typeof data?.output_text === "string") return data.output_text.trim();
+  const groups = [data?.outputs, data?.output, data?.steps];
+  for (const group of groups) {
+    if (!Array.isArray(group)) continue;
+    const text = group
+      .filter(item => item?.type !== "thought")
+      .map(item => {
+        if (typeof item?.text === "string") return item.text;
+        if (Array.isArray(item?.content)) {
+          return item.content.map(part => typeof part?.text === "string" ? part.text : "").join("\n");
+        }
+        return "";
+      })
+      .filter(Boolean)
+      .join("\n")
+      .trim();
+    if (text) return text;
+  }
+  return "";
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return json(res, 405, { error: "Method not allowed." });
@@ -144,12 +166,8 @@ Rules:
             });
             const fallbackData = await fallback.json().catch(() => ({}));
             if (fallback.ok) {
-              const fallbackOutput = fallbackData?.output_text ||
-                (Array.isArray(fallbackData?.outputs) ? fallbackData.outputs.map(item => item?.text || item?.content?.map(part => part?.text || "").join("\n") || "").join("\n") : "") ||
-                (Array.isArray(fallbackData?.output) ? fallbackData.output.map(item => item?.text || item?.content?.map(part => part?.text || "").join("\n") || "").join("\n") : "");
-              if (typeof fallbackOutput === "string" && fallbackOutput.trim()) {
-                return json(res, 200, { output: fallbackOutput.trim(), provider: "gemini-fallback" });
-              }
+              const fallbackOutput = extractGeminiText(fallbackData);
+              if (fallbackOutput) return json(res, 200, { output: fallbackOutput, provider: "gemini-fallback" });
             }
             console.error("Gemini fallback failed:", fallback.status, fallbackData);
             return json(res, 502, { error: "Grok failed and the Gemini fallback also failed. Check Vercel function logs for provider details." });
@@ -176,12 +194,8 @@ Rules:
               })
             });
             const fallbackData = await fallback.json().catch(() => ({}));
-            const fallbackOutput = fallbackData?.output_text ||
-              (Array.isArray(fallbackData?.outputs) ? fallbackData.outputs.map(item => item?.text || item?.content?.map(part => part?.text || "").join("\n") || "").join("\n") : "") ||
-              (Array.isArray(fallbackData?.output) ? fallbackData.output.map(item => item?.text || item?.content?.map(part => part?.text || "").join("\n") || "").join("\n") : "");
-            if (fallback.ok && typeof fallbackOutput === "string" && fallbackOutput.trim()) {
-              return json(res, 200, { output: fallbackOutput.trim(), provider: "gemini-fallback" });
-            }
+            const fallbackOutput = extractGeminiText(fallbackData);
+            if (fallback.ok && fallbackOutput) return json(res, 200, { output: fallbackOutput, provider: "gemini-fallback" });
             console.error("Gemini fallback failed:", fallback.status, fallbackData);
           } catch (fallbackError) {
             console.error("Gemini fallback request failed:", fallbackError);
@@ -264,45 +278,7 @@ Rules:
       });
     }
 
-    let output = "";
-
-    if (typeof data?.output_text === "string") {
-      output = data.output_text.trim();
-    }
-
-    if (!output && Array.isArray(data?.outputs)) {
-      output = data.outputs
-        .map(item => {
-          if (typeof item?.text === "string") return item.text;
-
-          if (Array.isArray(item?.content)) {
-            return item.content
-              .map(part => part?.text || "")
-              .join("\n");
-          }
-
-          return "";
-        })
-        .join("\n")
-        .trim();
-    }
-
-    if (!output && Array.isArray(data?.output)) {
-      output = data.output
-        .map(item => {
-          if (typeof item?.text === "string") return item.text;
-
-          if (Array.isArray(item?.content)) {
-            return item.content
-              .map(part => part?.text || "")
-              .join("\n");
-          }
-
-          return "";
-        })
-        .join("\n")
-        .trim();
-    }
+    const output = extractGeminiText(data);
 
     if (!output) {
       console.error("Gemini returned no readable output:", data);
