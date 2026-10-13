@@ -72,7 +72,9 @@ function showLearnMateAuth() {
       #learnmateAuth .lm-auth-label { display:block !important; margin:0 0 6px !important; color:#304447 !important; font:700 13px/1.3 DM Sans,Arial,sans-serif !important; }
       #learnmateAuth .lm-auth-input { display:block !important; width:100% !important; height:48px !important; min-height:48px !important; margin:0 !important; padding:12px 14px !important; box-sizing:border-box !important; border:1px solid #dce4e4 !important; border-radius:11px !important; background:#fff !important; color:#102326 !important; font:400 14px/1.2 DM Sans,Arial,sans-serif !important; outline:none !important; box-shadow:none !important; }
       #learnmateAuth .lm-auth-input:focus { border-color:#59dfc1 !important; box-shadow:0 0 0 3px rgba(89,223,193,.16) !important; }
-      #learnmateAuth .lm-auth-message { display:none; margin:0 0 14px !important; padding:10px 12px !important; border-radius:10px !important; font-size:13px !important; background:#fff4f4 !important; color:#b42318 !important; }
+      #learnmateAuth .lm-auth-message { display:none; margin:0 0 14px !important; padding:10px 12px !important; border-radius:10px !important; font-size:13px !important; line-height:1.5 !important; background:#fff4f4 !important; color:#b42318 !important; }
+      #learnmateAuth .lm-auth-message.success { display:block; background:#eaf8f2 !important; color:#175d49 !important; }
+      #learnmateAuth .lm-auth-message button { display:inline-block !important; width:auto !important; height:auto !important; min-height:0 !important; margin:8px 0 0 !important; padding:7px 10px !important; border:1px solid rgba(23,93,73,.22) !important; border-radius:8px !important; background:#fff !important; color:#175d49 !important; font:700 12px/1.2 DM Sans,Arial,sans-serif !important; cursor:pointer !important; }
       #learnmateAuth .lm-auth-primary { display:block !important; width:100% !important; height:48px !important; min-height:48px !important; margin:0 !important; padding:12px 16px !important; border:0 !important; border-radius:12px !important; background:#083335 !important; color:#fff !important; font:700 15px/1.2 DM Sans,Arial,sans-serif !important; cursor:pointer !important; box-sizing:border-box !important; }
       #learnmateAuth .lm-auth-secondary,#learnmateAuth .lm-auth-close { display:block !important; width:100% !important; margin:0 !important; border:0 !important; background:transparent !important; cursor:pointer !important; box-sizing:border-box !important; }
       #learnmateAuth .lm-auth-secondary { padding:13px !important; color:#536568 !important; font:600 13px/1.2 DM Sans,Arial,sans-serif !important; }
@@ -113,7 +115,7 @@ function showLearnMateAuth() {
         <label class="lm-auth-label" for="lmPassword">Password</label>
         <input id="lmPassword" class="lm-auth-input" type="password" placeholder="Minimum 6 characters" autocomplete="current-password">
       </div>
-      <div id="lmAuthMessage" class="lm-auth-message"></div>
+      <div id="lmAuthMessage" class="lm-auth-message" role="status" aria-live="polite"></div>
       <button id="lmAuthButton" class="lm-auth-primary" type="button" onclick="handleLearnMateAuth()">Log in</button>
       <button class="lm-auth-secondary" type="button" onclick="continueAsGuest()">Continue as guest</button>
       <button class="lm-auth-close" type="button" onclick="closeLearnMateAuth()">Close</button>
@@ -140,6 +142,46 @@ function showLearnMateAuth() {
 
 
 let learnMateAuthMode = "login";
+
+let pendingLearnMateConfirmationEmail = "";
+
+function getLearnMateAuthRedirectUrl() {
+  return `${window.location.origin}${window.location.pathname}`;
+}
+
+function showLearnMateConfirmation(email, note = "If this address is eligible for signup, a confirmation email was sent to") {
+  const message = document.getElementById("lmAuthMessage");
+  if (!message) return;
+  message.replaceChildren();
+  message.classList.add("success");
+  message.style.display = "block";
+  const copy = document.createElement("span");
+  copy.textContent = `${note} ${email}. Check that inbox and its spam folder.`;
+  const resend = document.createElement("button");
+  resend.type = "button";
+  resend.textContent = "Resend confirmation email";
+  resend.addEventListener("click", resendLearnMateSignupConfirmation);
+  message.append(copy, document.createElement("br"), resend);
+}
+
+async function resendLearnMateSignupConfirmation() {
+  const email = pendingLearnMateConfirmationEmail || document.getElementById("lmEmail")?.value.trim();
+  if (!email) { showAuthMessage("Enter the email address you used to sign up first."); return; }
+  const button = document.querySelector("#lmAuthMessage button");
+  if (button) { button.disabled = true; button.textContent = "Sending…"; }
+  try {
+    const { error } = await learnmateSupabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: getLearnMateAuthRedirectUrl() }
+    });
+    if (error) throw error;
+    pendingLearnMateConfirmationEmail = email;
+    showLearnMateConfirmation(email, "Another confirmation link was sent to");
+  } catch (error) {
+    showAuthMessage(error.message || "Could not resend the confirmation email. Please try again.");
+  }
+}
 
 
 
@@ -291,6 +333,8 @@ async function handleLearnMateAuth() {
 
         options: {
 
+          emailRedirectTo: getLearnMateAuthRedirectUrl(),
+
           data: {
 
             full_name: name
@@ -340,7 +384,11 @@ async function handleLearnMateAuth() {
     }
 
     if (learnMateAuthMode === "signup" && !result.data.session) {
-      showAuthMessage("Your account was created. Check your email to confirm it, then log in to finish setting up your profile.");
+      const name = document.getElementById("lmName").value.trim() || "Learner";
+      pendingLearnMateConfirmationEmail = email;
+      state.user = { ...state.user, name, goal: "Learner" };
+      store.set("lm_user", state.user);
+      showLearnMateConfirmation(email);
       return;
     }
 
@@ -402,7 +450,7 @@ async function handleLearnMateAuth() {
 
 
 
-      await loadLearnMateProfile(user.id);
+      await loadLearnMateProfile(user.id, user);
 
 
 
@@ -483,7 +531,7 @@ async function handleLearnMateAuth() {
 
 
 
-async function loadLearnMateProfile(userId) {
+async function loadLearnMateProfile(userId, authUser) {
 
 
 
@@ -538,6 +586,14 @@ async function loadLearnMateProfile(userId) {
 
 
 
+  }
+
+  else if (authUser) {
+    state.user = {
+      ...state.user,
+      name: authUser.user_metadata?.full_name || state.user.name || "Learner",
+      goal: state.user.goal || "Learner"
+    };
   }
 
 }
@@ -617,6 +673,7 @@ function showAuthMessage(message) {
 
 
   el.textContent = message;
+  el.classList.remove("success");
 
   el.style.display = "block";
 
@@ -639,6 +696,7 @@ function clearAuthMessage() {
 
 
   el.textContent = "";
+  el.classList.remove("success");
 
   el.style.display = "none";
 
@@ -680,7 +738,7 @@ window.enterApp = async function () {
 
 
 
-    await loadLearnMateProfile(session.user.id);
+    await loadLearnMateProfile(session.user.id, session.user);
 
 
 
@@ -728,7 +786,7 @@ learnmateSupabase.auth.onAuthStateChange((event, session) => {
     // Let Supabase finish its auth transaction before making further client calls.
     window.setTimeout(async () => {
       try {
-        await loadLearnMateProfile(session.user.id);
+        await loadLearnMateProfile(session.user.id, session.user);
         store.set("lm_user", state.user);
         await checkLearnMateOnboarding();
       } catch (error) {
@@ -755,6 +813,7 @@ window.showLoginMode = showLoginMode;
 window.showSignupMode = showSignupMode;
 
 window.handleLearnMateAuth = handleLearnMateAuth;
+window.resendLearnMateSignupConfirmation = resendLearnMateSignupConfirmation;
 
 window.continueAsGuest = continueAsGuest;
 
