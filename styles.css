@@ -69,6 +69,7 @@
 .module-row button:disabled{opacity:.5;cursor:not-allowed}
 .module-done{border-color:rgba(101,230,192,.22)}
 .project-task-list{display:flex;flex-direction:column;gap:11px}
+.project-task-locked{opacity:.58;background:rgba(255,255,255,.012)}.project-task-locked .feature-icon{font-size:13px}.project-qa{margin-top:20px;border-color:rgba(101,230,192,.2)}.project-qa-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}.project-qa-form .project-plan-status{grid-column:1/-1}.project-answer{margin-top:12px;padding:14px}.project-answer p{white-space:pre-wrap;line-height:1.6;color:var(--muted)}
 .project-task{display:grid;grid-template-columns:32px minmax(0,1fr);gap:12px;align-items:start;padding:16px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.02)}
 .project-task>.check-btn{margin-top:1px}
 .project-task-info{min-width:0}
@@ -80,6 +81,7 @@
 .project-task-done .project-task-info>p{opacity:.75}
 @media(max-width:800px){.learning-paths{grid-template-columns:1fr}}
 @media(max-width:520px){.module-row{align-items:flex-start;flex-direction:column}.project-task-heading{align-items:flex-start}}
+@media(max-width:650px){.project-qa-form{grid-template-columns:1fr}.project-qa-form .project-plan-status{grid-column:auto}}
 .lm-chat-preset{width:100%;text-align:left;color:var(--text);cursor:pointer;transition:transform .18s,border-color .18s,background .18s}.lm-chat-preset:hover,.lm-chat-preset:focus-visible{transform:translateY(-2px);border-color:rgba(101,230,192,.35);background:rgba(101,230,192,.07)}
 .planner-goal-form{margin-bottom:20px}.planner-day{display:flex;flex-direction:column;align-items:flex-start;gap:8px}.planner-day h3{margin:0}.planner-day p{line-height:1.6}.planner-day-done{border-color:rgba(101,230,192,.35)}
 .project-task-info .textarea{margin:8px 0 10px;min-height:95px}.project-review{margin-top:12px}.project-review p{margin:6px 0}.resume-upload{margin-bottom:16px}.resume-upload input{margin-top:10px}.resume-editor-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:16px;align-items:start}.resume-editor-layout>.resume{position:sticky;top:18px;max-height:calc(100vh - 36px);overflow:auto}.resume-analysis{margin-top:18px}.resume-analysis .card{padding:14px}.resume-analysis h3{margin-top:20px}
