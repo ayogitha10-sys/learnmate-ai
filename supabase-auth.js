@@ -2820,164 +2820,64 @@ async function showLearnMateSavedProjects() {
 
 
 
-  const content =
-
-    document.querySelector(".content");
-
-
-
-  if (!content) return;
-
-
-
-  const old =
-
-    document.getElementById("learnmateSavedProjects");
-
-
-
+  const old = document.getElementById("learnmateSavedProjects");
   if (old) old.remove();
-
-
-
   if (!data || data.length === 0) return;
 
-
-
-  const section =
-
-    document.createElement("div");
-
-
-
-  section.id =
-
-    "learnmateSavedProjects";
-
-
-
-  section.innerHTML = `
-
-    <div class="section-head" style="margin-top:30px">
-
-      <h2>My projects</h2>
-
-      <span class="muted">
-
-        ${data.length} saved
-
-      </span>
-
-    </div>
-
-
-
-    <div class="grid g3">
-
-
-
-      ${data.map(project => {
-
-
-
-        const title =
-
-          learnMateEscapeProjectText(project.title);
-
-
-
-        const description =
-
-          learnMateEscapeProjectText(project.description);
-
-
-
-        const category =
-
-          learnMateEscapeProjectText(project.category);
-
-
-
-        const difficulty =
-
-          learnMateEscapeProjectText(project.difficulty);
-
-
-
-        return `
-
-          <div class="card feature-card">
-
-
-
-            <div>
-
-
-
-              <span class="tag">
-
-                ${category} · ${difficulty}
-
-              </span>
-
-
-
-              <h3 style="margin-top:12px">
-
-                ${title}
-
-              </h3>
-
-
-
-              <p>
-
-                ${description}
-
-              </p>
-
-
-
-            </div>
-
-
-
-            <div style="margin-top:14px">
-
-
-
-              <span class="tag">
-
-                ${project.status || "planned"}
-
-              </span>
-
-
-
-            </div>
-
-
-
-          </div>
-
-        `;
-
-
-
-      }).join("")}
-
-
-
-    </div>
-
-  `;
-
-
-
-  content.appendChild(section);
-
-
-
+  const storageKey = "lm_projects";
+  let projects = [];
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    projects = Array.isArray(saved) ? saved : [];
+  } catch {
+    projects = [];
+  }
+
+  let changed = false;
+  const normalizeTitle = value => String(value || "").toLowerCase()
+    .replace(/\banalyser\b/g, "analyzer")
+    .split(/\bas\s+a\b|\bfor\b|\bwith\b|[-–—:]/)[0]
+    .replace(/\b(build|create|make|a|an|the|project|ai|ml)\b/g, " ")
+    .replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+
+  for (const savedProject of data) {
+    const cloudId = String(savedProject.id);
+    const title = String(savedProject.title || "Untitled project");
+    const titleKey = normalizeTitle(title);
+    let existing = projects.find(project =>
+      project.supabaseId === cloudId || project.supabaseIds?.includes(cloudId) ||
+      (titleKey && normalizeTitle(project.title) === titleKey)
+    );
+    if (!existing) {
+      const goal = window.state?.user?.goal || "personal learning";
+      const tasks = typeof projectPlanFallback === "function"
+        ? projectPlanFallback(title, goal)
+        : [{ id: "pt-0", title: "Define and plan the project", description: savedProject.description || `Plan the project: ${title}.`, steps: ["Write down the desired outcome.", "List the first small implementation task."], done: false }];
+      existing = {
+        id: `supabase-${cloudId}`, supabaseId: cloudId, supabaseIds: [cloudId],
+        title, description: savedProject.description || `Build ${title} from idea to a working project.`,
+        level: savedProject.difficulty || savedProject.category || "Custom project",
+        status: savedProject.status || "planned", tasks, progress: 0,
+        createdAt: savedProject.created_at ? Date.parse(savedProject.created_at) : Date.now(),
+        goal, roadmapVersion: 2
+      };
+      projects.unshift(existing);
+      changed = true;
+    } else {
+      const ids = Array.isArray(existing.supabaseIds) ? existing.supabaseIds : (existing.supabaseId ? [existing.supabaseId] : []);
+      if (!ids.includes(cloudId)) {
+        ids.push(cloudId);
+        existing.supabaseIds = ids;
+        existing.supabaseId = existing.supabaseId || cloudId;
+        changed = true;
+      }
+    }
+  }
+
+  if (changed) {
+    localStorage.setItem(storageKey, JSON.stringify(projects));
+    if (window.state?.page === "projects" && typeof render === "function") render();
+  }
 }
 
 
